@@ -6,11 +6,7 @@ import { WorkerManager } from './workerManager/workerManager';
 
 @singleton()
 export class App {
-
-  public constructor(
-    @inject(SERVICES.LOGGER) private readonly logger: Logger,
-    private readonly workerManager: WorkerManager
-  ) {}
+  public constructor(@inject(SERVICES.LOGGER) private readonly logger: Logger, private readonly workerManager: WorkerManager) {}
 
   public async run(): Promise<void> {
     await this.workerManager.worker();

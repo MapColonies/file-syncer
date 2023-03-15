@@ -52,7 +52,7 @@ export const registerExternalValues = (options?: RegisterOptions): DependencyCon
           return getProvider(providerConfig.destination);
         },
       },
-    }
+    },
   ];
 
   return registerDependencies(dependencies, options?.override, options?.useChild);

@@ -17,6 +17,16 @@
   "jobManager": {
     "url": "http://127.0.0.1:8080"
   },
+  "heartbeat": {
+    "url": "http://127.0.0.1:8082",
+    "waitTime": 3000
+  },
+  "catalog": {
+    "url": "http://127.0.0.1:8083"
+  },
+  "nginx": {
+    "url": "http://127.0.0.1:8084"
+  },
   "S3": {
     "accessKeyId": "minioadmin",
     "secretAccessKey": "minioadmin",
@@ -24,7 +34,8 @@
     "bucket": "3dtiles",
     "destinationBucket": "3dtiles-destination",
     "forcePathStyle": true,
-    "sslEnabled": false
+    "sslEnabled": false,
+    "maxAttempts": 3
   },
   "FS": {
     "source": {
@@ -37,9 +48,9 @@
   "worker": {
     "configProvider": {
       "source": "S3",
-      "destination": "S3"
+      "destination": "FS"
     },
-    "jobType": "RECORD_3D",
+    "jobType": "Ingestion_New",
     "taskType": "3D",
     "waitTime": 5000
   }

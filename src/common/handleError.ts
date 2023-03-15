@@ -1,4 +1,4 @@
-import { Response, Request, NextFunction } from "express";
+import { Response, Request, NextFunction } from 'express';
 import { AppError } from './appError';
 
 export function handleError(error: AppError, request: Request, response: Response, next: NextFunction): void {
@@ -7,6 +7,6 @@ export function handleError(error: AppError, request: Request, response: Respons
   if (!error.isOperational) {
     throw error;
   }
-  
+
   next();
 }

@@ -1,13 +1,10 @@
-import axios from 'axios';
 import { injectable, inject } from 'tsyringe';
 import { Logger } from '@map-colonies/js-logger';
 import { IConfig } from 'config';
-import { ITaskResponse } from '@map-colonies/mc-priority-queue';
-import httpStatus from 'http-status-codes';
+import { IUpdateTaskBody } from '@map-colonies/mc-priority-queue';
 import { SERVICES } from '../common/constants';
-import { IConfigProvider } from '../common/interfaces';
+import { IConfigProvider, ITaskParameters } from '../common/interfaces';
 import { JobManagerWrapper } from '../clients/jobManagerWrapper';
-import { sleep } from '../common/utils';
 
 @injectable()
 export class WorkerManager {
@@ -17,26 +14,22 @@ export class WorkerManager {
     @inject(JobManagerWrapper) private readonly jobManagerClient: JobManagerWrapper,
     @inject(SERVICES.CONFIGPROVIDERFROM) private readonly configProviderFrom: IConfigProvider,
     @inject(SERVICES.CONFIGPROVIDERTO) private readonly configProviderTo: IConfigProvider
-    ) {}
+  ) {}
   public async worker(): Promise<void> {
-    
     // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition, no-constant-condition
-    while(true) {
-      const task = await this.jobManagerClient.startTask();
+    while (true) {
+      const task = await this.jobManagerClient.waitForTask<ITaskParameters>();
 
-      if(task == null) {
-        this.logger.info({ msg: "There are no tasks... sleeping" });
-        await sleep(this.config.get<number>("worker.waitTime"));
-        continue;
-      }
-      
       const files: string[] = task.parameters.paths;
-      const taskLength = files.length;
       files.map(async (file: string) => {
         const data = await this.configProviderFrom.getFile(file);
-        await this.configProviderTo.postFile(file, data);
+        const nameSplitted = file.split('/');
+        nameSplitted[0] = task.parameters.modelId;
+        const newFileName = nameSplitted.join('/');
+        await this.configProviderTo.postFile(newFileName, data);
       });
-      await this.jobManagerClient.completeTask(task);
+
+      await this.jobManagerClient.ack<IUpdateTaskBody<ITaskParameters>>(task.jobId, task.id);
       await this.jobManagerClient.progressJob(task.jobId);
     }
   }

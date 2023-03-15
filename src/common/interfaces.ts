@@ -9,10 +9,13 @@ export interface IConfig {
 
 export interface IJobParameters {
   metadata: Layer3DMetadata;
+  modelId: string;
+  tilesetFilename: string;
 }
 
 export interface ITaskParameters {
   paths: string[];
+  modelId: string;
 }
 
 export interface IS3Config {
@@ -23,6 +26,7 @@ export interface IS3Config {
   destinationBucket: string;
   sslEnabled: boolean;
   forcePathStyle: boolean;
+  maxAttempts: number;
 }
 
 export interface IFSConfig {
