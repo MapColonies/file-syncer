@@ -6,7 +6,7 @@ import { SERVICES } from '../common/constants';
 import { IConfigProvider, ITaskParameters } from '../common/interfaces';
 import { JobManagerWrapper } from '../clients/jobManagerWrapper';
 import { AppError } from '../common/appError';
-import { sleep } from '../common/utils';
+import { changeModelName, sleep } from '../common/utils';
 
 @injectable()
 export class WorkerManager {
@@ -18,7 +18,6 @@ export class WorkerManager {
     @inject(SERVICES.CONFIG_PROVIDER_TO) private readonly configProviderTo: IConfigProvider
   ) {}
   public async worker(): Promise<void> {
-    this.logger.info({ msg: 'Starting worker' });
     const taskType = this.config.get<string>('worker.task.type');
     // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition, no-constant-condition
     while (true) {
@@ -28,10 +27,8 @@ export class WorkerManager {
         try {
           files.map(async (file: string) => {
             const data = await this.configProviderFrom.getFile(file);
-            const nameSplitted = file.split('/');
-            nameSplitted[0] = task.parameters.modelId;
-            const newFileName = nameSplitted.join('/');
-            await this.configProviderTo.postFile(newFileName, data);
+            const newModelName = changeModelName(file, task.parameters.modelId);
+            await this.configProviderTo.postFile(newModelName, data);
           });
         } catch (err) {
           this.logger.error({ msg: err });

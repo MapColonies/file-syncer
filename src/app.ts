@@ -9,6 +9,7 @@ export class App {
   public constructor(@inject(SERVICES.LOGGER) private readonly logger: Logger, private readonly workerManager: WorkerManager) {}
 
   public async run(): Promise<void> {
+    this.logger.info({ msg: 'Starting worker' });
     await this.workerManager.worker();
   }
 }

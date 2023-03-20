@@ -44,7 +44,7 @@ export class NFSProvider implements IConfigProvider {
       return;
     } catch (err) {
       this.logger.error({ msg: err });
-      throw new AppError('', httpStatus.INTERNAL_SERVER_ERROR, `Didn't write the file ${filePath} in FS`, true);
+      throw new AppError('', httpStatus.INTERNAL_SERVER_ERROR, `Didn't write the file ${filePath} in NFS`, true);
     }
   }
 }

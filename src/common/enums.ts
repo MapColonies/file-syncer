@@ -1,4 +1,4 @@
 export enum Providers {
-  FS = 'fs',
+  NFS = 'fs',
   S3 = 's3',
 }
