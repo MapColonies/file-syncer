@@ -6,6 +6,7 @@ import { SERVICES } from '../common/constants';
 import { IConfigProvider, ITaskParameters } from '../common/interfaces';
 import { JobManagerWrapper } from '../clients/jobManagerWrapper';
 import { AppError } from '../common/appError';
+import { sleep } from '../common/utils';
 
 @injectable()
 export class WorkerManager {
@@ -17,26 +18,32 @@ export class WorkerManager {
     @inject(SERVICES.CONFIG_PROVIDER_TO) private readonly configProviderTo: IConfigProvider
   ) {}
   public async worker(): Promise<void> {
-    this.logger.info({ msg: 'Starting worker'});
+    this.logger.info({ msg: 'Starting worker' });
     const taskType = this.config.get<string>('worker.task.type');
     // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition, no-constant-condition
     while (true) {
-      const task = await this.jobManagerClient.waitForTask<ITaskParameters>(taskType);
-      const files: string[] = task.parameters.paths;
       try {
-      files.map(async (file: string) => {
-          const data = await this.configProviderFrom.getFile(file);
-          const nameSplitted = file.split('/');
-          nameSplitted[0] = task.parameters.modelId;
-          const newFileName = nameSplitted.join('/');
-          await this.configProviderTo.postFile(newFileName, data);
-        });
+        const task = await this.jobManagerClient.waitForTask<ITaskParameters>(taskType);
+        const files: string[] = task.parameters.paths;
+        try {
+          files.map(async (file: string) => {
+            const data = await this.configProviderFrom.getFile(file);
+            const nameSplitted = file.split('/');
+            nameSplitted[0] = task.parameters.modelId;
+            const newFileName = nameSplitted.join('/');
+            await this.configProviderTo.postFile(newFileName, data);
+          });
+        } catch (err) {
+          this.logger.error({ msg: err });
+          const message = err instanceof AppError ? err.message : 'Unplanned error occurred';
+          const isRecoverable: boolean = task.attempts < this.config.get<number>('worker.task.maxAttempts');
+          await this.jobManagerClient.reject<IUpdateTaskBody<ITaskParameters>>(task.jobId, task.id, isRecoverable, message);
+        }
         await this.jobManagerClient.ack<IUpdateTaskBody<ITaskParameters>>(task.jobId, task.id);
       } catch (err) {
-        this.logger.error({ msg: err});
-        const message = err instanceof AppError ? err.message : 'Unplanned error occurred';
-        const isRecoverable: boolean = task.attempts < this.config.get<number>('worker.task.maxAttempts');
-        await this.jobManagerClient.reject<IUpdateTaskBody<ITaskParameters>>(task.jobId, task.id, isRecoverable, message);
+        this.logger.error({ msg: err });
+        const interval = this.config.get<number>('worker.waitTime');
+        await sleep(interval);
       }
     }
   }

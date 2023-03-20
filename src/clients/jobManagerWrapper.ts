@@ -34,12 +34,12 @@ export class JobManagerWrapper extends TaskHandler {
   //   if (job == undefined) {
   //     throw new AppError('', httpStatus.INTERNAL_SERVER_ERROR, `Somehow job ${jobId} doesn't exists anymore`, false);
   //   }
-    
+
   //   const payload: IUpdateJobBody<IJobParameters> = {
   //     // eslint-disable-next-line @typescript-eslint/no-magic-numbers
   //     percentage: parseInt(((job.completedTasks / job.taskCount) * 100).toString()),
   //   };
-    
+
   //   if (job.taskCount == job.completedTasks) {
   //     payload.status = OperationStatus.COMPLETED;
   //     try {
@@ -49,7 +49,7 @@ export class JobManagerWrapper extends TaskHandler {
   //       payload.reason = "Problem with the catalog service";
   //     }
   //   }
-    
+
   //   try {
   //     await this.jobManagerClient.updateJob<IJobParameters>(jobId, payload);
   //   } catch (err) {

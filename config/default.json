@@ -37,7 +37,7 @@
     "sslEnabled": false,
     "maxAttempts": 3
   },
-  "FS": {
+  "NFS": {
     "source": {
       "pvPath": "/home/netanel/3DModels"
     },
