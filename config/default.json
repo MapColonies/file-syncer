@@ -47,11 +47,16 @@
   },
   "worker": {
     "configProvider": {
-      "source": "S3",
-      "destination": "FS"
+      "source": "nfs",
+      "destination": "s3"
     },
-    "jobType": "Ingestion_New",
-    "taskType": "3D",
+    "job": {
+      "type": "Ingestion_New_3D"
+    },
+    "task": {
+      "type": "Ingestion",
+      "maxAttempts": 3
+    },
     "waitTime": 5000
   }
 }

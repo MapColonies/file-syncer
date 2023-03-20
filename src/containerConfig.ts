@@ -7,7 +7,7 @@ import { Metrics } from '@map-colonies/telemetry';
 import { SERVICES, SERVICE_NAME } from './common/constants';
 import { tracing } from './common/tracing';
 import { InjectionObject, registerDependencies } from './common/dependencyRegistration';
-import { IConfigProvider, IFSConfig, IS3Config, IProviderConfig } from './common/interfaces';
+import { IConfigProvider, INFSConfig, IS3Config, IProviderConfig } from './common/interfaces';
 import { getProvider } from './getProvider';
 
 export interface RegisterOptions {
@@ -17,7 +17,7 @@ export interface RegisterOptions {
 
 export const registerExternalValues = (options?: RegisterOptions): DependencyContainer => {
   const loggerConfig = config.get<LoggerOptions>('telemetry.logger');
-  const fsConfig = config.get<IFSConfig>('FS');
+  const fsConfig = config.get<INFSConfig>('NFS');
   const s3Config = config.get<IS3Config>('S3');
   const providerConfig = config.get<IProviderConfig>('worker.configProvider');
   // @ts-expect-error the signature is wrong
@@ -35,10 +35,10 @@ export const registerExternalValues = (options?: RegisterOptions): DependencyCon
     { token: SERVICES.TRACER, provider: { useValue: tracer } },
     { token: SERVICES.METER, provider: { useValue: meter } },
     { token: SERVICES.METRICS, provider: { useValue: metrics } },
-    { token: SERVICES.FS, provider: { useValue: fsConfig } },
+    { token: SERVICES.NFS, provider: { useValue: fsConfig } },
     { token: SERVICES.S3, provider: { useValue: s3Config } },
     {
-      token: SERVICES.CONFIGPROVIDERFROM,
+      token: SERVICES.CONFIG_PROVIDER_FROM,
       provider: {
         useFactory: (): IConfigProvider => {
           return getProvider(providerConfig.source);
@@ -46,7 +46,7 @@ export const registerExternalValues = (options?: RegisterOptions): DependencyCon
       },
     },
     {
-      token: SERVICES.CONFIGPROVIDERTO,
+      token: SERVICES.CONFIG_PROVIDER_TO,
       provider: {
         useFactory: (): IConfigProvider => {
           return getProvider(providerConfig.destination);

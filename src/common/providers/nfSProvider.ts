@@ -6,22 +6,22 @@ import httpStatus from 'http-status-codes';
 import { container } from 'tsyringe';
 import config from 'config';
 import { SERVICES } from '../constants';
-import { IConfigProvider, FSConfig, IData } from '../interfaces';
+import { IConfigProvider, NFSConfig, IData } from '../interfaces';
 import { AppError } from '../appError';
 
-export class FSProvider implements IConfigProvider {
+export class NFSProvider implements IConfigProvider {
   private readonly logger: Logger;
-  private readonly config: FSConfig;
+  private readonly config: NFSConfig;
 
   public constructor() {
     this.logger = container.resolve(SERVICES.LOGGER);
-    this.config = config.get<FSConfig>('FS');
+    this.config = config.get<NFSConfig>('NFS');
   }
 
   public async getFile(filePath: string): Promise<IData> {
     const fullPath = `${this.config.source.pvPath}/${filePath}`;
     if (!fs.existsSync(fullPath)) {
-      throw new AppError('', httpStatus.BAD_REQUEST, `File ${filePath} doesn't exists in the agreed folder`, false);
+      throw new AppError('', httpStatus.BAD_REQUEST, `File ${filePath} doesn't exists in the agreed folder`, true);
     }
 
     const response: Readable = Readable.from(await fs.promises.readFile(fullPath));
@@ -44,7 +44,7 @@ export class FSProvider implements IConfigProvider {
       return;
     } catch (err) {
       this.logger.error({ msg: err });
-      throw new AppError('', httpStatus.INTERNAL_SERVER_ERROR, `Didn't write the file ${filePath} in FS`, false);
+      throw new AppError('', httpStatus.INTERNAL_SERVER_ERROR, `Didn't write the file ${filePath} in FS`, true);
     }
   }
 }

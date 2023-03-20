@@ -62,7 +62,7 @@ export class S3Provider implements IConfigProvider {
         );
       }
       this.logger.error({ msg: e });
-      throw new AppError('', httpStatus.INTERNAL_SERVER_ERROR, "Didn't throw a S3 exception in getting file", false);
+      throw new AppError('', httpStatus.INTERNAL_SERVER_ERROR, "Didn't throw a S3 exception in getting file", true);
     }
   }
 
@@ -87,7 +87,7 @@ export class S3Provider implements IConfigProvider {
         );
       }
       this.logger.error({ msg: e });
-      throw new AppError('', httpStatus.INTERNAL_SERVER_ERROR, "Didn't throw a S3 exception in writting file", false);
+      throw new AppError('', httpStatus.INTERNAL_SERVER_ERROR, "Didn't throw a S3 exception in writting file", true);
     }
   }
 }

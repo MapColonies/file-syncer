@@ -29,7 +29,7 @@ export interface IS3Config {
   maxAttempts: number;
 }
 
-export interface IFSConfig {
+export interface INFSConfig {
   pvPath: string;
 }
 
@@ -38,9 +38,9 @@ export interface IProviderConfig {
   destination: Providers;
 }
 
-export interface FSConfig {
-  source: IFSConfig;
-  destination: IFSConfig;
+export interface NFSConfig {
+  source: INFSConfig;
+  destination: INFSConfig;
 }
 
 export interface IData {
