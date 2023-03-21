@@ -1,11 +1,11 @@
-import { injectable, inject } from 'tsyringe';
 import { Logger } from '@map-colonies/js-logger';
-import { IConfig } from 'config';
 import { ITaskResponse, IUpdateTaskBody } from '@map-colonies/mc-priority-queue';
-import { SERVICES } from '../common/constants';
-import { IConfigProvider, ITaskParameters } from '../common/interfaces';
+import { IConfig } from 'config';
+import { inject, injectable } from 'tsyringe';
 import { JobManagerWrapper } from '../clients/jobManagerWrapper';
 import { AppError } from '../common/appError';
+import { SERVICES } from '../common/constants';
+import { IConfigProvider, ITaskParameters } from '../common/interfaces';
 import { sleep } from '../common/utils';
 
 @injectable()

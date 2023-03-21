@@ -8,7 +8,7 @@ import { SERVICES, SERVICE_NAME } from './common/constants';
 import { tracing } from './common/tracing';
 import { InjectionObject, registerDependencies } from './common/dependencyRegistration';
 import { IConfigProvider, INFSConfig, IS3Config, IProviderConfig } from './common/interfaces';
-import { getProvider } from './getProvider';
+import { GetProvider } from './getProvider';
 
 export interface RegisterOptions {
   override?: InjectionObject<unknown>[];
@@ -41,7 +41,7 @@ export const registerExternalValues = (options?: RegisterOptions): DependencyCon
       token: SERVICES.CONFIG_PROVIDER_FROM,
       provider: {
         useFactory: (): IConfigProvider => {
-          return getProvider(providerConfig.source);
+          return GetProvider(providerConfig.source);
         },
       },
     },
@@ -49,7 +49,7 @@ export const registerExternalValues = (options?: RegisterOptions): DependencyCon
       token: SERVICES.CONFIG_PROVIDER_TO,
       provider: {
         useFactory: (): IConfigProvider => {
-          return getProvider(providerConfig.destination);
+          return GetProvider(providerConfig.destination);
         },
       },
     },
