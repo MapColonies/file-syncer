@@ -1,5 +1,4 @@
 import { Readable } from 'stream';
-import { container } from 'tsyringe';
 import {
   GetObjectCommand,
   GetObjectRequest,
@@ -7,23 +6,20 @@ import {
   PutObjectRequest,
   S3Client,
   S3ClientConfig,
-  S3ServiceException,
+  S3ServiceException
 } from '@aws-sdk/client-s3';
 import { Logger } from '@map-colonies/js-logger';
 import httpStatus from 'http-status-codes';
-import { IConfigProvider, IData, IS3Config } from '../interfaces';
-import { SERVICES } from '../constants';
+import { inject } from 'tsyringe';
 import { AppError } from '../appError';
+import { SERVICES } from '../constants';
+import { IConfigProvider, IData, IS3Config } from '../interfaces';
 
 export class S3Provider implements IConfigProvider {
   private readonly s3: S3Client;
-  private readonly logger: Logger;
-  private readonly s3Config: IS3Config;
 
-  public constructor() {
-    this.logger = container.resolve(SERVICES.LOGGER);
-    this.s3Config = container.resolve(SERVICES.S3);
-
+  public constructor(@inject(SERVICES.LOGGER) private readonly logger: Logger,
+    @inject(SERVICES.S3) private readonly s3Config: IS3Config) {
     const s3ClientConfig: S3ClientConfig = {
       endpoint: this.s3Config.endpointUrl,
       forcePathStyle: this.s3Config.forcePathStyle,
@@ -53,16 +49,8 @@ export class S3Provider implements IConfigProvider {
       };
       return data;
     } catch (e) {
-      if (e instanceof S3ServiceException) {
-        throw new AppError(
-          '',
-          e.$metadata.httpStatusCode ?? httpStatus.INTERNAL_SERVER_ERROR,
-          `${e.name}, message: ${e.message}, file: ${filePath}, bucket: ${this.s3Config.bucket}}`,
-          false
-        );
-      }
       this.logger.error({ msg: e });
-      throw new AppError('', httpStatus.INTERNAL_SERVER_ERROR, "Didn't throw a S3 exception in getting file", true);
+      this.handleS3Error(filePath, e);
     }
   }
 
@@ -78,16 +66,20 @@ export class S3Provider implements IConfigProvider {
     try {
       await this.s3.send(new PutObjectCommand(putParams));
     } catch (e) {
-      if (e instanceof S3ServiceException) {
-        throw new AppError(
-          '',
-          e.$metadata.httpStatusCode ?? httpStatus.INTERNAL_SERVER_ERROR,
-          `${e.name}, message: ${e.message}, file: ${filePath}, bucket: ${this.s3Config.bucket}}`,
-          false
-        );
-      }
       this.logger.error({ msg: e });
-      throw new AppError('', httpStatus.INTERNAL_SERVER_ERROR, "Didn't throw a S3 exception in writting file", true);
+      this.handleS3Error(filePath, e);
     }
+  }
+
+  private handleS3Error(filePath: string, error: unknown): never {
+    let statusCode = httpStatus.INTERNAL_SERVER_ERROR;
+    let message = "Didn't throw a S3 exception in file";
+
+    if (error instanceof S3ServiceException) {
+      statusCode = error.$metadata.httpStatusCode ?? statusCode;
+      message = `${error.name}, message: ${error.message}, file: ${filePath}, bucket: ${this.s3Config.bucket}}`;
+    }
+
+    throw new AppError('', statusCode, message, true);
   }
 }
