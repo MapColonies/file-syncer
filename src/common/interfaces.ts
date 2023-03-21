@@ -33,6 +33,11 @@ export interface INFSConfig {
   pvPath: string;
 }
 
+export interface IProviderMap {
+  [key: string]: IConfigProvider;
+}
+
+
 export interface IProviderConfig {
   source: Providers;
   destination: Providers;
