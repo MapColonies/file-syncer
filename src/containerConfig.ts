@@ -2,6 +2,7 @@ import config from 'config';
 import { logMethod } from '@map-colonies/telemetry';
 import { trace } from '@opentelemetry/api';
 import { DependencyContainer } from 'tsyringe/dist/typings/types';
+import { TaskHandler } from '@map-colonies/mc-priority-queue';
 import jsLogger, { LoggerOptions } from '@map-colonies/js-logger';
 import { Metrics } from '@map-colonies/telemetry';
 import { SERVICES, SERVICE_NAME } from './common/constants';
@@ -20,6 +21,12 @@ export const registerExternalValues = (options?: RegisterOptions): DependencyCon
   const nfsConfig = config.get<INFSConfig>('NFS');
   const s3Config = config.get<IS3Config>('S3');
   const providerConfig = config.get<IProviderConfig>('worker.configProvider');
+  const jobType = config.get<string>('worker.job.type');
+  const jobManagerBaseUrl = config.get<string>('jobManager.url');
+  const heartbeatUrl = config.get<string>('heartbeat.url');
+  const dequeueIntervalMs = config.get<number>('worker.waitTime');
+  const heartbeatIntervalMs = config.get<number>('heartbeat.waitTime');
+
   // @ts-expect-error the signature is wrong
   const logger = jsLogger({ ...loggerConfig, prettyPrint: loggerConfig.prettyPrint, hooks: { logMethod } });
 
@@ -37,6 +44,14 @@ export const registerExternalValues = (options?: RegisterOptions): DependencyCon
     { token: SERVICES.METRICS, provider: { useValue: metrics } },
     { token: SERVICES.NFS, provider: { useValue: nfsConfig } },
     { token: SERVICES.S3, provider: { useValue: s3Config } },
+    {
+      token: SERVICES.TaskHandler, provider: {
+        useFactory: (): TaskHandler => {
+          return new TaskHandler(logger, jobType, jobManagerBaseUrl, heartbeatUrl,
+            dequeueIntervalMs, heartbeatIntervalMs);
+        }
+      }
+    },
     {
       token: SERVICES.CONFIG_PROVIDER_FROM,
       provider: {

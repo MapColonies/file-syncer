@@ -1,6 +1,6 @@
-import { ITaskResponse } from '@map-colonies/mc-priority-queue';
 import { container } from 'tsyringe';
-import { ITaskParameters } from '../../../src/common/interfaces';
+import { getApp } from '../../../src/app';
+import { SERVICES } from '../../../src/common/constants';
 import { WorkerManager } from '../../../src/workerManager/workerManager';
 import { createTask } from '../../helpers/mockCreator';
 
@@ -13,6 +13,7 @@ describe('workerManager', () => {
     ack: jest.fn(),
     reject: jest.fn(),
   };
+
   const configProviderMock = {
     getFile: jest.fn(),
     postFile: jest.fn(),
@@ -22,8 +23,10 @@ describe('workerManager', () => {
     sleep: jest.fn(),
   }
 
-  beforeEach(() => {
-    // consoleLogMock = jest.spyOn(global.console, 'log');
+  beforeAll(() => {
+    getApp({
+      override: [{ token: SERVICES.PROVIDER_CONFIG, provider: { useValue: nfsConfig } }],
+    });
     manager = container.resolve(WorkerManager);
   });
 

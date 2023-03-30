@@ -17,5 +17,6 @@ export const SERVICES: Record<string, symbol> = {
   CONFIG_PROVIDER_TO: Symbol('ConfigProviderTo'),
   S3: Symbol('S3'),
   NFS: Symbol('NFS'),
+  TASK_HANDLER: Symbol('TaskHandler'),
 };
 /* eslint-enable @typescript-eslint/naming-convention */
