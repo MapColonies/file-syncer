@@ -13,39 +13,31 @@ import httpStatus from 'http-status-codes';
 import { inject } from 'tsyringe';
 import { AppError } from '../appError';
 import { SERVICES } from '../constants';
-import { IConfigProvider, IData, IS3Config } from '../interfaces';
+import { Provider, IData, S3Config, S3ProvidersConfig } from '../interfaces';
 
-export class S3Provider implements IConfigProvider {
-  private readonly s3: S3Client;
-
+export class S3Provider implements Provider {
+  private readonly s3Source: S3Client | null;
+  private readonly s3Dest: S3Client | null;
   public constructor(@inject(SERVICES.LOGGER) private readonly logger: Logger,
-    @inject(SERVICES.S3) private readonly s3Config: IS3Config) {
-    const s3ClientConfig: S3ClientConfig = {
-      endpoint: this.s3Config.endpointUrl,
-      forcePathStyle: this.s3Config.forcePathStyle,
-      credentials: {
-        accessKeyId: this.s3Config.accessKeyId,
-        secretAccessKey: this.s3Config.secretAccessKey,
-      },
-      maxAttempts: this.s3Config.maxAttempts,
-    };
-
-    this.s3 = new S3Client(s3ClientConfig);
+    @inject(SERVICES.S3_CONFIG) private readonly s3Config: S3ProvidersConfig) {
+    const { source, dest } = s3Config;
+    this.s3Source = source ? this.createS3Instance(source) : null;
+    this.s3Dest = dest ? this.createS3Instance(dest) : null;
   }
 
   public async getFile(filePath: string): Promise<IData> {
     /* eslint-disable @typescript-eslint/naming-convention */
     const getParams: GetObjectRequest = {
-      Bucket: this.s3Config.bucket,
+      Bucket: this.s3Config.source?.bucket,
       Key: filePath,
     };
     /* eslint-enable @typescript-eslint/naming-convention */
 
     try {
-      const response = await this.s3.send(new GetObjectCommand(getParams));
+      const response = await this.s3Source?.send(new GetObjectCommand(getParams));
       const data: IData = {
-        content: response.Body as Readable,
-        length: response.ContentLength,
+        content: response?.Body as Readable,
+        length: response?.ContentLength,
       };
       return data;
     } catch (e) {
@@ -57,14 +49,14 @@ export class S3Provider implements IConfigProvider {
   public async postFile(filePath: string, data: IData): Promise<void> {
     /* eslint-disable @typescript-eslint/naming-convention */
     const putParams: PutObjectRequest = {
-      Bucket: this.s3Config.destinationBucket,
+      Bucket: this.s3Config.dest?.bucket,
       Key: filePath,
       Body: data.content,
       ContentLength: data.length,
     };
     /* eslint-enable @typescript-eslint/naming-convention */
     try {
-      await this.s3.send(new PutObjectCommand(putParams));
+      await this.s3Dest?.send(new PutObjectCommand(putParams));
     } catch (e) {
       this.logger.error({ msg: e });
       this.handleS3Error(filePath, e);
@@ -77,9 +69,23 @@ export class S3Provider implements IConfigProvider {
 
     if (error instanceof S3ServiceException) {
       statusCode = error.$metadata.httpStatusCode ?? statusCode;
-      message = `${error.name}, message: ${error.message}, file: ${filePath}, bucket: ${this.s3Config.bucket}}`;
+      message = `${error.name}, message: ${error.message}, file: ${filePath}`;
     }
 
-    throw new AppError('', statusCode, message, true);
+    throw new AppError( statusCode, message, true);
+  }
+
+  private createS3Instance(config: S3Config): S3Client {
+    const s3ClientConfig: S3ClientConfig = {
+      endpoint: config.endpointUrl,
+      forcePathStyle: config.forcePathStyle,
+      credentials: {
+        accessKeyId: config.accessKeyId,
+        secretAccessKey: config.secretAccessKey,
+      },
+      maxAttempts: config.maxAttempts,
+    };
+
+    return new S3Client(s3ClientConfig);
   }
 }

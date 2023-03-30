@@ -8,8 +8,8 @@ import { Metrics } from '@map-colonies/telemetry';
 import { SERVICES, SERVICE_NAME } from './common/constants';
 import { tracing } from './common/tracing';
 import { InjectionObject, registerDependencies } from './common/dependencyRegistration';
-import { IConfigProvider, INFSConfig, IS3Config, IProviderConfig } from './common/interfaces';
-import { GetProvider } from './getProvider';
+import { Provider, NFSConfig, S3Config, ProviderConfig } from './common/interfaces';
+import { getProvider } from './common/providers/getProvider';
 
 export interface RegisterOptions {
   override?: InjectionObject<unknown>[];
@@ -18,9 +18,9 @@ export interface RegisterOptions {
 
 export const registerExternalValues = (options?: RegisterOptions): DependencyContainer => {
   const loggerConfig = config.get<LoggerOptions>('telemetry.logger');
-  const nfsConfig = config.get<INFSConfig>('NFS');
-  const s3Config = config.get<IS3Config>('S3');
-  const providerConfig = config.get<IProviderConfig>('worker.configProvider');
+  const nfsConfig = config.get<NFSConfig>('NFS');
+  const s3Config = config.get<S3Config>('S3');
+  const providerConfig = config.get<ProviderConfig>('worker.configProvider');
   const jobType = config.get<string>('worker.job.type');
   const jobManagerBaseUrl = config.get<string>('jobManager.url');
   const heartbeatUrl = config.get<string>('heartbeat.url');
@@ -42,8 +42,8 @@ export const registerExternalValues = (options?: RegisterOptions): DependencyCon
     { token: SERVICES.TRACER, provider: { useValue: tracer } },
     { token: SERVICES.METER, provider: { useValue: meter } },
     { token: SERVICES.METRICS, provider: { useValue: metrics } },
-    { token: SERVICES.NFS, provider: { useValue: nfsConfig } },
-    { token: SERVICES.S3, provider: { useValue: s3Config } },
+    { token: SERVICES.NFS_CONFIG, provider: { useValue: nfsConfig } },
+    { token: SERVICES.S3_CONFIG, provider: { useValue: s3Config } },
     {
       token: SERVICES.TaskHandler, provider: {
         useFactory: (): TaskHandler => {
@@ -55,16 +55,16 @@ export const registerExternalValues = (options?: RegisterOptions): DependencyCon
     {
       token: SERVICES.CONFIG_PROVIDER_FROM,
       provider: {
-        useFactory: (): IConfigProvider => {
-          return GetProvider(providerConfig.source);
+        useFactory: (): Provider => {
+          return getProvider(providerConfig.source);
         },
       },
     },
     {
       token: SERVICES.CONFIG_PROVIDER_TO,
       provider: {
-        useFactory: (): IConfigProvider => {
-          return GetProvider(providerConfig.destination);
+        useFactory: (): Provider => {
+          return getProvider(providerConfig.destination);
         },
       },
     },

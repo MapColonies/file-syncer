@@ -5,7 +5,7 @@ import { inject, injectable } from 'tsyringe';
 import { TaskHandler } from '@map-colonies/mc-priority-queue';
 import { AppError } from '../common/appError';
 import { SERVICES } from '../common/constants';
-import { IConfigProvider, ITaskParameters } from '../common/interfaces';
+import { Provider, TaskParameters } from '../common/interfaces';
 import { sleep } from '../common/utils';
 
 @injectable()
@@ -18,8 +18,8 @@ export class WorkerManager {
     @inject(SERVICES.LOGGER) private readonly logger: Logger,
     @inject(SERVICES.CONFIG) private readonly config: IConfig,
     @inject(SERVICES.TASK_HANDLER) private readonly taskHandler: TaskHandler,
-    @inject(SERVICES.CONFIG_PROVIDER_FROM) private readonly configProviderFrom: IConfigProvider,
-    @inject(SERVICES.CONFIG_PROVIDER_TO) private readonly configProviderTo: IConfigProvider
+    @inject(SERVICES.CONFIG_PROVIDER_FROM) private readonly configProviderFrom: Provider,
+    @inject(SERVICES.CONFIG_PROVIDER_TO) private readonly configProviderTo: Provider
   ) {
     this.taskType = this.config.get<string>('worker.task.type');
     this.waitTime = this.config.get<number>('worker.waitTime');
@@ -31,10 +31,10 @@ export class WorkerManager {
 
     while (attempts < this.maxAttempts) {
       try {
-        const task = await this.taskHandler.waitForTask<ITaskParameters>(this.taskType);
+        const task = await this.taskHandler.waitForTask<TaskParameters>(this.taskType);
         const filePaths: string[] = task.parameters.paths;
         await this.sendFilesToCloudProvider(filePaths, task);
-        await this.taskHandler.ack<IUpdateTaskBody<ITaskParameters>>(task.jobId, task.id);
+        await this.taskHandler.ack<IUpdateTaskBody<TaskParameters>>(task.jobId, task.id);
       } catch (err) {
         this.logger.error({ msg: err });
         attempts++;
@@ -43,7 +43,7 @@ export class WorkerManager {
     }
   }
 
-  private async sendFilesToCloudProvider(filePaths: string[], task: ITaskResponse<ITaskParameters>): Promise<void> {
+  private async sendFilesToCloudProvider(filePaths: string[], task: ITaskResponse<TaskParameters>): Promise<void> {
     try {
       filePaths.map(async (file: string) => {
         const data = await this.configProviderFrom.getFile(file);
@@ -57,11 +57,11 @@ export class WorkerManager {
     }
   }
 
-  private async handleSendToCloudRejection(err: Error, task: ITaskResponse<ITaskParameters>): Promise<void> {
+  private async handleSendToCloudRejection(err: Error, task: ITaskResponse<TaskParameters>): Promise<void> {
     this.logger.error({ msg: err });
     const message = err instanceof AppError ? err.message : 'Unplanned error occurred';
     const isRecoverable: boolean = task.attempts < this.maxAttempts;
-    await this.taskHandler.reject<IUpdateTaskBody<ITaskParameters>>(task.jobId, task.id, isRecoverable, message);
+    await this.taskHandler.reject<IUpdateTaskBody<TaskParameters>>(task.jobId, task.id, isRecoverable, message);
   }
 
   private changeModelName(oldName: string, newName: string): string {

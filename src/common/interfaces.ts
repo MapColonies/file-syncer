@@ -7,45 +7,48 @@ export interface IConfig {
   has: (setting: string) => boolean;
 }
 
-export interface IJobParameters {
+export interface JobParameters {
   metadata: Layer3DMetadata;
   modelId: string;
   tilesetFilename: string;
 }
 
-export interface ITaskParameters {
+export interface TaskParameters {
   paths: string[];
   modelId: string;
 }
 
-export interface IS3Config {
+export interface S3ProvidersConfig {
+  source?: S3Config;
+  dest?: S3Config;
+}
+
+export interface S3Config {
   accessKeyId: string;
   secretAccessKey: string;
   endpointUrl: string;
   bucket: string;
-  destinationBucket: string;
   sslEnabled: boolean;
   forcePathStyle: boolean;
   maxAttempts: number;
 }
 
-export interface INFSConfig {
+export interface NFSConfig {
   pvPath: string;
 }
 
-export interface IProviderMap {
-  [key: string]: IConfigProvider;
+export interface ProviderMap {
+  [key: string]: Provider;
 }
 
-
-export interface IProviderConfig {
+export interface ProviderConfig {
   source: Providers;
   destination: Providers;
 }
 
-export interface NFSConfig {
-  source: INFSConfig;
-  destination: INFSConfig;
+export interface NFSProvidersConfig {
+  source?: NFSConfig;
+  destination?: NFSConfig;
 }
 
 export interface IData {
@@ -53,8 +56,7 @@ export interface IData {
   length?: number | undefined;
 }
 
-export interface IConfigProvider {
+export interface Provider {
   getFile: (fileName: string) => Promise<IData>;
   postFile: (fileName: string, data: IData) => Promise<void>;
-  // isModelExists: (model: string) => boolean | Promise<boolean>;
 }

@@ -22,14 +22,24 @@
     "waitTime": 3000
   },
   "S3": {
-    "accessKeyId": "minioadmin",
-    "secretAccessKey": "minioadmin",
-    "endpointUrl": "http://127.0.0.1:9000",
-    "bucket": "3dtiles",
-    "destinationBucket": "3dtiles-destination",
-    "forcePathStyle": true,
-    "sslEnabled": false,
-    "maxAttempts": 3
+    "source": {
+      "accessKeyId": "minioadmin",
+      "secretAccessKey": "minioadmin",
+      "endpointUrl": "http://127.0.0.1:9000",
+      "bucket": "3dtiles",
+      "forcePathStyle": true,
+      "sslEnabled": false,
+      "maxAttempts": 3
+    },
+    "destination": {
+      "accessKeyId": "minioadmin",
+      "secretAccessKey": "minioadmin",
+      "endpointUrl": "http://127.0.0.1:9000",
+      "bucket": "3dtiles-destination",
+      "forcePathStyle": true,
+      "sslEnabled": false,
+      "maxAttempts": 3
+    }
   },
   "NFS": {
     "source": {
@@ -41,7 +51,7 @@
   },
   "worker": {
     "configProvider": {
-      "source": "nfs",
+      "source": "s3",
       "destination": "s3"
     },
     "job": {
