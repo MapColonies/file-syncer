@@ -19,5 +19,42 @@
       "url": "TELEMETRY_METRICS_URL",
       "interval": "TELEMETRY_METRICS_INTERVAL"
     }
+  },
+  "jobManager": {
+    "url": "JOB_MANAGER_URL"
+  },
+  "heartbeat": {
+    "url": "HEARTBEAT_URL",
+    "waitTime": "HEARTBEAT_WAIT_TIME"
+  },
+  "S3": {
+    "accessKeyId": "S3_ACCESS_KEY_ID",
+    "secretAccessKey": "S3_SECRET_ACCESS_KEY",
+    "endpointUrl": "S3_HOST",
+    "bucket": "S3_BUCKET",
+    "destinationBucket": "S3_DESTINATION_BUCKET",
+    "sslEnabled": "S3_SSL_ENABLED"
+  },
+  "NFS": {
+    "source": {
+      "pvPath": "PV_SOURCE_PATH"
+    },
+    "destination": {
+      "pvPath": "PV_DESTINATION_PATH"
+    }
+  },
+  "worker": {
+    "provider": {
+      "source": "PROVIDER_FROM",
+      "destination": "PROVIDER_TO"
+    },
+    "job": {
+      "type": "JOB_TYPE"
+    },
+    "task": {
+      "batches": "TASK_BATCHES",
+      "type": "TASK_TYPE"
+    },
+    "waitTime": "WORKER_WAIT_TIME"
   }
 }
