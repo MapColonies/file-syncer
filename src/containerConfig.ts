@@ -1,14 +1,13 @@
-import config from 'config';
-import { logMethod } from '@map-colonies/telemetry';
-import { trace } from '@opentelemetry/api';
-import { DependencyContainer } from 'tsyringe/dist/typings/types';
 import { TaskHandler } from '@map-colonies/mc-priority-queue';
-import jsLogger, { LoggerOptions } from '@map-colonies/js-logger';
 import { Metrics } from '@map-colonies/telemetry';
+import { trace } from '@opentelemetry/api';
+import config from 'config';
+import { DependencyContainer } from 'tsyringe/dist/typings/types';
 import { SERVICES, SERVICE_NAME } from './common/constants';
-import { tracing } from './common/tracing';
 import { InjectionObject, registerDependencies } from './common/dependencyRegistration';
-import { Provider, NFSConfig, S3Config, ProviderConfig } from './common/interfaces';
+import { NFSProvidersConfig, Provider, ProviderConfig, S3ProvidersConfig } from './common/interfaces';
+import { tracing } from './common/tracing';
+import logger from './common/logger';
 import { getProvider } from './common/providers/getProvider';
 
 export interface RegisterOptions {
@@ -17,19 +16,15 @@ export interface RegisterOptions {
 }
 
 export const registerExternalValues = (options?: RegisterOptions): DependencyContainer => {
-  const loggerConfig = config.get<LoggerOptions>('telemetry.logger');
-  const nfsConfig = config.get<NFSConfig>('NFS');
-  const s3Config = config.get<S3Config>('S3');
+  const nfsConfig = config.get<NFSProvidersConfig>('NFS');
+  const s3Config = config.get<S3ProvidersConfig>('S3');
   const providerConfig = config.get<ProviderConfig>('worker.configProvider');
   const jobType = config.get<string>('worker.job.type');
   const jobManagerBaseUrl = config.get<string>('jobManager.url');
   const heartbeatUrl = config.get<string>('heartbeat.url');
   const dequeueIntervalMs = config.get<number>('worker.waitTime');
   const heartbeatIntervalMs = config.get<number>('heartbeat.waitTime');
-
-  // @ts-expect-error the signature is wrong
-  const logger = jsLogger({ ...loggerConfig, prettyPrint: loggerConfig.prettyPrint, hooks: { logMethod } });
-
+  
   const metrics = new Metrics(SERVICE_NAME);
   const meter = metrics.start();
 
@@ -45,7 +40,7 @@ export const registerExternalValues = (options?: RegisterOptions): DependencyCon
     { token: SERVICES.NFS_CONFIG, provider: { useValue: nfsConfig } },
     { token: SERVICES.S3_CONFIG, provider: { useValue: s3Config } },
     {
-      token: SERVICES.TaskHandler, provider: {
+      token: SERVICES.TASK_HANDLER, provider: {
         useFactory: (): TaskHandler => {
           return new TaskHandler(logger, jobType, jobManagerBaseUrl, heartbeatUrl,
             dequeueIntervalMs, heartbeatIntervalMs);
