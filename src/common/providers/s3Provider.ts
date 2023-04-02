@@ -20,9 +20,9 @@ export class S3Provider implements Provider {
   private readonly s3Dest: S3Client | null;
   public constructor(@inject(SERVICES.LOGGER) private readonly logger: Logger,
     @inject(SERVICES.S3_CONFIG) private readonly s3Config: S3ProvidersConfig) {
-    const { source, dest } = s3Config;
+    const { source, destination } = s3Config;
     this.s3Source = source ? this.createS3Instance(source) : null;
-    this.s3Dest = dest ? this.createS3Instance(dest) : null;
+    this.s3Dest = destination ? this.createS3Instance(destination) : null;
   }
 
   public async getFile(filePath: string): Promise<IData> {
@@ -49,7 +49,7 @@ export class S3Provider implements Provider {
   public async postFile(filePath: string, data: IData): Promise<void> {
     /* eslint-disable @typescript-eslint/naming-convention */
     const putParams: PutObjectRequest = {
-      Bucket: this.s3Config.dest?.bucket,
+      Bucket: this.s3Config.destination?.bucket,
       Key: filePath,
       Body: data.content,
       ContentLength: data.length,

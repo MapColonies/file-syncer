@@ -20,7 +20,7 @@ export interface TaskParameters {
 
 export interface S3ProvidersConfig {
   source?: S3Config;
-  dest?: S3Config;
+  destination?: S3Config;
 }
 
 export interface S3Config {
