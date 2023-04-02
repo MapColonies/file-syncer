@@ -1,9 +1,8 @@
 import fs from 'fs';
 import path from 'path';
 import { Readable } from 'stream';
-import config from 'config';
-import httpStatus from 'http-status-codes';
 import { Logger } from '@map-colonies/js-logger';
+import httpStatus from 'http-status-codes';
 import { inject, injectable } from 'tsyringe';
 import { AppError } from '../appError';
 import { SERVICES } from '../constants';
@@ -11,10 +10,8 @@ import { IData, NFSProvidersConfig, Provider } from '../interfaces';
 
 @injectable()
 export class NFSProvider implements Provider {
-  private readonly config: NFSProvidersConfig;
-
-  public constructor(@inject(SERVICES.LOGGER) private readonly logger: Logger) {
-    this.config = config.get<NFSProvidersConfig>('NFS');
+  public constructor(@inject(SERVICES.LOGGER) private readonly logger: Logger,
+    @inject(SERVICES.NFS_CONFIG) private readonly config: NFSProvidersConfig) {
   }
 
   public async getFile(filePath: string): Promise<IData> {
