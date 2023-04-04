@@ -48,13 +48,13 @@ export class WorkerManager {
   private async sendFilesToCloudProvider(filePaths: string[], task: ITaskResponse<TaskParameters>): Promise<void> {
     this.logger.info({ msg: 'Starting sendFilesToCloudProvider' });
     try {
-      filePaths.map(async (file: string) => {
+      for (const file of filePaths) {
         this.logger.info({ msg: 'Getting data' });
         const data = await this.configProviderFrom.getFile(file);
         const newModelName = this.changeModelName(file, task.parameters.modelId);
         this.logger.info({ msg: 'Writing data' });
         await this.configProviderTo.postFile(newModelName, data);
-      });
+      };
     } catch (err) {
       if (err instanceof Error) {
         await this.handleSendToCloudRejection(err, task,);
