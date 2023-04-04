@@ -28,6 +28,7 @@ export interface S3Config {
   secretAccessKey: string;
   endpointUrl: string;
   bucket: string;
+  region: string;
   sslEnabled: boolean;
   forcePathStyle: boolean;
   maxAttempts: number;

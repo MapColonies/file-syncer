@@ -33,6 +33,7 @@
       "secretAccessKey": "S3_SOURCE_SECRET_ACCESS_KEY",
       "endpointUrl": "S3_SOURCE_HOST",
       "bucket": "S3_SOURCE_BUCKET",
+      "region": "S3_SOURCE_REGION",
       "sslEnabled": "S3_SOURCE_SSL_ENABLED",
       "maxAttempts": "S3_SOURCE_MAX_ATTEMPTS"
     },
@@ -41,6 +42,7 @@
       "secretAccessKey": "S3_DEST_SECRET_ACCESS_KEY",
       "endpointUrl": "S3_DEST_HOST",
       "bucket": "S3_DEST_BUCKET",
+      "region": "S3_DEST_REGION",
       "sslEnabled": "S3_DEST_SSL_ENABLED",
       "maxAttempts": "S3_DEST_MAX_ATTEMPTS"
     }

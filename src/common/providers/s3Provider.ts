@@ -83,6 +83,7 @@ export class S3Provider implements Provider {
         accessKeyId: config.accessKeyId,
         secretAccessKey: config.secretAccessKey,
       },
+      region: config.region,
       maxAttempts: config.maxAttempts,
     };
 

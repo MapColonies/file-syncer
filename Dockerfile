@@ -1,5 +1,4 @@
-FROM node:12 as build
-
+FROM node:18 as build
 
 WORKDIR /tmp/buildApp
 
@@ -9,9 +8,7 @@ RUN npm install
 COPY . .
 RUN npm run build
 
-FROM node:12.20.1-alpine3.9 as production
-
-RUN apk add dumb-init
+FROM node:18 as production
 
 ENV NODE_ENV=production
 ENV SERVER_PORT=8080
@@ -29,5 +26,5 @@ COPY --chown=node:node ./config ./config
 
 USER node
 EXPOSE 8080
-ENTRYPOINT ["dumb-init", "node", "--max_old_space_size=512", "./index.js"]
-CMD ["say", "helloWorld"]
+ENTRYPOINT ["node", "--max_old_space_size=512", "./index.js"]
+CMD ["node", "--max_old_space_size=512", "./index.js"]
