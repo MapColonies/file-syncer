@@ -31,18 +31,20 @@
     "source": {
       "accessKeyId": "S3_SOURCE_ACCESS_KEY_ID",
       "secretAccessKey": "S3_SOURCE_SECRET_ACCESS_KEY",
-      "endpointUrl": "S3_SOURCE_HOST",
+      "endpointUrl": "S3_SOURCE_END_POINT_URL",
       "bucket": "S3_SOURCE_BUCKET",
       "region": "S3_SOURCE_REGION",
+      "forcePathStyle": "S3_SOURCE_FORCE_PATH_STYLE",
       "sslEnabled": "S3_SOURCE_SSL_ENABLED",
       "maxAttempts": "S3_SOURCE_MAX_ATTEMPTS"
     },
     "destination": {
       "accessKeyId": "S3_DEST_ACCESS_KEY_ID",
       "secretAccessKey": "S3_DEST_SECRET_ACCESS_KEY",
-      "endpointUrl": "S3_DEST_HOST",
+      "endpointUrl": "S3_DEST_END_POINT_URL",
       "bucket": "S3_DEST_BUCKET",
       "region": "S3_DEST_REGION",
+      "forcePathStyle": "S3_DEST_FORCE_PATH_STYLE",
       "sslEnabled": "S3_DEST_SSL_ENABLED",
       "maxAttempts": "S3_DEST_MAX_ATTEMPTS"
     }
