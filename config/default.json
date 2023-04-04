@@ -52,7 +52,7 @@
     }
   },
   "worker": {
-    "configProvider": {
+    "provider": {
       "source": "s3",
       "destination": "s3"
     },

@@ -43,7 +43,7 @@
         }
     },
     "worker": {
-        "configProvider": {
+        "provider": {
             "source": "nfs",
             "destination": "s3"
         },

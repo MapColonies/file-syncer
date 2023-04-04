@@ -18,7 +18,7 @@ export interface RegisterOptions {
 export const registerExternalValues = (options?: RegisterOptions): DependencyContainer => {
   const nfsConfig = config.get<NFSProvidersConfig>('NFS');
   const s3Config = config.get<S3ProvidersConfig>('S3');
-  const providerConfig = config.get<ProviderConfig>('worker.configProvider');
+  const providerConfig = config.get<ProviderConfig>('worker.provider');
   const jobType = config.get<string>('worker.job.type');
   const jobManagerBaseUrl = config.get<string>('jobManager.url');
   const heartbeatUrl = config.get<string>('heartbeat.url');
