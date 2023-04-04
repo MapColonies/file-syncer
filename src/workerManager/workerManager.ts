@@ -1,8 +1,7 @@
 import { Logger } from '@map-colonies/js-logger';
-import { ITaskResponse, IUpdateTaskBody } from '@map-colonies/mc-priority-queue';
+import { ITaskResponse, IUpdateTaskBody, TaskHandler } from '@map-colonies/mc-priority-queue';
 import { IConfig } from 'config';
 import { inject, injectable } from 'tsyringe';
-import { TaskHandler } from '@map-colonies/mc-priority-queue';
 import { AppError } from '../common/appError';
 import { SERVICES } from '../common/constants';
 import { Provider, TaskParameters } from '../common/interfaces';
@@ -28,6 +27,7 @@ export class WorkerManager {
 
   public async worker(): Promise<void> {
     let attempts = 0;
+    let error!: Error;
 
     while (attempts < this.maxAttempts) {
       try {
@@ -38,35 +38,39 @@ export class WorkerManager {
         this.logger.info({ msg: 'Done sendFilesToCloudProvider' });
         await this.taskHandler.ack<IUpdateTaskBody<TaskParameters>>(task.jobId, task.id);
       } catch (err) {
-        this.logger.error({ msg: err });
-        attempts++;
-        await sleep(this.waitTime);
+        if (err instanceof AppError) {
+          this.logger.error({ msg: err, stack: err.stack });
+          attempts++;
+          this.logger.info({ msg: 'Increase retry attempts', attempts, maxAttempts: this.maxAttempts });
+          await sleep(this.waitTime);
+        }
       }
     }
+
+    this.logger.error({ msg: 'Reaching to max attempts, throw the last error', error });
+    throw error;
   }
 
   private async sendFilesToCloudProvider(filePaths: string[], task: ITaskResponse<TaskParameters>): Promise<void> {
     this.logger.info({ msg: 'Starting sendFilesToCloudProvider' });
     try {
       for (const file of filePaths) {
-        this.logger.info({ msg: 'Getting data', file });
         const data = await this.configProviderFrom.getFile(file);
         const newModelName = this.changeModelName(file, task.parameters.modelId);
         this.logger.info({ msg: 'Writing data', file });
         await this.configProviderTo.postFile(newModelName, data);
       };
     } catch (err) {
-      if (err instanceof Error) {
-        await this.handleSendToCloudRejection(err, task,);
+      if (err instanceof AppError) {
+        await this.rejectJobManager(err, task,);
+        throw err;
       }
     }
   }
 
-  private async handleSendToCloudRejection(err: Error, task: ITaskResponse<TaskParameters>): Promise<void> {
-    this.logger.error({ msg: err });
-    const message = err instanceof AppError ? err.message : 'Unplanned error occurred';
+  private async rejectJobManager(err: Error, task: ITaskResponse<TaskParameters>): Promise<void> {
     const isRecoverable: boolean = task.attempts < this.maxAttempts;
-    await this.taskHandler.reject<IUpdateTaskBody<TaskParameters>>(task.jobId, task.id, isRecoverable, message);
+    await this.taskHandler.reject<IUpdateTaskBody<TaskParameters>>(task.jobId, task.id, isRecoverable, err.message);
   }
 
   private changeModelName(oldName: string, newName: string): string {

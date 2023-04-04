@@ -24,12 +24,15 @@ export class NFSProvider implements Provider {
       throw new AppError(httpStatus.BAD_REQUEST, `File ${filePath} doesn't exists in the agreed folder`, true);
     }
 
+    this.logger.info({ msg: 'Starting getFile', fullPath });
     const response: Readable = Readable.from(await fs.promises.readFile(fullPath));
 
     const data: IData = {
       content: response,
       length: response.readableLength,
     };
+
+    this.logger.info({ msg: 'Done getFile', data });
     return data;
   }
 
@@ -41,11 +44,11 @@ export class NFSProvider implements Provider {
     const fullPath = `${this.config.destination.pvPath}/${filePath}`;
 
     try {
+      this.logger.info({ msg: 'Starting postFile', fullPath });
       const dir = path.dirname(fullPath);
       await fs.promises.mkdir(dir, { recursive: true });
       await fs.promises.writeFile(fullPath, data.content);
-
-      return;
+      this.logger.info({ msg: 'Done postFile', fullPath });
     } catch (err) {
       this.logger.error({ msg: err });
       throw new AppError(httpStatus.INTERNAL_SERVER_ERROR, `Didn't write the file ${filePath} in NFS`, true);
