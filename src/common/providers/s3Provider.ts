@@ -42,7 +42,8 @@ export class S3Provider implements Provider {
       return data;
     } catch (e) {
       this.logger.error({ msg: e });
-      this.handleS3Error(filePath, e);
+      throw e;
+      // this.handleS3Error(filePath, e);
     }
   }
 
@@ -59,7 +60,8 @@ export class S3Provider implements Provider {
       await this.s3Dest?.send(new PutObjectCommand(putParams));
     } catch (e) {
       this.logger.error({ msg: e });
-      this.handleS3Error(filePath, e);
+      throw e;
+      // this.handleS3Error(filePath, e);
     }
   }
 
