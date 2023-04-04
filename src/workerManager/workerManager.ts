@@ -49,10 +49,10 @@ export class WorkerManager {
     this.logger.info({ msg: 'Starting sendFilesToCloudProvider' });
     try {
       for (const file of filePaths) {
-        this.logger.info({ msg: 'Getting data' });
+        this.logger.info({ msg: 'Getting data', file });
         const data = await this.configProviderFrom.getFile(file);
         const newModelName = this.changeModelName(file, task.parameters.modelId);
-        this.logger.info({ msg: 'Writing data' });
+        this.logger.info({ msg: 'Writing data', file });
         await this.configProviderTo.postFile(newModelName, data);
       };
     } catch (err) {
