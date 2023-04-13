@@ -66,8 +66,8 @@
       "type": "JOB_TYPE"
     },
     "task": {
-      "batches": "TASK_BATCHES",
-      "type": "TASK_TYPE"
+      "type": "TASK_TYPE",
+      "maxAttempts": "TASK_MAX_ATTEMPTS"
     },
     "waitTime": "WORKER_WAIT_TIME",
     "maxRetries": "WORKER_MAX_RETRIES"
