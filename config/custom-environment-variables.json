@@ -69,6 +69,7 @@
       "batches": "TASK_BATCHES",
       "type": "TASK_TYPE"
     },
-    "waitTime": "WORKER_WAIT_TIME"
+    "waitTime": "WORKER_WAIT_TIME",
+    "maxRetries": "WORKER_MAX_RETRIES"
   }
 }

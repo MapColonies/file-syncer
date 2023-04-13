@@ -12,6 +12,7 @@ export class WorkerManager {
   private readonly taskType: string;
   private readonly waitTime: number;
   private readonly maxAttempts: number;
+  private readonly maxRetries: number;
   
   public constructor(
     @inject(SERVICES.LOGGER) private readonly logger: Logger,
@@ -21,15 +22,16 @@ export class WorkerManager {
     @inject(SERVICES.CONFIG_PROVIDER_TO) private readonly configProviderTo: Provider
   ) {
     this.taskType = this.config.get<string>('worker.task.type');
+    this.maxAttempts = this.config.get<number>('worker.task.maxAttempts');
     this.waitTime = this.config.get<number>('worker.waitTime');
-    this.maxAttempts = this.config.get<number>('worker.task.maxAttempts')
+    this.maxRetries = this.config.get<number>('worker.maxRetries');
   }
 
   public async worker(): Promise<void> {
-    let attempts = 0;
+    let retries = 0;
     let error!: Error;
 
-    while (attempts < this.maxAttempts) {
+    while (retries < this.maxRetries) {
       try {
         const task = await this.taskHandler.waitForTask<TaskParameters>(this.taskType);
         this.logger.info({ msg: 'Found a task to work on!', task: task.id });
@@ -40,8 +42,8 @@ export class WorkerManager {
       } catch (err) {
         if (err instanceof AppError) {
           this.logger.error({ msg: err, stack: err.stack });
-          attempts++;
-          this.logger.info({ msg: 'Increase retry attempts', attempts, maxAttempts: this.maxAttempts });
+          retries++;
+          this.logger.info({ msg: 'Increase retry attempts', retries, maxRetries: this.maxRetries });
           await sleep(this.waitTime);
         }
       }
