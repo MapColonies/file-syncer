@@ -41,6 +41,7 @@ export class WorkerManager {
         await this.taskHandler.ack<IUpdateTaskBody<TaskParameters>>(task.jobId, task.id);
       } catch (err) {
         if (err instanceof AppError) {
+          error = err;
           this.logger.error({ msg: err, stack: err.stack });
           retries++;
           this.logger.info({ msg: 'Increase retry attempts', retries, maxRetries: this.maxRetries });
