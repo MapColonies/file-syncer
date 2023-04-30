@@ -1,12 +1,12 @@
 import { container } from 'tsyringe';
 import { getApp } from '../../../src/app';
 import { SERVICES } from '../../../src/common/constants';
-import { WorkerManager } from '../../../src/workerManager/workerManager';
+import { FileSyncerManager } from '../../../src/fileSyncerManager/fileSyncerManager';
 import { createTask } from '../../helpers/mockCreator';
 
-describe('workerManager', () => {
+describe('fileSyncerManager', () => {
   let consoleLogMock: jest.SpyInstance;
-  let manager: WorkerManager;
+  let manager: FileSyncerManager;
 
   const jobsManagerMock = {
     waitForTask: jest.fn(),
@@ -27,7 +27,7 @@ describe('workerManager', () => {
     getApp({
       override: [{ token: SERVICES.PROVIDER_CONFIG, provider: { useValue: nfsConfig } }],
     });
-    manager = container.resolve(WorkerManager);
+    manager = container.resolve(FileSyncerManager);
   });
 
   afterEach(() => {
@@ -35,7 +35,7 @@ describe('workerManager', () => {
     jest.restoreAllMocks();
   });
 
-  describe('worker tests', () => {
+  describe('fileSyncer tests', () => {
     it('rejects when jobManager does not work', () => {
       jobsManagerMock.waitForTask.mockRejectedValueOnce(Error());
 

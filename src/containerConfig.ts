@@ -18,11 +18,11 @@ export interface RegisterOptions {
 export const registerExternalValues = (options?: RegisterOptions): DependencyContainer => {
   const nfsConfig = config.get<NFSProvidersConfig>('NFS');
   const s3Config = config.get<S3ProvidersConfig>('S3');
-  const providerConfig = config.get<ProviderConfig>('worker.provider');
-  const jobType = config.get<string>('worker.job.type');
+  const providerConfig = config.get<ProviderConfig>('fileSyncer.provider');
+  const jobType = config.get<string>('fileSyncer.job.type');
   const jobManagerBaseUrl = config.get<string>('jobManager.url');
   const heartbeatUrl = config.get<string>('heartbeat.url');
-  const dequeueIntervalMs = config.get<number>('worker.waitTime');
+  const dequeueIntervalMs = config.get<number>('fileSyncer.waitTime');
   const heartbeatIntervalMs = config.get<number>('heartbeat.waitTime');
   
   const metrics = new Metrics(SERVICE_NAME);

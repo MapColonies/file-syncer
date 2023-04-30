@@ -51,7 +51,7 @@
       "pvPath": "/home/netanel/destination3DModels"
     }
   },
-  "worker": {
+  "fileSyncer": {
     "provider": {
       "source": "s3",
       "destination": "s3"

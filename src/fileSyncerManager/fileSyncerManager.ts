@@ -8,7 +8,7 @@ import { Provider, TaskParameters } from '../common/interfaces';
 import { sleep } from '../common/utils';
 
 @injectable()
-export class WorkerManager {
+export class FileSyncerManager {
   private readonly taskType: string;
   private readonly waitTime: number;
   private readonly maxAttempts: number;
@@ -21,13 +21,13 @@ export class WorkerManager {
     @inject(SERVICES.CONFIG_PROVIDER_FROM) private readonly configProviderFrom: Provider,
     @inject(SERVICES.CONFIG_PROVIDER_TO) private readonly configProviderTo: Provider
   ) {
-    this.taskType = this.config.get<string>('worker.task.type');
-    this.maxAttempts = this.config.get<number>('worker.task.maxAttempts');
-    this.waitTime = this.config.get<number>('worker.waitTime');
-    this.maxRetries = this.config.get<number>('worker.maxRetries');
+    this.taskType = this.config.get<string>('fileSyncer.task.type');
+    this.maxAttempts = this.config.get<number>('fileSyncer.task.maxAttempts');
+    this.waitTime = this.config.get<number>('fileSyncer.waitTime');
+    this.maxRetries = this.config.get<number>('fileSyncer.maxRetries');
   }
 
-  public async worker(): Promise<void> {
+  public async fileSyncer(): Promise<void> {
     let retries = 0;
     let error!: Error;
 

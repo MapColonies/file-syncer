@@ -14,24 +14,24 @@
     },
     "S3": {
         "source": {
-          "accessKeyId": "minioadmin",
-          "secretAccessKey": "minioadmin",
-          "endpointUrl": "http://127.0.0.1:9000",
-          "bucket": "3dtiles",
-          "region": "us-east-1",
-          "forcePathStyle": true,
-          "sslEnabled": false,
-          "maxAttempts": 3
+            "accessKeyId": "minioadmin",
+            "secretAccessKey": "minioadmin",
+            "endpointUrl": "http://127.0.0.1:9000",
+            "bucket": "3dtiles",
+            "region": "us-east-1",
+            "forcePathStyle": true,
+            "sslEnabled": false,
+            "maxAttempts": 3
         },
         "destination": {
-          "accessKeyId": "minioadmin",
-          "secretAccessKey": "minioadmin",
-          "endpointUrl": "http://127.0.0.1:9000",
-          "bucket": "3dtiles-destination",
-          "region": "us-east-1",
-          "forcePathStyle": true,
-          "sslEnabled": false,
-          "maxAttempts": 3
+            "accessKeyId": "minioadmin",
+            "secretAccessKey": "minioadmin",
+            "endpointUrl": "http://127.0.0.1:9000",
+            "bucket": "3dtiles-destination",
+            "region": "us-east-1",
+            "forcePathStyle": true,
+            "sslEnabled": false,
+            "maxAttempts": 3
         }
     },
     "NFS": {
@@ -42,7 +42,7 @@
             "pvPath": "/home/netanel/destination3DModels"
         }
     },
-    "worker": {
+    "fileSyncer": {
         "provider": {
             "source": "nfs",
             "destination": "s3"

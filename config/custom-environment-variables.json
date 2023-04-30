@@ -57,7 +57,7 @@
       "pvPath": "PV_DEST_PATH"
     }
   },
-  "worker": {
+  "fileSyncer": {
     "provider": {
       "source": "PROVIDER_FROM",
       "destination": "PROVIDER_TO"
@@ -69,7 +69,7 @@
       "type": "TASK_TYPE",
       "maxAttempts": "TASK_MAX_ATTEMPTS"
     },
-    "waitTime": "WORKER_WAIT_TIME",
-    "maxRetries": "WORKER_MAX_RETRIES"
+    "waitTime": "FILE_SYNCER_WAIT_TIME",
+    "maxRetries": "FILE_SYNCER_MAX_RETRIES"
   }
 }
