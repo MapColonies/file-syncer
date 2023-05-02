@@ -13,7 +13,7 @@ export class NFSProvider implements Provider {
   public constructor(
     @inject(SERVICES.LOGGER) private readonly logger: Logger,
     @inject(SERVICES.NFS_CONFIG) private readonly config: NFSProvidersConfig
-  ) {}
+  ) { }
 
   public async getFile(filePath: string): Promise<IData> {
     if (!this.config.source) {
@@ -25,7 +25,7 @@ export class NFSProvider implements Provider {
       throw new AppError(httpStatus.BAD_REQUEST, `File ${filePath} doesn't exists in the agreed folder`, true);
     }
 
-    this.logger.info({ msg: 'Starting getFile', fullPath });
+    this.logger.debug({ msg: 'Starting getFile', fullPath });
     const response: Readable = Readable.from(await fs.promises.readFile(fullPath));
 
     const data: IData = {
@@ -33,7 +33,7 @@ export class NFSProvider implements Provider {
       length: response.readableLength,
     };
 
-    this.logger.info({ msg: 'Done getFile', data });
+    this.logger.debug({ msg: 'Done getFile', data });
     return data;
   }
 
@@ -45,11 +45,11 @@ export class NFSProvider implements Provider {
     const fullPath = `${this.config.destination.pvPath}/${filePath}`;
 
     try {
-      this.logger.info({ msg: 'Starting postFile', fullPath });
+      this.logger.debug({ msg: 'Starting postFile', fullPath });
       const dir = path.dirname(fullPath);
       await fs.promises.mkdir(dir, { recursive: true });
       await fs.promises.writeFile(fullPath, data.content);
-      this.logger.info({ msg: 'Done postFile', fullPath });
+      this.logger.debug({ msg: 'Done postFile', fullPath });
     } catch (err) {
       this.logger.error({ msg: err });
       throw new AppError(httpStatus.INTERNAL_SERVER_ERROR, `Didn't write the file ${filePath} in NFS`, true);

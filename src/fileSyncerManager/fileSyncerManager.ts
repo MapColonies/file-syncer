@@ -60,7 +60,7 @@ export class FileSyncerManager {
       for (const file of filePaths) {
         const data = await this.configProviderFrom.getFile(file);
         const newModelName = this.changeModelName(file, task.parameters.modelId);
-        this.logger.info({ msg: 'Writing data', file });
+        this.logger.debug({ msg: 'Writing data', file });
         await this.configProviderTo.postFile(newModelName, data);
       }
     } catch (err) {

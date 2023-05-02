@@ -36,7 +36,7 @@ export class S3Provider implements Provider {
     /* eslint-enable @typescript-eslint/naming-convention */
 
     try {
-      this.logger.info({ msg: 'Starting getFile', filePath });
+      this.logger.debug({ msg: 'Starting getFile', filePath });
       const response = await this.s3Source?.send(new GetObjectCommand(getParams));
 
       const data: IData = {
@@ -44,7 +44,7 @@ export class S3Provider implements Provider {
         length: response?.ContentLength,
       };
 
-      this.logger.info({ msg: 'Done getFile', data });
+      this.logger.debug({ msg: 'Done getFile', data });
       return data;
     } catch (e) {
       this.logger.error({ msg: e });
@@ -62,9 +62,9 @@ export class S3Provider implements Provider {
     };
     /* eslint-enable @typescript-eslint/naming-convention */
     try {
-      this.logger.info({ msg: 'Starting postFile', filePath });
+      this.logger.debug({ msg: 'Starting postFile', filePath });
       await this.s3Dest?.send(new PutObjectCommand(putParams));
-      this.logger.info({ msg: 'Done postFile', filePath });
+      this.logger.debug({ msg: 'Done postFile', filePath });
     } catch (e) {
       this.logger.error({ msg: e });
       this.handleS3Error(filePath, e);
