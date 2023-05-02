@@ -13,7 +13,7 @@ export class NFSProvider implements Provider {
   public constructor(
     @inject(SERVICES.LOGGER) private readonly logger: Logger,
     @inject(SERVICES.NFS_CONFIG) private readonly config: NFSProvidersConfig
-  ) { }
+  ) {}
 
   public async getFile(filePath: string): Promise<IData> {
     if (!this.config.source) {
