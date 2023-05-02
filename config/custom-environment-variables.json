@@ -25,7 +25,10 @@
   },
   "heartbeat": {
     "url": "HEARTBEAT_URL",
-    "waitTime": "HEARTBEAT_WAIT_TIME"
+    "waitTime": {
+      "__name": "HEARTBEAT_WAIT_TIME",
+      "__format": "number"
+    }
   },
   "S3": {
     "source": {
@@ -34,9 +37,18 @@
       "endpointUrl": "S3_SOURCE_END_POINT_URL",
       "bucket": "S3_SOURCE_BUCKET",
       "region": "S3_SOURCE_REGION",
-      "forcePathStyle": "S3_SOURCE_FORCE_PATH_STYLE",
-      "sslEnabled": "S3_SOURCE_SSL_ENABLED",
-      "maxAttempts": "S3_SOURCE_MAX_ATTEMPTS"
+      "forcePathStyle": {
+        "__name": "S3_SOURCE_FORCE_PATH_STYLE",
+        "__format": "boolean"
+      },
+      "sslEnabled": {
+        "__name": "S3_SOURCE_SSL_ENABLED",
+        "__format": "boolean"
+      },
+      "maxAttempts": {
+        "__name": "S3_SOURCE_MAX_ATTEMPTS",
+        "__format": "number"
+      }
     },
     "destination": {
       "accessKeyId": "S3_DEST_ACCESS_KEY_ID",
@@ -44,9 +56,18 @@
       "endpointUrl": "S3_DEST_END_POINT_URL",
       "bucket": "S3_DEST_BUCKET",
       "region": "S3_DEST_REGION",
-      "forcePathStyle": "S3_DEST_FORCE_PATH_STYLE",
-      "sslEnabled": "S3_DEST_SSL_ENABLED",
-      "maxAttempts": "S3_DEST_MAX_ATTEMPTS"
+      "forcePathStyle": {
+        "__name": "S3_DEST_FORCE_PATH_STYLE",
+        "__format": "boolean"
+      },
+      "sslEnabled": {
+        "__name": "S3_DEST_SSL_ENABLED",
+        "__format": "boolean"
+      },
+      "maxAttempts": {
+        "__name": "S3_DEST_MAX_ATTEMPTS",
+        "__format": "number"
+      }
     }
   },
   "NFS": {
@@ -67,9 +88,18 @@
     },
     "task": {
       "type": "TASK_TYPE",
-      "maxAttempts": "TASK_MAX_ATTEMPTS"
+      "maxAttempts": {
+        "__name": "TASK_MAX_ATTEMPTS",
+        "__format": "number"
+      }
     },
-    "waitTime": "FILE_SYNCER_WAIT_TIME",
-    "maxRetries": "FILE_SYNCER_MAX_RETRIES"
+    "waitTime": {
+      "__name": "FILE_SYNCER_WAIT_TIME",
+      "__format": "number"
+    },
+    "maxRetries": {
+      "__name": "FILE_SYNCER_MAX_RETRIES",
+      "__format": "number"
+    }
   }
 }
