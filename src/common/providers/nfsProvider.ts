@@ -10,13 +10,14 @@ import { IData, NFSProvidersConfig, Provider } from '../interfaces';
 
 @injectable()
 export class NFSProvider implements Provider {
-  public constructor(@inject(SERVICES.LOGGER) private readonly logger: Logger,
-    @inject(SERVICES.NFS_CONFIG) private readonly config: NFSProvidersConfig) {
-  }
+  public constructor(
+    @inject(SERVICES.LOGGER) private readonly logger: Logger,
+    @inject(SERVICES.NFS_CONFIG) private readonly config: NFSProvidersConfig
+  ) {}
 
   public async getFile(filePath: string): Promise<IData> {
     if (!this.config.source) {
-      throw new AppError(httpStatus.INTERNAL_SERVER_ERROR, "no nfs source available", false);
+      throw new AppError(httpStatus.INTERNAL_SERVER_ERROR, 'no nfs source available', false);
     }
 
     const fullPath = `${this.config.source.pvPath}/${filePath}`;
@@ -38,7 +39,7 @@ export class NFSProvider implements Provider {
 
   public async postFile(filePath: string, data: IData): Promise<void> {
     if (!this.config.destination) {
-      throw new AppError(httpStatus.INTERNAL_SERVER_ERROR, "no nfs destination available", false);
+      throw new AppError(httpStatus.INTERNAL_SERVER_ERROR, 'no nfs destination available', false);
     }
 
     const fullPath = `${this.config.destination.pvPath}/${filePath}`;

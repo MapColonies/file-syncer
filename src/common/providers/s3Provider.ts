@@ -6,7 +6,7 @@ import {
   PutObjectRequest,
   S3Client,
   S3ClientConfig,
-  S3ServiceException
+  S3ServiceException,
 } from '@aws-sdk/client-s3';
 import { Logger } from '@map-colonies/js-logger';
 import httpStatus from 'http-status-codes';
@@ -18,8 +18,10 @@ import { Provider, IData, S3Config, S3ProvidersConfig } from '../interfaces';
 export class S3Provider implements Provider {
   private readonly s3Source: S3Client | null;
   private readonly s3Dest: S3Client | null;
-  public constructor(@inject(SERVICES.LOGGER) private readonly logger: Logger,
-    @inject(SERVICES.S3_CONFIG) private readonly s3Config: S3ProvidersConfig) {
+  public constructor(
+    @inject(SERVICES.LOGGER) private readonly logger: Logger,
+    @inject(SERVICES.S3_CONFIG) private readonly s3Config: S3ProvidersConfig
+  ) {
     const { source, destination } = s3Config;
     this.s3Source = source ? this.createS3Instance(source) : null;
     this.s3Dest = destination ? this.createS3Instance(destination) : null;

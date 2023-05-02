@@ -31,7 +31,7 @@ describe('FSProvider', () => {
 
       const result = await provider.listFiles(model);
 
-      expect(result).toThrow(new AppError( httpStatus.BAD_REQUEST, `Model ${model} doesn't exists in the agreed folder`, true));
+      expect(result).toThrow(new AppError(httpStatus.BAD_REQUEST, `Model ${model} doesn't exists in the agreed folder`, true));
     });
   });
 });

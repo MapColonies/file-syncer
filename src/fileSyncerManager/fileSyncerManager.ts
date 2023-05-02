@@ -13,7 +13,7 @@ export class FileSyncerManager {
   private readonly waitTime: number;
   private readonly maxAttempts: number;
   private readonly maxRetries: number;
-  
+
   public constructor(
     @inject(SERVICES.LOGGER) private readonly logger: Logger,
     @inject(SERVICES.CONFIG) private readonly config: IConfig,
@@ -62,10 +62,10 @@ export class FileSyncerManager {
         const newModelName = this.changeModelName(file, task.parameters.modelId);
         this.logger.info({ msg: 'Writing data', file });
         await this.configProviderTo.postFile(newModelName, data);
-      };
+      }
     } catch (err) {
       if (err instanceof AppError) {
-        await this.rejectJobManager(err, task,);
+        await this.rejectJobManager(err, task);
         throw err;
       }
     }

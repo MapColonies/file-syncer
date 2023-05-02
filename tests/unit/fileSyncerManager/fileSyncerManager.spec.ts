@@ -21,7 +21,7 @@ describe('fileSyncerManager', () => {
 
   const utilsMock = {
     sleep: jest.fn(),
-  }
+  };
 
   beforeAll(() => {
     getApp({
@@ -46,7 +46,6 @@ describe('fileSyncerManager', () => {
     it('rejects when jobManager does not work', () => {
       const task = createTask();
 
-      
       manager.sayHello();
 
       expect(consoleLogMock).toHaveBeenCalledTimes(1);
