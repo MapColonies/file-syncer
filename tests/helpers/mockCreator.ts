@@ -1,7 +1,7 @@
 import { ITaskResponse, OperationStatus } from '@map-colonies/mc-priority-queue';
-import { ITaskParameters } from '../../src/common/interfaces';
+import { TaskParameters } from '../../src/common/interfaces';
 
-export const createTask = (): ITaskResponse<ITaskParameters> => {
+export const createTask = (): ITaskResponse<TaskParameters> => {
   return {
     id: '12345',
     jobId: '123',
@@ -17,9 +17,29 @@ export const createTask = (): ITaskResponse<ITaskParameters> => {
   };
 };
 
-export const createTaskParameters = (): ITaskParameters => {
+export const createTaskParameters = (): TaskParameters => {
   return {
     paths: ['url1', 'url2'],
     modelId: 'modelId',
   };
+};
+
+export const taskHandlerMock = {
+  waitForTask: jest.fn(),
+  ack: jest.fn(),
+  reject: jest.fn(),
+};
+
+export const configProviderFromMock = {
+  getFile: jest.fn(),
+};
+
+export const configProviderToMock = {
+  postFile: jest.fn(),
+};
+
+export const fileSyncerManagerMock = {
+  sendFilesToCloudProvider: jest.fn(),
+  changeModelName: jest.fn(),
+  rejectJobManager: jest.fn(),
 };
