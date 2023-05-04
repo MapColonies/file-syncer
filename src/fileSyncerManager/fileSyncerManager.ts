@@ -35,8 +35,7 @@ export class FileSyncerManager {
       try {
         const task = await this.taskHandler.waitForTask<TaskParameters>(this.taskType);
         this.logger.info({ msg: 'Found a task to work on!', task: task.id });
-        const filePaths: string[] = task.parameters.paths;
-        await this.sendFilesToCloudProvider(filePaths, task);
+        await this.sendFilesToCloudProvider(task);
         this.logger.info({ msg: 'Done sendFilesToCloudProvider' });
         await this.taskHandler.ack<IUpdateTaskBody<TaskParameters>>(task.jobId, task.id);
       } catch (err) {
@@ -54,8 +53,9 @@ export class FileSyncerManager {
     throw error;
   }
 
-  private async sendFilesToCloudProvider(filePaths: string[], task: ITaskResponse<TaskParameters>): Promise<void> {
+  private async sendFilesToCloudProvider(task: ITaskResponse<TaskParameters>): Promise<void> {
     this.logger.info({ msg: 'Starting sendFilesToCloudProvider' });
+    const filePaths: string[] = task.parameters.paths;
     try {
       for (const file of filePaths) {
         const data = await this.configProviderFrom.getFile(file);
