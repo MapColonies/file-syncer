@@ -73,7 +73,12 @@ export class FileSyncerManager {
 
   private async rejectJobManager(err: Error, task: ITaskResponse<TaskParameters>): Promise<void> {
     const isRecoverable: boolean = task.attempts < this.maxAttempts;
-    await this.taskHandler.reject<IUpdateTaskBody<TaskParameters>>(task.jobId, task.id, isRecoverable, err.message);
+    try {
+      await this.taskHandler.reject<IUpdateTaskBody<TaskParameters>>(task.jobId, task.id, isRecoverable, err.message);
+    } catch (error) {
+      this.logger.error({error});
+      throw error;
+    }
   }
 
   private changeModelName(oldName: string, newName: string): string {
