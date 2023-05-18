@@ -1,10 +1,7 @@
-import { ITaskResponse } from '@map-colonies/mc-priority-queue';
 import { container } from 'tsyringe';
 import httpStatus from 'http-status-codes';
-import { config } from 'yargs';
 import { getApp } from '../../../src/app';
 import { AppError } from '../../../src/common/appError';
-import { TaskParameters } from '../../../src/common/interfaces';
 import { FileSyncerManager } from '../../../src/fileSyncerManager/fileSyncerManager';
 import { configProviderFromMock, configProviderToMock, createTask, fileSyncerManagerMock, taskHandlerMock } from '../../helpers/mockCreator';
 import { SERVICES } from '../../../src/common/constants';
@@ -37,7 +34,6 @@ describe('fileSyncerManager', () => {
   //     taskHandlerMock.ack.mockImplementationOnce(() => 'nothing');
 
   //     //Act
-
 
   //     //Assert
   //     expect()
