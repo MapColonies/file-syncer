@@ -53,8 +53,8 @@
   },
   "fileSyncer": {
     "provider": {
-      "source": "s3",
-      "destination": "s3"
+      "source": "nfs",
+      "destination": "nfs"
     },
     "job": {
       "type": "Ingestion_New_3D"

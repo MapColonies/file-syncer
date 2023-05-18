@@ -76,7 +76,7 @@ export class FileSyncerManager {
     try {
       await this.taskHandler.reject<IUpdateTaskBody<TaskParameters>>(task.jobId, task.id, isRecoverable, err.message);
     } catch (error) {
-      this.logger.error({error});
+      this.logger.error({ error });
       throw error;
     }
   }

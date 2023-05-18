@@ -16,7 +16,6 @@ export class NFSProvider implements Provider {
   ) {}
 
   public async getFile(filePath: string): Promise<IData> {
-    
     const pvPath = this.config.source?.pvPath ?? '';
     const fullPath = `${pvPath}/${filePath}`;
     if (!fs.existsSync(fullPath)) {
@@ -26,13 +25,13 @@ export class NFSProvider implements Provider {
     this.logger.debug({ msg: 'Starting getFile', fullPath });
     try {
       const response: Readable = Readable.from(await fs.promises.readFile(fullPath));
-      
+
       const data: IData = {
         content: response,
         length: response.readableLength,
       };
       this.logger.debug({ msg: 'Done getFile', data });
-      
+
       return data;
     } catch (error) {
       this.logger.error(error);
