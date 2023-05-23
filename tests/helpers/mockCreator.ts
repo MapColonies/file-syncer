@@ -43,3 +43,16 @@ export const fileSyncerManagerMock = {
   changeModelName: jest.fn(),
   rejectJobManager: jest.fn(),
 };
+
+export const jobsManagerMock = {
+  waitForTask: jest.fn(),
+  ack: jest.fn(),
+  reject: jest.fn(),
+};
+
+export const loggerMock = {
+  info: jest.fn(),
+  warn: jest.fn(),
+  error: jest.fn(),
+  debug: jest.fn(),
+}
