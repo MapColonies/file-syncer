@@ -76,12 +76,7 @@ export class FileSyncerManager {
 
   private async rejectJobManager(err: Error, task: ITaskResponse<TaskParameters>): Promise<void> {
     const isRecoverable: boolean = task.attempts < this.maxAttempts;
-    try {
-      await this.taskHandler.reject<IUpdateTaskBody<TaskParameters>>(task.jobId, task.id, isRecoverable, err.message);
-    } catch (error) {
-      this.logger.error({ error });
-      throw error;
-    }
+    await this.taskHandler.reject<IUpdateTaskBody<TaskParameters>>(task.jobId, task.id, isRecoverable, err.message);
   }
 
   private async updateOffset(task: ITaskResponse<TaskParameters>, counter: number): Promise<void> {
@@ -90,12 +85,7 @@ export class FileSyncerManager {
       status: OperationStatus.IN_PROGRESS,
       parameters: { ...task.parameters, offset: newOffset }
     };
-    try {
-      await this.taskHandler.jobManagerClient.updateTask<TaskParameters>(task.jobId, task.id, payload);
-    } catch (error) {
-      this.logger.error({ error });
-      throw error;
-    }
+    await this.taskHandler.jobManagerClient.updateTask<TaskParameters>(task.jobId, task.id, payload);
   }
 
   private changeModelName(oldName: string, newName: string): string {
