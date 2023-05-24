@@ -16,6 +16,7 @@ export interface JobParameters {
 export interface TaskParameters {
   paths: string[];
   modelId: string;
+  offset: number;
 }
 
 export interface S3ProvidersConfig {

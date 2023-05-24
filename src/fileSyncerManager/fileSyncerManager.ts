@@ -1,5 +1,5 @@
 import { Logger } from '@map-colonies/js-logger';
-import { ITaskResponse, IUpdateTaskBody, TaskHandler } from '@map-colonies/mc-priority-queue';
+import { ITaskResponse, IUpdateTaskBody, OperationStatus, TaskHandler } from '@map-colonies/mc-priority-queue';
 import { IConfig } from 'config';
 import { inject, injectable } from 'tsyringe';
 import { AppError } from '../common/appError';
@@ -55,16 +55,19 @@ export class FileSyncerManager {
 
   private async sendFilesToCloudProvider(task: ITaskResponse<TaskParameters>): Promise<void> {
     this.logger.info({ msg: 'Starting sendFilesToCloudProvider' });
-    const filePaths: string[] = task.parameters.paths;
+    let counter = 0;
+    const filePaths: string[] = task.parameters.paths.slice(task.parameters.offset);
     try {
-      for (const file of filePaths) {
-        const data = await this.configProviderFrom.getFile(file);
-        const newModelName = this.changeModelName(file, task.parameters.modelId);
-        this.logger.debug({ msg: 'Writing data', file });
+      for (const filePath of filePaths) {
+        const data = await this.configProviderFrom.getFile(filePath);
+        const newModelName = this.changeModelName(filePath, task.parameters.modelId);
+        this.logger.debug({ msg: 'Writing data', filePath });
         await this.configProviderTo.postFile(newModelName, data);
+        counter++;
       }
     } catch (err) {
       if (err instanceof AppError) {
+        await this.updateOffset(task, counter);
         await this.rejectJobManager(err, task);
         throw err;
       }
@@ -75,6 +78,20 @@ export class FileSyncerManager {
     const isRecoverable: boolean = task.attempts < this.maxAttempts;
     try {
       await this.taskHandler.reject<IUpdateTaskBody<TaskParameters>>(task.jobId, task.id, isRecoverable, err.message);
+    } catch (error) {
+      this.logger.error({ error });
+      throw error;
+    }
+  }
+
+  private async updateOffset(task: ITaskResponse<TaskParameters>, counter: number): Promise<void> {
+    const newOffset = task.parameters.offset + counter;
+    const payload: IUpdateTaskBody<TaskParameters> = {
+      status: OperationStatus.IN_PROGRESS,
+      parameters: { ...task.parameters, offset: newOffset }
+    };
+    try {
+      await this.taskHandler.jobManagerClient.updateTask<TaskParameters>(task.jobId, task.id, payload);
     } catch (error) {
       this.logger.error({ error });
       throw error;
