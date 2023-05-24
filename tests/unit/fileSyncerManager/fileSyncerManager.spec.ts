@@ -1,10 +1,14 @@
 import { container } from 'tsyringe';
+import { IUpdateTaskBody, OperationStatus } from '@map-colonies/mc-priority-queue';
+import { randNumber } from '@ngneat/falso';
+import jsLogger from '@map-colonies/js-logger';
 import httpStatus from 'http-status-codes';
 import { getApp } from '../../../src/app';
 import { AppError } from '../../../src/common/appError';
 import { FileSyncerManager } from '../../../src/fileSyncerManager/fileSyncerManager';
 import { configProviderFromMock, configProviderToMock, createTask, taskHandlerMock } from '../../helpers/mockCreator';
 import { SERVICES } from '../../../src/common/constants';
+import { TaskParameters } from '../../../src/common/interfaces';
 
 describe('fileSyncerManager', () => {
     let fileSyncerManager: FileSyncerManager;
@@ -12,6 +16,7 @@ describe('fileSyncerManager', () => {
     beforeAll(() => {
         getApp({
             override: [
+                { token: SERVICES.LOGGER, provider: { useValue: jsLogger({ enabled: false })}},
                 { token: SERVICES.TASK_HANDLER, provider: { useValue: taskHandlerMock } },
                 { token: SERVICES.CONFIG_PROVIDER_FROM, provider: { useValue: configProviderFromMock } },
                 { token: SERVICES.CONFIG_PROVIDER_TO, provider: { useValue: configProviderToMock } },
@@ -92,6 +97,53 @@ describe('fileSyncerManager', () => {
 
             //Assert
             expect(taskHandlerMock.reject).toHaveBeenCalledWith(task.jobId, task.id, false, 'error message');
+        });
+    });
+
+    describe('updateOffset tests', () => {
+        it(`when task didn't failed before, expect to update task with offset equal to counter`, async () => {
+            //Arrange
+            const task = createTask();
+            const counter = randNumber();
+            taskHandlerMock.jobManagerClient.updateTask.mockResolvedValue('');
+            const payloadExpected: IUpdateTaskBody<TaskParameters> = {
+                status: OperationStatus.IN_PROGRESS,
+                parameters: { ...task.parameters, offset: counter }
+            }
+
+            //Act
+            await fileSyncerManager['updateOffset'](task, counter);
+
+            //Assert
+            expect(taskHandlerMock.jobManagerClient.updateTask).toHaveBeenCalledWith(task.jobId, task.id, payloadExpected);
+        });
+
+        it(`when task failed before, expect to update task with offset equal to counter plus the last offset`, async () => {
+            //Arrange
+            const task = createTask();
+            task.parameters.offset = randNumber();
+            const counter = randNumber();
+            taskHandlerMock.jobManagerClient.updateTask.mockResolvedValue('');
+            const payloadExpected: IUpdateTaskBody<TaskParameters> = {
+                status: OperationStatus.IN_PROGRESS,
+                parameters: { ...task.parameters, offset: counter + task.parameters.offset }
+            }
+
+            //Act
+            await fileSyncerManager['updateOffset'](task, counter);
+
+            //Assert
+            expect(taskHandlerMock.jobManagerClient.updateTask).toHaveBeenCalledWith(task.jobId, task.id, payloadExpected);
+        });
+
+        it('when job-manager is not available, expect to throw an error', async () => {
+            //Arrange
+            const task = createTask();
+            const counter = randNumber();
+            taskHandlerMock.jobManagerClient.updateTask.mockRejectedValue(new Error('job-manager is not available'));
+
+            //Act && Assert
+            await expect(fileSyncerManager['updateOffset'](task, counter)).rejects.toThrow(Error);
         });
     });
 
