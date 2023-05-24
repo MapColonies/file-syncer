@@ -73,7 +73,7 @@ export class S3Provider implements Provider {
 
   private handleS3Error(filePath: string, error: unknown): never {
     let statusCode = httpStatus.INTERNAL_SERVER_ERROR;
-    let message = "Didn't throw a S3 exception in file";
+    let message = `Unexpected Error, Stringified: ${String(error)}`;
 
     if (error instanceof S3ServiceException) {
       statusCode = error.$metadata.httpStatusCode ?? statusCode;
