@@ -19,7 +19,6 @@ export const registerExternalValues = (options?: RegisterOptions): DependencyCon
   const nfsConfig = config.get<NFSProvidersConfig>('NFS');
   const s3Config = config.get<S3ProvidersConfig>('S3');
   const providerConfig = config.get<ProviderConfig>('fileSyncer.provider');
-  const jobType = config.get<string>('fileSyncer.job.type');
   const jobManagerBaseUrl = config.get<string>('jobManager.url');
   const heartbeatUrl = config.get<string>('heartbeat.url');
   const dequeueIntervalMs = config.get<number>('fileSyncer.waitTime');
@@ -43,7 +42,7 @@ export const registerExternalValues = (options?: RegisterOptions): DependencyCon
       token: SERVICES.TASK_HANDLER,
       provider: {
         useFactory: (): TaskHandler => {
-          return new TaskHandler(logger, jobType, jobManagerBaseUrl, heartbeatUrl, dequeueIntervalMs, heartbeatIntervalMs);
+          return new TaskHandler(logger, jobManagerBaseUrl, heartbeatUrl, dequeueIntervalMs, heartbeatIntervalMs);
         },
       },
     },

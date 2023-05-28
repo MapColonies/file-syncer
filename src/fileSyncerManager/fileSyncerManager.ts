@@ -3,7 +3,7 @@ import { ITaskResponse, IUpdateTaskBody, TaskHandler } from '@map-colonies/mc-pr
 import { IConfig } from 'config';
 import { inject, injectable } from 'tsyringe';
 import { AppError } from '../common/appError';
-import { SERVICES } from '../common/constants';
+import { JOB_TYPE, SERVICES } from '../common/constants';
 import { Provider, TaskParameters } from '../common/interfaces';
 import { sleep } from '../common/utils';
 
@@ -33,7 +33,7 @@ export class FileSyncerManager {
 
     while (retries < this.maxRetries) {
       try {
-        const task = await this.taskHandler.waitForTask<TaskParameters>(this.taskType);
+        const task = await this.taskHandler.waitForTask<TaskParameters>(this.taskType, JOB_TYPE);
         this.logger.info({ msg: 'Found a task to work on!', task: task.id });
         await this.sendFilesToCloudProvider(task);
         this.logger.info({ msg: 'Done sendFilesToCloudProvider' });
