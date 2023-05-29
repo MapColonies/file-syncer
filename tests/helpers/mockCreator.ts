@@ -22,7 +22,7 @@ export const createTaskParameters = (): TaskParameters => {
   return {
     paths: [randWord(), randWord()],
     modelId: randUuid(),
-    offset: 0
+    lastIndexError: 0
   };
 };
 

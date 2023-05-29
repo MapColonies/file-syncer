@@ -55,19 +55,22 @@ export class FileSyncerManager {
 
   private async sendFilesToCloudProvider(task: ITaskResponse<TaskParameters>): Promise<void> {
     this.logger.info({ msg: 'Starting sendFilesToCloudProvider' });
-    let counter = 0;
-    const filePaths: string[] = task.parameters.paths.slice(task.parameters.offset);
+    // eslint-disable-next-line @typescript-eslint/no-magic-numbers
+    const startPosition: number = task.parameters.lastIndexError === -1 ? 0 : task.parameters.lastIndexError;
+    const taskParameters = task.parameters;
+    let index = startPosition;
     try {
-      for (const filePath of filePaths) {
+      while (index < task.parameters.paths.length) {
+        const filePath = taskParameters.paths[index];
         const data = await this.configProviderFrom.getFile(filePath);
-        const newModelName = this.changeModelName(filePath, task.parameters.modelId);
+        const newModelName = this.changeModelName(filePath, taskParameters.modelId);
         this.logger.debug({ msg: 'Writing data', filePath });
         await this.configProviderTo.postFile(newModelName, data);
-        counter++;
+        index++;
       }
     } catch (err) {
       if (err instanceof AppError) {
-        await this.updateOffset(task, counter);
+        await this.updateIndexError(task, index);
         await this.rejectJobManager(err, task);
         throw err;
       }
@@ -79,11 +82,10 @@ export class FileSyncerManager {
     await this.taskHandler.reject<IUpdateTaskBody<TaskParameters>>(task.jobId, task.id, isRecoverable, err.message);
   }
 
-  private async updateOffset(task: ITaskResponse<TaskParameters>, counter: number): Promise<void> {
-    const newOffset = task.parameters.offset + counter;
+  private async updateIndexError(task: ITaskResponse<TaskParameters>, lastIndexError: number): Promise<void> {
     const payload: IUpdateTaskBody<TaskParameters> = {
       status: OperationStatus.IN_PROGRESS,
-      parameters: { ...task.parameters, offset: newOffset }
+      parameters: { ...task.parameters, lastIndexError }
     };
     await this.taskHandler.jobManagerClient.updateTask<TaskParameters>(task.jobId, task.id, payload);
   }
