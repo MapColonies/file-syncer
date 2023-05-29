@@ -1,5 +1,5 @@
 import { Logger } from '@map-colonies/js-logger';
-import { ITaskResponse, IUpdateTaskBody, TaskHandler } from '@map-colonies/mc-priority-queue';
+import { ITaskResponse, IUpdateTaskBody, OperationStatus, TaskHandler } from '@map-colonies/mc-priority-queue';
 import { IConfig } from 'config';
 import { inject, injectable } from 'tsyringe';
 import { AppError } from '../common/appError';
@@ -55,16 +55,22 @@ export class FileSyncerManager {
 
   private async sendFilesToCloudProvider(task: ITaskResponse<TaskParameters>): Promise<void> {
     this.logger.info({ msg: 'Starting sendFilesToCloudProvider' });
-    const filePaths: string[] = task.parameters.paths;
+    // eslint-disable-next-line @typescript-eslint/no-magic-numbers
+    const startPosition: number = task.parameters.lastIndexError === -1 ? 0 : task.parameters.lastIndexError;
+    const taskParameters = task.parameters;
+    let index = startPosition;
     try {
-      for (const file of filePaths) {
-        const data = await this.configProviderFrom.getFile(file);
-        const newModelName = this.changeModelName(file, task.parameters.modelId);
-        this.logger.debug({ msg: 'Writing data', file });
+      while (index < task.parameters.paths.length) {
+        const filePath = taskParameters.paths[index];
+        const data = await this.configProviderFrom.getFile(filePath);
+        const newModelName = this.changeModelName(filePath, taskParameters.modelId);
+        this.logger.debug({ msg: 'Writing data', filePath });
         await this.configProviderTo.postFile(newModelName, data);
+        index++;
       }
     } catch (err) {
       if (err instanceof AppError) {
+        await this.updateIndexError(task, index);
         await this.rejectJobManager(err, task);
         throw err;
       }
@@ -73,12 +79,15 @@ export class FileSyncerManager {
 
   private async rejectJobManager(err: Error, task: ITaskResponse<TaskParameters>): Promise<void> {
     const isRecoverable: boolean = task.attempts < this.maxAttempts;
-    try {
-      await this.taskHandler.reject<IUpdateTaskBody<TaskParameters>>(task.jobId, task.id, isRecoverable, err.message);
-    } catch (error) {
-      this.logger.error({ error });
-      throw error;
-    }
+    await this.taskHandler.reject<IUpdateTaskBody<TaskParameters>>(task.jobId, task.id, isRecoverable, err.message);
+  }
+
+  private async updateIndexError(task: ITaskResponse<TaskParameters>, lastIndexError: number): Promise<void> {
+    const payload: IUpdateTaskBody<TaskParameters> = {
+      status: OperationStatus.IN_PROGRESS,
+      parameters: { ...task.parameters, lastIndexError }
+    };
+    await this.taskHandler.jobManagerClient.updateTask<TaskParameters>(task.jobId, task.id, payload);
   }
 
   private changeModelName(oldName: string, newName: string): string {

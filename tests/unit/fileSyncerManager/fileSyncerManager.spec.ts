@@ -1,4 +1,5 @@
 import { container } from 'tsyringe';
+import jsLogger from '@map-colonies/js-logger';
 import httpStatus from 'http-status-codes';
 import { getApp } from '../../../src/app';
 import { AppError } from '../../../src/common/appError';
@@ -12,6 +13,7 @@ describe('fileSyncerManager', () => {
     beforeAll(() => {
         getApp({
             override: [
+                { token: SERVICES.LOGGER, provider: { useValue: jsLogger({ enabled: false })}},
                 { token: SERVICES.TASK_HANDLER, provider: { useValue: taskHandlerMock } },
                 { token: SERVICES.CONFIG_PROVIDER_FROM, provider: { useValue: configProviderFromMock } },
                 { token: SERVICES.CONFIG_PROVIDER_TO, provider: { useValue: configProviderToMock } },
