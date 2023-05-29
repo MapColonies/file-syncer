@@ -6,7 +6,7 @@ import {
   PutObjectRequest,
   S3Client,
   S3ClientConfig,
-  S3ServiceException
+  S3ServiceException,
 } from '@aws-sdk/client-s3';
 import { Logger } from '@map-colonies/js-logger';
 import httpStatus from 'http-status-codes';
@@ -18,8 +18,10 @@ import { Provider, IData, S3Config, S3ProvidersConfig } from '../interfaces';
 export class S3Provider implements Provider {
   private readonly s3Source: S3Client | null;
   private readonly s3Dest: S3Client | null;
-  public constructor(@inject(SERVICES.LOGGER) private readonly logger: Logger,
-    @inject(SERVICES.S3_CONFIG) private readonly s3Config: S3ProvidersConfig) {
+  public constructor(
+    @inject(SERVICES.LOGGER) private readonly logger: Logger,
+    @inject(SERVICES.S3_CONFIG) private readonly s3Config: S3ProvidersConfig
+  ) {
     const { source, destination } = s3Config;
     this.s3Source = source ? this.createS3Instance(source) : null;
     this.s3Dest = destination ? this.createS3Instance(destination) : null;
@@ -34,7 +36,7 @@ export class S3Provider implements Provider {
     /* eslint-enable @typescript-eslint/naming-convention */
 
     try {
-      this.logger.info({ msg: 'Starting getFile', filePath });
+      this.logger.debug({ msg: 'Starting getFile', filePath });
       const response = await this.s3Source?.send(new GetObjectCommand(getParams));
 
       const data: IData = {
@@ -42,7 +44,7 @@ export class S3Provider implements Provider {
         length: response?.ContentLength,
       };
 
-      this.logger.info({ msg: 'Done getFile', data });
+      this.logger.debug({ msg: 'Done getFile', data });
       return data;
     } catch (e) {
       this.logger.error({ msg: e });
@@ -60,9 +62,9 @@ export class S3Provider implements Provider {
     };
     /* eslint-enable @typescript-eslint/naming-convention */
     try {
-      this.logger.info({ msg: 'Starting postFile', filePath });
+      this.logger.debug({ msg: 'Starting postFile', filePath });
       await this.s3Dest?.send(new PutObjectCommand(putParams));
-      this.logger.info({ msg: 'Done postFile', filePath });
+      this.logger.debug({ msg: 'Done postFile', filePath });
     } catch (e) {
       this.logger.error({ msg: e });
       this.handleS3Error(filePath, e);
@@ -71,11 +73,15 @@ export class S3Provider implements Provider {
 
   private handleS3Error(filePath: string, error: unknown): never {
     let statusCode = httpStatus.INTERNAL_SERVER_ERROR;
-    let message = "Didn't throw a S3 exception in file";
+    let message;
 
-    if (error instanceof S3ServiceException) {
+    if(error instanceof S3ServiceException) {
       statusCode = error.$metadata.httpStatusCode ?? statusCode;
       message = `${error.name}, message: ${error.message}, file: ${filePath}`;
+    } else if(error instanceof Error) {
+      message = error.message;
+    } else {
+      message = `Unexpected Error Type, Stringified: ${String(error)}`;
     }
 
     throw new AppError(statusCode, message, true);
