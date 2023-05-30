@@ -62,3 +62,9 @@ export interface Provider {
   getFile: (fileName: string) => Promise<IData>;
   postFile: (fileName: string, data: IData) => Promise<void>;
 }
+
+export interface TaskResult {
+  completed: boolean;
+  index: number;
+  error?: Error;
+}

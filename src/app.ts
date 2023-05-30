@@ -10,7 +10,7 @@ export class App {
 
   public async run(): Promise<void> {
     this.logger.info({ msg: 'Starting fileSyncer' });
-    await this.fileSyncerManager.fileSyncer();
+    await this.fileSyncerManager.start();
   }
 }
 

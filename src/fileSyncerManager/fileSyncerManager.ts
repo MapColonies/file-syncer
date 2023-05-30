@@ -1,11 +1,9 @@
 import { Logger } from '@map-colonies/js-logger';
 import { ITaskResponse, IUpdateTaskBody, TaskHandler } from '@map-colonies/mc-priority-queue';
 import { IConfig } from 'config';
-import httpStatus from 'http-status-codes';
 import { inject, injectable } from 'tsyringe';
-import { AppError } from '../common/appError';
 import { JOB_TYPE, SERVICES } from '../common/constants';
-import { Provider, TaskParameters } from '../common/interfaces';
+import { Provider, TaskParameters, TaskResult } from '../common/interfaces';
 import { sleep } from '../common/utils';
 
 @injectable()
@@ -30,8 +28,7 @@ export class FileSyncerManager {
     this.intervalMs = this.config.get<number>('fileSyncer.intervalMs');
   }
 
-  // eslint-disable-next-line @typescript-eslint/require-await
-  public async fileSyncer(): Promise<void> {
+  public start(): void {
     // eslint-disable-next-line @typescript-eslint/no-misused-promises
     setInterval(async () => {
       const task = await this.taskHandler.dequeue<TaskParameters>(this.taskType, JOB_TYPE);
@@ -40,57 +37,81 @@ export class FileSyncerManager {
       }
 
       this.logger.info({ msg: 'Found a task to work on!', task: task.id });
-      await this.handleTask(task);
-      this.logger.info({ msg: 'Done sendFilesToCloudProvider' });
+      await this.handleTaskWithRetries(task);
+      this.logger.info({ msg: 'Done working on a task in this interval', taskId: task.id });
       await this.taskHandler.ack<IUpdateTaskBody<TaskParameters>>(task.jobId, task.id);
     }, this.intervalMs)
   }
 
-  private async handleTask(task: ITaskResponse<TaskParameters>): Promise<void> {
-    this.logger.info({ msg: 'Starting handleTask' });
-    let error!: Error;
+  private async handleTaskWithRetries(task: ITaskResponse<TaskParameters>): Promise<void> {
+    this.logger.debug({ msg: 'Starting handleTaskWithRetries', taskId: task.id });
     let retry = 0;
+    let taskResult!: TaskResult;
 
     while (retry < this.maxRetries) {
-      try {
-        await this.sendFilesToCloudProvider(task);
-      } catch (err) {
+      taskResult = await this.handleTask(task);
+
+      if (taskResult.completed) {
+        return;
+      } else {
         retry++;
-        this.logger.info({ msg: 'Increase retry', retry, maxRetries: this.maxRetries });
+        this.logger.debug({ msg: 'Increase retry', retry, maxRetries: this.maxRetries });
         await sleep(this.waitTime);
-        if (err instanceof Error) {
-          this.logger.error({ err: err.message, task });
-          error = new AppError(httpStatus.INTERNAL_SERVER_ERROR, `error with the task`, true);
-        }
+        this.logger.error({ error: taskResult.error?.message, taskId: task.id });
       }
     }
 
-    this.logger.error({ msg: 'Reaching to max attempt, throw the last error', error });
-    throw error;
+    this.logger.error({
+      msg: 'Reaching maximum retries, failing the task',
+      error: taskResult.error, retry, taskId: task.id, reason: task.reason
+    });
+    await this.handleFailedTask(task, taskResult);
   }
 
-  private async sendFilesToCloudProvider(task: ITaskResponse<TaskParameters>): Promise<void> {
-    this.logger.info({ msg: 'Starting sendFilesToCloudProvider' });
-    // eslint-disable-next-line @typescript-eslint/no-magic-numbers
-    const startPosition: number = task.parameters.lastIndexError === -1 ? 0 : task.parameters.lastIndexError;
-    const taskParameters = task.parameters;
-    let index = startPosition;
+  private async handleFailedTask(task: ITaskResponse<TaskParameters>, taskResult: TaskResult): Promise<void> {
     try {
-      while (index < task.parameters.paths.length) {
-        const filePath = taskParameters.paths[index];
-        const data = await this.configProviderFrom.getFile(filePath);
-        const newModelName = this.changeModelName(filePath, taskParameters.modelId);
-        this.logger.debug({ msg: 'Writing data', filePath });
-        await this.configProviderTo.postFile(newModelName, data);
-        index++;
-      }
+      await this.updateIndexError(task, taskResult.index);
+      await this.rejectJobManager(taskResult.error ?? new Error('Default error'), task);
+    this.logger.debug({ msg: 'Updated failing the task in job manager' });
     } catch (err) {
-      if (err instanceof Error) {
-        await this.updateIndexError(task, index);
-        await this.rejectJobManager(err, task);
-        throw err;
-      }
+      this.logger.error({ err, taskId: task.id });
     }
+  }
+
+  private async handleTask(task: ITaskResponse<TaskParameters>): Promise<TaskResult> {
+    this.logger.debug({ msg: 'Starting handleTask', taskId: task.id });
+    const taskParameters = task.parameters;
+    const taskResult: TaskResult = this.initTaskResult(taskParameters);
+
+    while (taskResult.index < taskParameters.paths.length) {
+      const filePath = taskParameters.paths[taskResult.index];
+      try {
+        await this.syncFile(filePath, taskParameters);
+      } catch (err) {
+        if (err instanceof Error) {
+          this.logger.error({ err, taskId: task.id });
+          taskResult.error = err;
+        }
+        return taskResult;
+      }
+      taskResult.index++;
+    }
+
+    taskResult.completed = true;
+    return taskResult;
+  }
+
+  private initTaskResult(taskParameters: TaskParameters): TaskResult {
+    // eslint-disable-next-line @typescript-eslint/no-magic-numbers
+    const startPosition = taskParameters.lastIndexError === -1 ? 0 : taskParameters.lastIndexError;
+    const taskResult: TaskResult = { index: startPosition, completed: false };
+    return taskResult;
+  }
+
+  private async syncFile(filePath: string, taskParameters: TaskParameters): Promise<void> {
+    const data = await this.configProviderFrom.getFile(filePath);
+    const newModelName = this.changeModelName(filePath, taskParameters.modelId);
+    await this.configProviderTo.postFile(newModelName, data);
   }
 
   private async rejectJobManager(err: Error, task: ITaskResponse<TaskParameters>): Promise<void> {
