@@ -1,6 +1,7 @@
 import { Logger } from '@map-colonies/js-logger';
-import { ITaskResponse, IUpdateTaskBody, OperationStatus, TaskHandler } from '@map-colonies/mc-priority-queue';
+import { ITaskResponse, IUpdateTaskBody, TaskHandler } from '@map-colonies/mc-priority-queue';
 import { IConfig } from 'config';
+import httpStatus from 'http-status-codes';
 import { inject, injectable } from 'tsyringe';
 import { AppError } from '../common/appError';
 import { JOB_TYPE, SERVICES } from '../common/constants';
@@ -28,28 +29,36 @@ export class FileSyncerManager {
   }
 
   public async fileSyncer(): Promise<void> {
-    let retries = 0;
-    let error!: Error;
+    // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition, no-constant-condition
+    while (true) {
+      const task = await this.taskHandler.waitForTask<TaskParameters>(this.taskType, JOB_TYPE);
+      this.logger.info({ msg: 'Found a task to work on!', task: task.id });
+      await this.handleTask(task);
+      this.logger.info({ msg: 'Done sendFilesToCloudProvider' });
+      await this.taskHandler.ack<IUpdateTaskBody<TaskParameters>>(task.jobId, task.id);
+    }
+  }
 
-    while (retries < this.maxRetries) {
+  private async handleTask(task: ITaskResponse<TaskParameters>): Promise<void> {
+    this.logger.info({ msg: 'Starting handleTask' });
+    let error!: Error;
+    let retry = 0;
+
+    while (retry < this.maxRetries) {
       try {
-        const task = await this.taskHandler.waitForTask<TaskParameters>(this.taskType, JOB_TYPE);
-        this.logger.info({ msg: 'Found a task to work on!', task: task.id });
         await this.sendFilesToCloudProvider(task);
-        this.logger.info({ msg: 'Done sendFilesToCloudProvider' });
-        await this.taskHandler.ack<IUpdateTaskBody<TaskParameters>>(task.jobId, task.id);
       } catch (err) {
-        if (err instanceof AppError) {
-          error = err;
-          this.logger.error({ msg: err, stack: err.stack });
-          retries++;
-          this.logger.info({ msg: 'Increase retry attempts', retries, maxRetries: this.maxRetries });
-          await sleep(this.waitTime);
+        retry++;
+        this.logger.info({ msg: 'Increase retry', retry, maxRetries: this.maxRetries });
+        await sleep(this.waitTime);
+        if (err instanceof Error) {
+          this.logger.error({ err: err.message, task });
+          error = new AppError(httpStatus.INTERNAL_SERVER_ERROR, `error with the task`, true);
         }
       }
     }
 
-    this.logger.error({ msg: 'Reaching to max attempts, throw the last error', error });
+    this.logger.error({ msg: 'Reaching to max attempt, throw the last error', error });
     throw error;
   }
 
@@ -69,7 +78,7 @@ export class FileSyncerManager {
         index++;
       }
     } catch (err) {
-      if (err instanceof AppError) {
+      if (err instanceof Error) {
         await this.updateIndexError(task, index);
         await this.rejectJobManager(err, task);
         throw err;
@@ -84,7 +93,6 @@ export class FileSyncerManager {
 
   private async updateIndexError(task: ITaskResponse<TaskParameters>, lastIndexError: number): Promise<void> {
     const payload: IUpdateTaskBody<TaskParameters> = {
-      status: OperationStatus.IN_PROGRESS,
       parameters: { ...task.parameters, lastIndexError }
     };
     await this.taskHandler.jobManagerClient.updateTask<TaskParameters>(task.jobId, task.id, payload);

@@ -6,14 +6,14 @@ import {
   PutObjectRequest,
   S3Client,
   S3ClientConfig,
-  S3ServiceException,
+  S3ServiceException
 } from '@aws-sdk/client-s3';
 import { Logger } from '@map-colonies/js-logger';
 import httpStatus from 'http-status-codes';
 import { inject } from 'tsyringe';
 import { AppError } from '../appError';
 import { SERVICES } from '../constants';
-import { Provider, IData, S3Config, S3ProvidersConfig } from '../interfaces';
+import { IData, Provider, S3Config, S3ProvidersConfig } from '../interfaces';
 
 export class S3Provider implements Provider {
   private readonly s3Source: S3Client | null;
@@ -73,15 +73,13 @@ export class S3Provider implements Provider {
 
   private handleS3Error(filePath: string, error: unknown): never {
     let statusCode = httpStatus.INTERNAL_SERVER_ERROR;
-    let message;
+    let message = '';
 
     if(error instanceof S3ServiceException) {
       statusCode = error.$metadata.httpStatusCode ?? statusCode;
       message = `${error.name}, message: ${error.message}, file: ${filePath}`;
     } else if(error instanceof Error) {
       message = error.message;
-    } else {
-      message = `Unexpected Error Type, Stringified: ${String(error)}`;
     }
 
     throw new AppError(statusCode, message, true);
