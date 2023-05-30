@@ -14,6 +14,7 @@ export class FileSyncerManager {
   private readonly waitTime: number;
   private readonly maxAttempts: number;
   private readonly maxRetries: number;
+  private readonly intervalMs: number;
 
   public constructor(
     @inject(SERVICES.LOGGER) private readonly logger: Logger,
@@ -26,17 +27,23 @@ export class FileSyncerManager {
     this.maxAttempts = this.config.get<number>('fileSyncer.task.maxAttempts');
     this.waitTime = this.config.get<number>('fileSyncer.waitTime');
     this.maxRetries = this.config.get<number>('fileSyncer.maxRetries');
+    this.intervalMs = this.config.get<number>('fileSyncer.intervalMs');
   }
 
+  // eslint-disable-next-line @typescript-eslint/require-await
   public async fileSyncer(): Promise<void> {
-    // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition, no-constant-condition
-    while (true) {
-      const task = await this.taskHandler.waitForTask<TaskParameters>(this.taskType, JOB_TYPE);
+    // eslint-disable-next-line @typescript-eslint/no-misused-promises
+    setInterval(async () => {
+      const task = await this.taskHandler.dequeue<TaskParameters>(this.taskType, JOB_TYPE);
+      if (!task) {
+        return;
+      }
+
       this.logger.info({ msg: 'Found a task to work on!', task: task.id });
       await this.handleTask(task);
       this.logger.info({ msg: 'Done sendFilesToCloudProvider' });
       await this.taskHandler.ack<IUpdateTaskBody<TaskParameters>>(task.jobId, task.id);
-    }
+    }, this.intervalMs)
   }
 
   private async handleTask(task: ITaskResponse<TaskParameters>): Promise<void> {

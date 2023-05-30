@@ -100,6 +100,10 @@
     "maxRetries": {
       "__name": "FILE_SYNCER_MAX_RETRIES",
       "__format": "number"
+    },
+    "intervalMs": {
+      "__name": "FILE_SYNCER_INTERVAL_MS",
+      "__format": "number"
     }
   }
 }
