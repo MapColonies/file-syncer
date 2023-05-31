@@ -31,7 +31,7 @@ export class FileSyncerManager {
   public start(): void {
     // eslint-disable-next-line @typescript-eslint/no-misused-promises
     setInterval(async () => {
-      const task = await this.taskHandler.dequeue<TaskParameters>(this.taskType, JOB_TYPE);
+      const task = await this.taskHandler.dequeue<TaskParameters>(JOB_TYPE, this.taskType);
       if (!task) {
         return;
       }
