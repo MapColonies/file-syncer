@@ -64,6 +64,7 @@
       "maxAttempts": 3
     },
     "waitTime": 5000,
-    "maxRetries": 3
+    "maxRetries": 3,
+    "intervalMs": 5000
   }
 }
