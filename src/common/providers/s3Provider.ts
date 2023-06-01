@@ -41,7 +41,6 @@ export class S3Provider implements Provider {
       if (!response?.Body) {
         throw new Error('')
       }
-      // const content = Buffer.from(await (response.Body as unknown as Blob).arrayBuffer());
 
       const data: string = await response.Body.transformToString();
 
