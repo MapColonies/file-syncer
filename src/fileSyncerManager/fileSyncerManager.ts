@@ -37,13 +37,15 @@ export class FileSyncerManager {
       }
 
       this.logger.info({ msg: 'Found a task to work on!', task: task.id });
-      await this.handleTaskWithRetries(task);
+      const isCompleted: boolean = await this.handleTaskWithRetries(task);
       this.logger.info({ msg: 'Done working on a task in this interval', taskId: task.id });
-      await this.taskHandler.ack<IUpdateTaskBody<TaskParameters>>(task.jobId, task.id);
+      if(isCompleted) {
+        await this.taskHandler.ack<IUpdateTaskBody<TaskParameters>>(task.jobId, task.id);
+      }
     }, this.intervalMs)
   }
 
-  private async handleTaskWithRetries(task: ITaskResponse<TaskParameters>): Promise<void> {
+  private async handleTaskWithRetries(task: ITaskResponse<TaskParameters>): Promise<boolean> {
     this.logger.debug({ msg: 'Starting handleTaskWithRetries', taskId: task.id });
     let retry = 0;
     let taskResult!: TaskResult;
@@ -52,7 +54,7 @@ export class FileSyncerManager {
       taskResult = await this.handleTask(task);
 
       if (taskResult.completed) {
-        return;
+        return true;
       } else {
         retry++;
         this.logger.debug({ msg: 'Increase retry', retry, maxRetries: this.maxRetries });
@@ -66,6 +68,7 @@ export class FileSyncerManager {
       error: taskResult.error, retry, taskId: task.id, reason: task.reason
     });
     await this.handleFailedTask(task, taskResult);
+    return false;
   }
 
   private async handleFailedTask(task: ITaskResponse<TaskParameters>, taskResult: TaskResult): Promise<void> {
