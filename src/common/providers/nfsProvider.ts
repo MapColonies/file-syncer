@@ -1,6 +1,5 @@
 import fs from 'fs';
 import path from 'path';
-import { Readable } from 'stream';
 import { Logger } from '@map-colonies/js-logger';
 import httpStatus from 'http-status-codes';
 import { inject, injectable } from 'tsyringe';

@@ -1,4 +1,3 @@
-import { Readable } from 'stream';
 import { Layer3DMetadata } from '@map-colonies/mc-model-types';
 import { Providers } from './enums';
 
