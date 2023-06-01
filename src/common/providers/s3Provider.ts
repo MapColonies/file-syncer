@@ -13,7 +13,7 @@ import httpStatus from 'http-status-codes';
 import { inject } from 'tsyringe';
 import { AppError } from '../appError';
 import { SERVICES } from '../constants';
-import { IData, Provider, S3Config, S3ProvidersConfig } from '../interfaces';
+import { Provider, S3Config, S3ProvidersConfig } from '../interfaces';
 
 export class S3Provider implements Provider {
   private readonly s3Source: S3Client | null;
@@ -27,7 +27,7 @@ export class S3Provider implements Provider {
     this.s3Dest = destination ? this.createS3Instance(destination) : null;
   }
 
-  public async getFile(filePath: string): Promise<IData> {
+  public async getFile(filePath: string): Promise<string> {
     /* eslint-disable @typescript-eslint/naming-convention */
     const getParams: GetObjectRequest = {
       Bucket: this.s3Config.source?.bucket,
@@ -38,15 +38,13 @@ export class S3Provider implements Provider {
     try {
       this.logger.debug({ msg: 'Starting getFile', filePath });
       const response = await this.s3Source?.send(new GetObjectCommand(getParams));
-      const arrayBuffer = await (response?.Body as Blob).arrayBuffer()
-      const content = Buffer.from(arrayBuffer);
+      if (!response?.Body) {
+        throw new Error('')
+      }
 
-      const data: IData = {
-        content,
-        length: response?.ContentLength,
-      };
+      const data: string = await response.Body.transformToString();
 
-      this.logger.debug({ msg: 'Done getFile', data });
+      this.logger.debug({ msg: 'Done getFile' });
       return data;
     } catch (e) {
       this.logger.error({ msg: e });
@@ -54,15 +52,17 @@ export class S3Provider implements Provider {
     }
   }
 
-  public async postFile(filePath: string, data: IData): Promise<void> {
-    const blob = new Blob([data.content]);
-
+  public async postFile(filePath: string, data: string): Promise<void> {
+    const fileStreamer = new Readable();
+    fileStreamer.push(data);
+    fileStreamer.push(null);
+    
     /* eslint-disable @typescript-eslint/naming-convention */
     const putParams: PutObjectRequest = {
       Bucket: this.s3Config.destination?.bucket,
       Key: filePath,
-      Body: blob,
-      ContentLength: data.length,
+      Body: fileStreamer,
+      ContentLength: fileStreamer.readableLength,
     };
     /* eslint-enable @typescript-eslint/naming-convention */
     try {
