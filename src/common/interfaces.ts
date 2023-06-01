@@ -52,14 +52,9 @@ export interface NFSProvidersConfig {
   destination?: NFSConfig;
 }
 
-export interface IData {
-  content: Buffer;
-  length?: number | undefined;
-}
-
 export interface Provider {
-  getFile: (fileName: string) => Promise<IData>;
-  postFile: (fileName: string, data: IData) => Promise<void>;
+  getFile: (fileName: string) => Promise<string>;
+  postFile: (fileName: string, data: string) => Promise<void>;
 }
 
 export interface TaskResult {

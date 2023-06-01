@@ -5,7 +5,7 @@ import httpStatus from 'http-status-codes';
 import { inject, injectable } from 'tsyringe';
 import { AppError } from '../appError';
 import { SERVICES } from '../constants';
-import { IData, NFSProvidersConfig, Provider } from '../interfaces';
+import { NFSProvidersConfig, Provider } from '../interfaces';
 
 @injectable()
 export class NFSProvider implements Provider {
@@ -14,7 +14,7 @@ export class NFSProvider implements Provider {
     @inject(SERVICES.NFS_CONFIG) private readonly config: NFSProvidersConfig
   ) { }
 
-  public async getFile(filePath: string): Promise<IData> {
+  public async getFile(filePath: string): Promise<string> {
     const pvPath = this.config.source?.pvPath ?? '';
     const fullPath = `${pvPath}/${filePath}`;
     if (!fs.existsSync(fullPath)) {
@@ -22,24 +22,19 @@ export class NFSProvider implements Provider {
     }
 
     this.logger.debug({ msg: 'Starting getFile', fullPath });
-    const content = await fs.promises.readFile(fullPath);
-    this.logger.debug({ msg: 'Successfully read the file' });
-    const data: IData = {
-      content,
-      length: content.length,
-    };
-    this.logger.debug({ msg: 'Done getFile', data });
+    const data = await fs.promises.readFile(fullPath, { encoding: 'utf8' });
+    this.logger.debug({ msg: 'Done getFile' });
 
     return data;
   }
 
-  public async postFile(filePath: string, data: IData): Promise<void> {
+  public async postFile(filePath: string, data: string): Promise<void> {
     const pvPath = this.config.destination?.pvPath ?? '';
     const fullPath = `${pvPath}/${filePath}`;
     this.logger.debug({ msg: 'Starting postFile', fullPath });
     const dir = path.dirname(fullPath);
     await fs.promises.mkdir(dir, { recursive: true });
-    await fs.promises.writeFile(fullPath, data.content);
+    await fs.promises.writeFile(fullPath, data);
     this.logger.debug({ msg: 'Done postFile', fullPath });
   }
 }
