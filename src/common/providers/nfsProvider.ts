@@ -25,10 +25,9 @@ export class NFSProvider implements Provider {
     this.logger.debug({ msg: 'Starting getFile', fullPath });
     const content = await fs.promises.readFile(fullPath);
     this.logger.debug({ msg: 'Successfully read the file' });
-    const response: Readable = Readable.from(content);
     const data: IData = {
-      content: response,
-      length: response.readableLength,
+      content,
+      length: content.length,
     };
     this.logger.debug({ msg: 'Done getFile', data });
 

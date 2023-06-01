@@ -54,7 +54,7 @@ export interface NFSProvidersConfig {
 }
 
 export interface IData {
-  content: Readable;
+  content: Buffer;
   length?: number | undefined;
 }
 

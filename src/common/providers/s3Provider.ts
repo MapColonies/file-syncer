@@ -38,9 +38,11 @@ export class S3Provider implements Provider {
     try {
       this.logger.debug({ msg: 'Starting getFile', filePath });
       const response = await this.s3Source?.send(new GetObjectCommand(getParams));
+      const arrayBuffer = await (response?.Body as Blob).arrayBuffer()
+      const content = Buffer.from(arrayBuffer);
 
       const data: IData = {
-        content: response?.Body as Readable,
+        content,
         length: response?.ContentLength,
       };
 
@@ -53,11 +55,13 @@ export class S3Provider implements Provider {
   }
 
   public async postFile(filePath: string, data: IData): Promise<void> {
+    const blob = new Blob([data.content]);
+
     /* eslint-disable @typescript-eslint/naming-convention */
     const putParams: PutObjectRequest = {
       Bucket: this.s3Config.destination?.bucket,
       Key: filePath,
-      Body: data.content,
+      Body: blob,
       ContentLength: data.length,
     };
     /* eslint-enable @typescript-eslint/naming-convention */
@@ -75,10 +79,10 @@ export class S3Provider implements Provider {
     let statusCode = httpStatus.INTERNAL_SERVER_ERROR;
     let message = '';
 
-    if(error instanceof S3ServiceException) {
+    if (error instanceof S3ServiceException) {
       statusCode = error.$metadata.httpStatusCode ?? statusCode;
       message = `${error.name}, message: ${error.message}, file: ${filePath}`;
-    } else if(error instanceof Error) {
+    } else if (error instanceof Error) {
       message = error.message;
     }
 
