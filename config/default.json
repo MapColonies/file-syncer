@@ -65,6 +65,7 @@
     },
     "waitTime": 5000,
     "maxRetries": 3,
-    "intervalMs": 5000
+    "intervalMs": 5000,
+    "taskPoolSize": 1
   }
 }

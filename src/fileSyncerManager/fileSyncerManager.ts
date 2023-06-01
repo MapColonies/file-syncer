@@ -13,6 +13,8 @@ export class FileSyncerManager {
   private readonly maxAttempts: number;
   private readonly maxRetries: number;
   private readonly intervalMs: number;
+  private readonly taskPoolSize: number;
+  private taskCounter: number;
 
   public constructor(
     @inject(SERVICES.LOGGER) private readonly logger: Logger,
@@ -26,22 +28,30 @@ export class FileSyncerManager {
     this.waitTime = this.config.get<number>('fileSyncer.waitTime');
     this.maxRetries = this.config.get<number>('fileSyncer.maxRetries');
     this.intervalMs = this.config.get<number>('fileSyncer.intervalMs');
+    this.taskPoolSize = this.config.get<number>('fileSyncer.taskPoolSize');
+    this.taskCounter = 0;
   }
 
   public start(): void {
     // eslint-disable-next-line @typescript-eslint/no-misused-promises
     setInterval(async () => {
+      if (this.taskCounter > this.taskPoolSize) {
+        return;
+      }
+
       const task = await this.taskHandler.dequeue<TaskParameters>(JOB_TYPE, this.taskType);
       if (!task) {
         return;
       }
 
       this.logger.info({ msg: 'Found a task to work on!', task: task.id });
+      this.taskCounter++;
       const isCompleted: boolean = await this.handleTaskWithRetries(task);
-      this.logger.info({ msg: 'Done working on a task in this interval', taskId: task.id });
-      if(isCompleted) {
+      if (isCompleted) {
         await this.taskHandler.ack<IUpdateTaskBody<TaskParameters>>(task.jobId, task.id);
       }
+      this.logger.info({ msg: 'Done working on a task in this interval', taskId: task.id });
+      this.taskCounter--;
     }, this.intervalMs)
   }
 
@@ -75,7 +85,7 @@ export class FileSyncerManager {
     try {
       await this.updateIndexError(task, taskResult.index);
       await this.rejectJobManager(taskResult.error ?? new Error('Default error'), task);
-    this.logger.debug({ msg: 'Updated failing the task in job manager' });
+      this.logger.debug({ msg: 'Updated failing the task in job manager' });
     } catch (err) {
       this.logger.error({ err, taskId: task.id });
     }

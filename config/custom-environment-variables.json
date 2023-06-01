@@ -104,6 +104,10 @@
     "intervalMs": {
       "__name": "FILE_SYNCER_INTERVAL_MS",
       "__format": "number"
+    },
+    "taskPoolSize": {
+      "__name": "FILE_SYNCER_TASK_POOL_SIZE",
+      "__format": "number"
     }
   }
 }
