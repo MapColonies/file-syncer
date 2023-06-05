@@ -53,8 +53,9 @@ export class S3Provider implements Provider {
   }
 
   public async postFile(filePath: string, data: string): Promise<void> {
-    const fileStreamer = new Readable();
-    fileStreamer.push(data);
+    const fileStreamer = new Readable({ encoding: 'binary' });
+    fileStreamer.push(data, 'binary');
+    fileStreamer.push(null);
 
     /* eslint-disable @typescript-eslint/naming-convention */
     const putParams: PutObjectRequest = {
