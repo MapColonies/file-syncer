@@ -35,7 +35,7 @@ export class FileSyncerManager {
   public start(): void {
     // eslint-disable-next-line @typescript-eslint/no-misused-promises
     setInterval(async () => {
-      if (this.taskCounter > this.taskPoolSize) {
+      if (this.taskCounter >= this.taskPoolSize) {
         return;
       }
 
