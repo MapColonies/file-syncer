@@ -1,8 +1,8 @@
 import config from 'config';
 import httpStatus from 'http-status-codes';
-import { AppError } from '../appError';
-import { NFSConfig, NFSProvidersConfig, Provider, S3Config, S3ProvidersConfig } from '../interfaces';
-import logger from '../logger';
+import { AppError } from '../common/appError';
+import { NFSConfig, NFSProvidersConfig, Provider, S3Config, S3ProvidersConfig } from '../common/interfaces';
+import logger from '../common/logger';
 import { NFSProvider } from './nfsProvider';
 import { S3Provider } from './s3Provider';
 

@@ -11,9 +11,9 @@ import {
 import { Logger } from '@map-colonies/js-logger';
 import httpStatus from 'http-status-codes';
 import { inject } from 'tsyringe';
-import { AppError } from '../appError';
-import { SERVICES } from '../constants';
-import { Provider, S3Config, S3ProvidersConfig } from '../interfaces';
+import { AppError } from '../common/appError';
+import { SERVICES } from '../common/constants';
+import { Provider, S3Config, S3ProvidersConfig } from '../common/interfaces';
 
 export class S3Provider implements Provider {
   private readonly s3Source: S3Client | null;

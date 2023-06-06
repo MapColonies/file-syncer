@@ -3,9 +3,9 @@ import path from 'path';
 import { Logger } from '@map-colonies/js-logger';
 import httpStatus from 'http-status-codes';
 import { inject, injectable } from 'tsyringe';
-import { AppError } from '../appError';
-import { SERVICES } from '../constants';
-import { NFSProvidersConfig, Provider } from '../interfaces';
+import { AppError } from '../common/appError';
+import { SERVICES } from '../common/constants';
+import { NFSProvidersConfig, Provider } from '../common/interfaces';
 
 @injectable()
 export class NFSProvider implements Provider {

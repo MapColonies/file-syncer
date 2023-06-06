@@ -8,7 +8,7 @@ import { InjectionObject, registerDependencies } from './common/dependencyRegist
 import { NFSProvidersConfig, Provider, ProviderConfig, S3ProvidersConfig } from './common/interfaces';
 import { tracing } from './common/tracing';
 import logger from './common/logger';
-import { getProvider } from './common/providers/getProvider';
+import { getProvider } from './providers/getProvider';
 
 export interface RegisterOptions {
   override?: InjectionObject<unknown>[];
