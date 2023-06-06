@@ -57,7 +57,11 @@ export class S3Provider implements Provider {
   }
   
   private createS3Instance(config: S3Config): AWS.S3 {
-    const s3 = new S3(config);
+    const s3 = new S3({
+      accessKeyId: config.accessKeyId,
+      secretAccessKey: config.secretAccessKey,
+      region: config.region
+    });
     return s3;
   }
 }
