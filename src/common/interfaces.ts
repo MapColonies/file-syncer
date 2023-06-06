@@ -53,8 +53,8 @@ export interface NFSProvidersConfig {
 }
 
 export interface Provider {
-  getFile: (fileName: string) => Promise<string>;
-  postFile: (fileName: string, data: string) => Promise<void>;
+  getFile: (fileName: string) => Promise<Buffer>;
+  postFile: (fileName: string, data: Buffer) => Promise<void>;
 }
 
 export interface TaskResult {

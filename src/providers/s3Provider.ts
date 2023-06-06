@@ -1,23 +1,13 @@
-import { Readable } from 'stream';
-import {
-  GetObjectCommand,
-  GetObjectRequest,
-  PutObjectCommand,
-  PutObjectRequest,
-  S3Client,
-  S3ClientConfig,
-  S3ServiceException
-} from '@aws-sdk/client-s3';
 import { Logger } from '@map-colonies/js-logger';
-import httpStatus from 'http-status-codes';
+import { S3 } from 'aws-sdk';
 import { inject } from 'tsyringe';
-import { AppError } from '../common/appError';
 import { SERVICES } from '../common/constants';
 import { Provider, S3Config, S3ProvidersConfig } from '../common/interfaces';
 
 export class S3Provider implements Provider {
-  private readonly s3Source: S3Client | null;
-  private readonly s3Dest: S3Client | null;
+  private readonly s3Source: S3 | null;
+  private readonly s3Dest: S3 | null;
+
   public constructor(
     @inject(SERVICES.LOGGER) private readonly logger: Logger,
     @inject(SERVICES.S3_CONFIG) private readonly s3Config: S3ProvidersConfig
@@ -27,80 +17,47 @@ export class S3Provider implements Provider {
     this.s3Dest = destination ? this.createS3Instance(destination) : null;
   }
 
-  public async getFile(filePath: string): Promise<string> {
+  public async getFile(filePath: string): Promise<Buffer> {
+    if (!this.s3Config.source) {
+      throw new Error("No s3 source config found");
+    }
+
     /* eslint-disable @typescript-eslint/naming-convention */
-    const getParams: GetObjectRequest = {
-      Bucket: this.s3Config.source?.bucket,
+    const getParams: S3.GetObjectRequest = {
+      Bucket: this.s3Config.source.bucket,
       Key: filePath,
     };
     /* eslint-enable @typescript-eslint/naming-convention */
 
-    try {
-      this.logger.debug({ msg: 'Starting getFile', filePath });
-      const response = await this.s3Source?.send(new GetObjectCommand(getParams));
-      if (!response?.Body) {
-        throw new Error('')
-      }
-
-      const data: string = await response.Body.transformToString();
-
-      this.logger.debug({ msg: 'Done getFile' });
-      return data;
-    } catch (e) {
-      this.logger.error({ msg: e });
-      this.handleS3Error(filePath, e);
+    this.logger.debug({ msg: 'Starting getFile', filePath });
+    const response = await this.s3Source?.getObject(getParams).promise();
+    if (!response) {
+      throw new Error('got empty response');
     }
+
+    return response.Body as Buffer;
   }
 
-  public async postFile(filePath: string, data: string): Promise<void> {
-    const fileStreamer = new Readable({ encoding: 'binary' });
-    fileStreamer.push(data, 'binary');
-    fileStreamer.push(null);
+  public async postFile(filePath: string, data: Buffer): Promise<void> {
+    if (!this.s3Config.destination) {
+      throw new Error("No s3 destination config found");
+    }
 
     /* eslint-disable @typescript-eslint/naming-convention */
-    const putParams: PutObjectRequest = {
-      Bucket: this.s3Config.destination?.bucket,
+    const putParams: S3.PutObjectRequest = {
+      Bucket: this.s3Config.destination.bucket,
       Key: filePath,
-      Body: fileStreamer,
-      ContentLength: fileStreamer.readableLength,
+      Body: data
     };
     /* eslint-enable @typescript-eslint/naming-convention */
-    try {
-      this.logger.debug({ msg: 'Starting postFile', filePath });
-      await this.s3Dest?.send(new PutObjectCommand(putParams));
-      this.logger.debug({ msg: 'Done postFile', filePath });
-    } catch (e) {
-      this.logger.error({ msg: e });
-      this.handleS3Error(filePath, e);
-    }
+
+    this.logger.debug({ msg: 'Starting postFile', filePath });
+    await this.s3Dest?.putObject(putParams).promise();
+    this.logger.debug({ msg: 'Done postFile', filePath });
   }
-
-  private handleS3Error(filePath: string, error: unknown): never {
-    let statusCode = httpStatus.INTERNAL_SERVER_ERROR;
-    let message = '';
-
-    if (error instanceof S3ServiceException) {
-      statusCode = error.$metadata.httpStatusCode ?? statusCode;
-      message = `${error.name}, message: ${error.message}, file: ${filePath}`;
-    } else if (error instanceof Error) {
-      message = error.message;
-    }
-
-    throw new AppError(statusCode, message, true);
-  }
-
-  private createS3Instance(config: S3Config): S3Client {
-    const s3ClientConfig: S3ClientConfig = {
-      endpoint: config.endpointUrl,
-      forcePathStyle: config.forcePathStyle,
-      credentials: {
-        accessKeyId: config.accessKeyId,
-        secretAccessKey: config.secretAccessKey,
-      },
-      region: config.region,
-      maxAttempts: config.maxAttempts,
-    };
-
-    return new S3Client(s3ClientConfig);
+  
+  private createS3Instance(config: S3Config): AWS.S3 {
+    const s3 = new S3(config);
+    return s3;
   }
 }
