@@ -17,12 +17,14 @@ class ErrorHandler {
       logger.error({
         msg: "App received SIGTERM event, try to gracefully close the server",
       });
+      this.exit();
     });
 
     process.on("SIGINT", () => {
       logger.error({
         msg: "App received SIGINT event, try to gracefully close the server",
       });
+      this.exit();
     });
   }
 
@@ -62,6 +64,11 @@ class ErrorHandler {
       return error.isTrusted;
     }
     return false;
+  }
+
+  private exit(): void {
+    logger.error({ msg: "Gracefully closing the server" });
+    process.exit(1);
   }
 }
 
