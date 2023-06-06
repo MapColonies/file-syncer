@@ -56,7 +56,7 @@ export class FileSyncerManager {
   }
 
   private async handleTaskWithRetries(task: ITaskResponse<TaskParameters>): Promise<boolean> {
-    this.logger.debug({ msg: 'Starting handleTaskWithRetries', taskId: task.id });
+    this.logger.info({ msg: 'Starting handleTaskWithRetries', taskId: task.id });
     let retry = 0;
     let taskResult!: TaskResult;
 
@@ -67,7 +67,7 @@ export class FileSyncerManager {
         return true;
       } else {
         retry++;
-        this.logger.debug({ msg: 'Increase retry', retry, maxRetries: this.maxRetries });
+        this.logger.info({ msg: 'Increase retry', retry, maxRetries: this.maxRetries });
         await sleep(this.waitTime);
         this.logger.error({ error: taskResult.error?.message, taskId: task.id });
       }
@@ -85,14 +85,14 @@ export class FileSyncerManager {
     try {
       await this.updateIndexError(task, taskResult.index);
       await this.rejectJobManager(taskResult.error ?? new Error('Default error'), task);
-      this.logger.debug({ msg: 'Updated failing the task in job manager' });
+      this.logger.info({ msg: 'Updated failing the task in job manager' });
     } catch (err) {
       this.logger.error({ err, taskId: task.id });
     }
   }
 
   private async handleTask(task: ITaskResponse<TaskParameters>): Promise<TaskResult> {
-    this.logger.debug({ msg: 'Starting handleTask', taskId: task.id });
+    this.logger.info({ msg: 'Starting handleTask', taskId: task.id });
     const taskParameters = task.parameters;
     const taskResult: TaskResult = this.initTaskResult(taskParameters);
 
