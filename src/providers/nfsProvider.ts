@@ -22,11 +22,10 @@ export class NFSProvider implements Provider {
     }
 
     this.logger.debug({ msg: 'Starting getFile', fullPath });
-    const data = await fs.promises.readFile(fullPath, { encoding: 'binary' });
-    const buffer = Buffer.from(data, 'binary');
+    const data = await fs.promises.readFile(fullPath);
     this.logger.debug({ msg: 'Done getFile' });
 
-    return buffer;
+    return data;
   }
 
   public async postFile(filePath: string, data: Buffer): Promise<void> {
