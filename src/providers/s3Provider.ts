@@ -57,13 +57,13 @@ export class S3Provider implements Provider {
   }
 
   private createS3Instance(config: S3Config): AWS.S3 {
-    AWS.config.update({
-      accessKeyId: config.accessKeyId,
-      secretAccessKey: config.secretAccessKey,
-      region: config.region
-    })
-
-    const s3: AWS.S3 = new AWS.S3();
-    return s3;
+    return new AWS.S3({
+      endpoint: config.endpointUrl,
+      credentials: {
+        accessKeyId: config.accessKeyId,
+        secretAccessKey: config.secretAccessKey,
+      },
+      s3ForcePathStyle: true
+    });
   }
 }
