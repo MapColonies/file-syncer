@@ -22,7 +22,7 @@ export const createTaskParameters = (): TaskParameters => {
   return {
     paths: [randWord(), randWord()],
     modelId: randUuid(),
-    lastIndexError: 0
+    lastIndexError: 0,
   };
 };
 
@@ -60,4 +60,4 @@ export const loggerMock = {
   warn: jest.fn(),
   error: jest.fn(),
   debug: jest.fn(),
-}
+};

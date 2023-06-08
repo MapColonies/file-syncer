@@ -12,9 +12,9 @@ export class NFSProvider implements Provider {
   public constructor(
     @inject(SERVICES.LOGGER) private readonly logger: Logger,
     @inject(SERVICES.NFS_CONFIG) private readonly config: NFSProvidersConfig
-  ) { }
+  ) {}
 
-  public async getFile(filePath: string): Promise<string> {
+  public async getFile(filePath: string): Promise<Buffer> {
     const pvPath = this.config.source?.pvPath ?? '';
     const fullPath = `${pvPath}/${filePath}`;
     if (!fs.existsSync(fullPath)) {
@@ -22,13 +22,13 @@ export class NFSProvider implements Provider {
     }
 
     this.logger.debug({ msg: 'Starting getFile', fullPath });
-    const data = await fs.promises.readFile(fullPath, { encoding: 'binary' });
+    const data = await fs.promises.readFile(fullPath);
     this.logger.debug({ msg: 'Done getFile' });
 
     return data;
   }
 
-  public async postFile(filePath: string, data: string): Promise<void> {
+  public async postFile(filePath: string, data: Buffer): Promise<void> {
     const pvPath = this.config.destination?.pvPath ?? '';
     const fullPath = `${pvPath}/${filePath}`;
     this.logger.debug({ msg: 'Starting postFile', fullPath });
