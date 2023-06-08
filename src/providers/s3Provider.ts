@@ -19,7 +19,7 @@ export class S3Provider implements Provider {
 
   public async getFile(filePath: string): Promise<Buffer> {
     if (!this.s3Config.source) {
-      throw new Error("No s3 source config found");
+      throw new Error('No s3 source config found');
     }
 
     /* eslint-disable @typescript-eslint/naming-convention */
@@ -40,14 +40,14 @@ export class S3Provider implements Provider {
 
   public async postFile(filePath: string, data: Buffer): Promise<void> {
     if (!this.s3Config.destination) {
-      throw new Error("No s3 destination config found");
+      throw new Error('No s3 destination config found');
     }
 
     /* eslint-disable @typescript-eslint/naming-convention */
     const putParams: AWS.S3.PutObjectRequest = {
       Bucket: this.s3Config.destination.bucket,
       Key: filePath,
-      Body: data
+      Body: data,
     };
     /* eslint-enable @typescript-eslint/naming-convention */
 
@@ -63,7 +63,7 @@ export class S3Provider implements Provider {
         accessKeyId: config.accessKeyId,
         secretAccessKey: config.secretAccessKey,
       },
-      s3ForcePathStyle: true
+      s3ForcePathStyle: true,
     });
   }
 }

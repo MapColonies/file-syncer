@@ -52,7 +52,7 @@ export class FileSyncerManager {
       }
       this.logger.info({ msg: 'Done working on a task in this interval', taskId: task.id });
       this.taskCounter--;
-    }, this.intervalMs)
+    }, this.intervalMs);
   }
 
   private async handleTaskWithRetries(task: ITaskResponse<TaskParameters>): Promise<boolean> {
@@ -75,7 +75,10 @@ export class FileSyncerManager {
 
     this.logger.error({
       msg: 'Reaching maximum retries, failing the task',
-      error: taskResult.error, retry, taskId: task.id, reason: task.reason
+      error: taskResult.error,
+      retry,
+      taskId: task.id,
+      reason: task.reason,
     });
     await this.handleFailedTask(task, taskResult);
     return false;
@@ -134,7 +137,7 @@ export class FileSyncerManager {
 
   private async updateIndexError(task: ITaskResponse<TaskParameters>, lastIndexError: number): Promise<void> {
     const payload: IUpdateTaskBody<TaskParameters> = {
-      parameters: { ...task.parameters, lastIndexError }
+      parameters: { ...task.parameters, lastIndexError },
     };
     await this.taskHandler.jobManagerClient.updateTask<TaskParameters>(task.jobId, task.id, payload);
   }
