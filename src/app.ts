@@ -8,9 +8,9 @@ import { FileSyncerManager } from './fileSyncerManager/fileSyncerManager';
 export class App {
   public constructor(@inject(SERVICES.LOGGER) private readonly logger: Logger, private readonly fileSyncerManager: FileSyncerManager) {}
 
-  public async run(): Promise<void> {
+  public run(): void {
     this.logger.info({ msg: 'Starting fileSyncer' });
-    await this.fileSyncerManager.start();
+    this.fileSyncerManager.start();
   }
 }
 
