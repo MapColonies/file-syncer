@@ -63,7 +63,9 @@ export class S3Provider implements Provider {
         accessKeyId: config.accessKeyId,
         secretAccessKey: config.secretAccessKey,
       },
-      s3ForcePathStyle: true,
+      maxRetries: config.maxAttempts,
+      sslEnabled: config.sslEnabled,
+      s3ForcePathStyle: config.forcePathStyle,
     });
   }
 }
