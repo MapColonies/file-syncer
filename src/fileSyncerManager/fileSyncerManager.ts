@@ -12,7 +12,6 @@ export class FileSyncerManager {
   private readonly waitTime: number;
   private readonly maxAttempts: number;
   private readonly maxRetries: number;
-  private readonly intervalMs: number;
   private readonly taskPoolSize: number;
   private taskCounter: number;
 
@@ -27,32 +26,28 @@ export class FileSyncerManager {
     this.maxAttempts = this.config.get<number>('fileSyncer.task.maxAttempts');
     this.waitTime = this.config.get<number>('fileSyncer.waitTime');
     this.maxRetries = this.config.get<number>('fileSyncer.maxRetries');
-    this.intervalMs = this.config.get<number>('fileSyncer.intervalMs');
     this.taskPoolSize = this.config.get<number>('fileSyncer.taskPoolSize');
     this.taskCounter = 0;
   }
 
-  public start(): void {
-    // eslint-disable-next-line @typescript-eslint/no-misused-promises
-    setInterval(async () => {
-      if (this.taskCounter >= this.taskPoolSize) {
-        return;
-      }
+  public async start(): Promise<void> {
+    if (this.taskCounter >= this.taskPoolSize) {
+      return;
+    }
 
-      const task = await this.taskHandler.dequeue<TaskParameters>(JOB_TYPE, this.taskType);
-      if (!task) {
-        return;
-      }
+    const task = await this.taskHandler.dequeue<TaskParameters>(JOB_TYPE, this.taskType);
+    if (!task) {
+      return;
+    }
 
-      this.logger.info({ msg: 'Found a task to work on!', task: task.id });
-      this.taskCounter++;
-      const isCompleted: boolean = await this.handleTaskWithRetries(task);
-      if (isCompleted) {
-        await this.taskHandler.ack<IUpdateTaskBody<TaskParameters>>(task.jobId, task.id);
-      }
-      this.logger.info({ msg: 'Done working on a task in this interval', taskId: task.id });
-      this.taskCounter--;
-    }, this.intervalMs);
+    this.logger.info({ msg: 'Found a task to work on!', task: task.id });
+    this.taskCounter++;
+    const isCompleted: boolean = await this.handleTaskWithRetries(task);
+    if (isCompleted) {
+      await this.taskHandler.ack<IUpdateTaskBody<TaskParameters>>(task.jobId, task.id);
+    }
+    this.logger.info({ msg: 'Done working on a task in this interval', taskId: task.id });
+    this.taskCounter--;
   }
 
   private async handleTaskWithRetries(task: ITaskResponse<TaskParameters>): Promise<boolean> {
@@ -110,6 +105,7 @@ export class FileSyncerManager {
         }
         return taskResult;
       }
+      
       taskResult.index++;
     }
 
