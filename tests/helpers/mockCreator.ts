@@ -33,6 +33,7 @@ export const taskHandlerMock = {
   waitForTask: jest.fn(),
   ack: jest.fn(),
   reject: jest.fn(),
+  dequeue: jest.fn(),
 };
 
 export const configProviderFromMock = {
