@@ -54,7 +54,7 @@
       "type": "Ingestion",
       "maxAttempts": 3
     },
-    "waitTime": 5000,
+    "waitTime": 0,
     "maxRetries": 3,
     "intervalMs": 5000
   }
