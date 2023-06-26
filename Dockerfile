@@ -1,4 +1,4 @@
-FROM node:18 as build
+FROM node:20 as build
 
 WORKDIR /tmp/buildApp
 
@@ -8,7 +8,7 @@ RUN npm install
 COPY . .
 RUN npm run build
 
-FROM node:18 as production
+FROM node:20-alpine as production
 
 ENV NODE_ENV=production
 ENV SERVER_PORT=8080
