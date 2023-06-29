@@ -48,7 +48,8 @@
       "maxAttempts": {
         "__name": "S3_SOURCE_MAX_ATTEMPTS",
         "__format": "number"
-      }
+      },
+      "sigVersion": "S3_SOURCE_SIG_VERSION"
     },
     "destination": {
       "accessKeyId": "S3_DEST_ACCESS_KEY_ID",
@@ -67,7 +68,8 @@
       "maxAttempts": {
         "__name": "S3_DEST_MAX_ATTEMPTS",
         "__format": "number"
-      }
+      },
+      "sigVersion": "S3_DEST_SIG_VERSION"
     }
   },
   "NFS": {

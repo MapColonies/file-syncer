@@ -23,24 +23,26 @@
   },
   "S3": {
     "source": {
-      "accessKeyId": "minioadmin",
-      "secretAccessKey": "minioadmin",
-      "endpointUrl": "http://127.0.0.1:9000",
-      "bucket": "3dtiles",
+      "accessKeyId": "vector",
+      "secretAccessKey": "vectorPassword",
+      "endpointUrl": "http://10.8.0.9:9000",
+      "bucket": "3dtilesint",
       "region": "us-east-1",
       "forcePathStyle": true,
       "sslEnabled": false,
-      "maxAttempts": 3
+      "maxAttempts": 3,
+      "sigVersion": "v4"
     },
     "destination": {
-      "accessKeyId": "minioadmin",
-      "secretAccessKey": "minioadmin",
-      "endpointUrl": "http://127.0.0.1:9000",
-      "bucket": "3dtiles-destination",
+      "accessKeyId": "vector",
+      "secretAccessKey": "vectorPassword",
+      "endpointUrl": "http://10.8.0.9:9000",
+      "bucket": "3dtiles-dest",
       "region": "us-east-1",
       "forcePathStyle": true,
       "sslEnabled": false,
-      "maxAttempts": 3
+      "maxAttempts": 3,
+      "sigVersion": "v4"
     }
   },
   "NFS": {
@@ -53,8 +55,8 @@
   },
   "fileSyncer": {
     "provider": {
-      "source": "nfs",
-      "destination": "nfs"
+      "source": "S3",
+      "destination": "S3"
     },
     "job": {
       "type": "Ingestion_New_3D"
@@ -66,6 +68,6 @@
     "waitTime": 5000,
     "maxRetries": 3,
     "intervalMs": 5000,
-    "taskPoolSize": 1
+    "taskPoolSize": 30
   }
 }
