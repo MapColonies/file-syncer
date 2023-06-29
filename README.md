@@ -1,62 +1,28 @@
-# Map Colonies typescript script template
+# File Syncer Service
+The File Syncer service is responsible for copying the model from a source location to a destination location, which can be either NFS or S3. It runs on a constant interval and fetches pending tasks from the Job Manager database. Once a new pending task is found, the service initiates the synchronization process by copying the associated files to the appropriate destination (either NFS or S3) based on the configuration.
 
-----------------------------------
+## Functionality
+The File Syncer service performs the following steps:
 
-![badge-alerts-lgtm](https://img.shields.io/lgtm/alerts/github/MapColonies/ts-script-boilerplate?style=for-the-badge)
+Interval Execution: The service runs on a constant interval, which can be controlled using the 'intervalMs' parameter in the configuration. This ensures that the synchronization process is regularly executed.
 
-![grade-badge-lgtm](https://img.shields.io/lgtm/grade/javascript/github/MapColonies/ts-script-boilerplate?style=for-the-badge)
+Pending Task Retrieval: In each interval, the service fetches pending tasks from the Job Manager database. These tasks represent the files that need to be synchronized.
 
-![snyk](https://img.shields.io/snyk/vulnerabilities/github/MapColonies/ts-script-boilerplate?style=for-the-badge)
+File Sync: For each pending task, the service copies the corresponding files from the source location to the destination location. The source and destination can be configured to be either NFS or S3.
 
-----------------------------------
+Task Pool Size: The File Syncer service has a task pool that determines the number of tasks it can fetch and process in each interval. The size of the task pool is determined by the 'taskPoolSize' parameter in the configuration.
 
-This is a basic repo template for building new MapColonies cli script or cron-job in Typescript.
+## Configuration
+The File Syncer service can be configured using the following parameters:
 
-### Template Usage Notes:
-- the docker file contains default command to use when running container without additional parameters
-- command handlers can be async or sync functions
-- naming command '$0' will make it the default command
-### Template Features:
+intervalMs: Specifies the time interval, in milliseconds, at which the service runs and fetches pending tasks.
+taskPoolSize: Determines the maximum number of tasks that can be fetched and processed in each interval.
+These configuration parameters allow users to customize the behavior of the File Syncer service based on their specific requirements.
 
-- eslint configuration by [@map-colonies/eslint-config](https://github.com/MapColonies/eslint-config)
+## Usage
+To use the File Syncer service, you need to configure the source and destination locations, as well as set the appropriate parameters in the configuration file. The service will automatically run on the specified interval and synchronize the files between the source and destination according to pending tasks.
 
-- prettier configuration by [@map-colonies/prettier-config](https://github.com/MapColonies/prettier-config)
-
-- jest
-
-- .nvmrc
-
-- Multi stage producton-ready Dockerfile
-
-- commitlint
-
-- git hooks
-
-- logging by [@map-colonies/js-logger](https://github.com/MapColonies/js-logger)
-
-- config load with [node-config](https://www.npmjs.com/package/node-config)
-
-- Tracing and metrics by [@map-colonies/telemetry](https://github.com/MapColonies/telemetry)
-
-- github templates
-
-- bug report
-
-- feature request
-
-- pull request
-
-- github actions
-
-- on pull_request
-
-- LGTM
-
-- test
-
-- lint
-
-- snyk
+Ensure that the Job Manager service is running and properly configured, as the File Syncer service relies on it to fetch the pending tasks.
 
 ## Installation
 
