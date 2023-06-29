@@ -66,6 +66,7 @@ export class S3Provider implements Provider {
       maxRetries: config.maxAttempts,
       sslEnabled: config.sslEnabled,
       s3ForcePathStyle: config.forcePathStyle,
+      signatureVersion: config.sigVersion,
     });
   }
 }
