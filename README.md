@@ -12,6 +12,12 @@ File Sync: For each pending task, the service copies the corresponding files fro
 
 Task Pool Size: The File Syncer service has a task pool that determines the number of tasks it can fetch and process in each interval. The size of the task pool is determined by the 'taskPoolSize' parameter in the configuration.
 
+## Dependencies
+The File Syncer service has the following dependencies:
+
+Job Manager: The File Syncer service relies on the Job Manager to fetch pending tasks from the database.
+Heartbeat Manager: The File Syncer service depends on the Heartbeat Manager to log the last heartbeat for workers assigned to specific tasks. The Heartbeat Manager is responsible for tracking the activity status of workers and ensuring that tasks remain active.
+
 ## Configuration
 The File Syncer service can be configured using the following parameters:
 
