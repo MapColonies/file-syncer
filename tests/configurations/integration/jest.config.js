@@ -2,11 +2,6 @@ module.exports = {
   transform: {
     '^.+\\.ts$': 'ts-jest',
   },
-  globals: {
-    'ts-jest': {
-      tsconfig: 'tsconfig.test.json',
-    },
-  },
   coverageReporters: ['text', 'html'],
   collectCoverage: true,
   collectCoverageFrom: ['<rootDir>/src/**/*.ts', '!*/node_modules/', '!/vendor/**', '!*/common/**', '!**/models/**', '!<rootDir>/src/*'],
@@ -34,4 +29,6 @@ module.exports = {
       statements: 80,
     },
   },
+  globalSetup: '<rootDir>/tests/configurations/runContainers/global-setup.js',
+  globalTeardown: '<rootDir>/tests/configurations/runContainers/global-teardown.js',
 };

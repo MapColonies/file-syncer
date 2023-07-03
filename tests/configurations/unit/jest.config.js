@@ -2,11 +2,6 @@ module.exports = {
   transform: {
     '^.+\\.ts$': 'ts-jest',
   },
-  globals: {
-    'ts-jest': {
-      tsconfig: 'tsconfig.test.json',
-    },
-  },
   testMatch: ['<rootDir>/tests/unit/**/*.spec.ts'],
   coverageReporters: ['text', 'html'],
   collectCoverage: true,
@@ -19,6 +14,7 @@ module.exports = {
     '!**/routes/**',
     '!<rootDir>/src/*',
   ],
+  coveragePathIgnorePatterns: ['<rootDir>/src/providers'],
   coverageDirectory: '<rootDir>/coverage',
   reporters: [
     'default',
