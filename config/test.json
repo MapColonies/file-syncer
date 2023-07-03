@@ -36,10 +36,10 @@
   },
   "NFS": {
     "source": {
-      "pvPath": "/home/netanel/3DModels"
+      "pvPath": "./tests/helpers/3DModels"
     },
     "destination": {
-      "pvPath": "/home/netanel/destination3DModels"
+      "pvPath": "./tests/helpers/3DModelsDestination"
     }
   },
   "fileSyncer": {
@@ -56,6 +56,7 @@
     },
     "waitTime": 0,
     "maxRetries": 3,
+    "taskPoolSize": 3,
     "intervalMs": 5000
   }
 }
