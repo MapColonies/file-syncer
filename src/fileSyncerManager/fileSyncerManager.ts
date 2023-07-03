@@ -50,9 +50,15 @@ export class FileSyncerManager {
       if (isCompleted) {
         await this.taskHandler.ack<IUpdateTaskBody<TaskParameters>>(task.jobId, task.id);
       }
-      this.logger.info({ msg: 'Done working on a task in this interval', taskId: task.id });
+
+      await this.deleteTaskParameters(task);
       this.taskCounter--;
+      this.logger.info({ msg: 'Done working on a task in this interval', taskId: task.id });
     }, this.intervalMs);
+  }
+
+  private async deleteTaskParameters(task: ITaskResponse<TaskParameters>): Promise<void> {
+    await this.taskHandler.jobManagerClient.updateTask(task.jobId, task.id, { ...task, parameters: {} })
   }
 
   private async handleTaskWithRetries(task: ITaskResponse<TaskParameters>): Promise<boolean> {
