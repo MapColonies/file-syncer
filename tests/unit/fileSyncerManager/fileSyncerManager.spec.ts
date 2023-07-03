@@ -8,7 +8,7 @@ import { configProviderFromMock, configProviderToMock, createTask, taskHandlerMo
 describe('fileSyncerManager', () => {
   let fileSyncerManager: FileSyncerManager;
 
-  beforeAll(() => {
+  beforeEach(() => {
     getApp({
       override: [
         { token: SERVICES.LOGGER, provider: { useValue: jsLogger({ enabled: false }) } },
@@ -26,7 +26,23 @@ describe('fileSyncerManager', () => {
   });
 
   describe('start', () => {
-    it('When it not found task it not sync any files', async () => {
+    it('When task counter is not smaller than pool size, it will not dequeue', async () => {
+      fileSyncerManager = container.resolve(FileSyncerManager);
+      fileSyncerManager['taskCounter'] = 10;
+
+      getApp({
+        override: [
+          { token: SERVICES.FILE_SYNCER_MANAGER, provider: { useValue: fileSyncerManager } },
+        ],
+      });
+
+      const response = await fileSyncerManager.start();
+
+      expect(response).toBeUndefined();
+      expect(taskHandlerMock.dequeue).not.toHaveBeenCalled();
+    });
+
+    it(`When didn't find task, does nothing`, async () => {
       taskHandlerMock.dequeue.mockResolvedValue(null);
 
       await fileSyncerManager.start();
@@ -36,7 +52,7 @@ describe('fileSyncerManager', () => {
       expect(configProviderToMock.postFile).not.toHaveBeenCalled();
     });
 
-    it('When it found task it sync files', async () => {
+    it('When found a task, it syncs the files between the providers', async () => {
       taskHandlerMock.dequeue.mockResolvedValue(createTask());
 
       await fileSyncerManager.start();
@@ -46,7 +62,7 @@ describe('fileSyncerManager', () => {
       expect(configProviderToMock.postFile).toHaveBeenCalled();
     });
 
-    it('When it found task it but there is a problem in get file, post file will not call', async () => {
+    it(`When found a task but didn't get or post file, throws an error`, async () => {
       taskHandlerMock.dequeue.mockResolvedValue(createTask());
       configProviderFromMock.getFile.mockRejectedValue(new Error('error'));
 
@@ -54,6 +70,17 @@ describe('fileSyncerManager', () => {
 
       expect(taskHandlerMock.dequeue).toHaveBeenCalled();
       expect(taskHandlerMock.reject).toHaveBeenCalled();
+    });
+
+    it(`When found a task but there is a problem with the job-manager, throws an error`, async () => {
+      taskHandlerMock.dequeue.mockResolvedValue(createTask());
+      configProviderFromMock.getFile.mockRejectedValue(new Error('error'));
+      taskHandlerMock.reject.mockRejectedValue(new Error('job-manager error'));
+
+      const response = await fileSyncerManager.start();
+
+      expect(taskHandlerMock.dequeue).toHaveBeenCalled();
+      expect(response).toBeUndefined();
     });
   });
 });
