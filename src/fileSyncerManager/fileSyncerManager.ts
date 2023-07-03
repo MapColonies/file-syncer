@@ -49,11 +49,11 @@ export class FileSyncerManager {
       const isCompleted: boolean = await this.handleTaskWithRetries(task);
       if (isCompleted) {
         await this.taskHandler.ack<IUpdateTaskBody<TaskParameters>>(task.jobId, task.id);
+        await this.deleteTaskParameters(task);
       }
 
-      await this.deleteTaskParameters(task);
       this.taskCounter--;
-      this.logger.info({ msg: 'Done working on a task in this interval', taskId: task.id });
+      this.logger.info({ msg: 'Done working on a task in this interval', taskId: task.id, isCompleted });
     }, this.intervalMs);
   }
 
