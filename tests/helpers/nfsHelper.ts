@@ -29,11 +29,11 @@ export class NfsHelper {
 
   public async cleanNFS(): Promise<void> {
     if (this.config.source?.pvPath != undefined) {
-      await fs.promises.rmdir(this.config.source.pvPath, { recursive: true });
+      await fs.promises.rm(this.config.source.pvPath, { recursive: true });
     }
 
     if (this.config.destination?.pvPath != undefined) {
-      await fs.promises.rmdir(this.config.destination.pvPath, { recursive: true });
+      await fs.promises.rm(this.config.destination.pvPath, { recursive: true });
     }
   }
 }
