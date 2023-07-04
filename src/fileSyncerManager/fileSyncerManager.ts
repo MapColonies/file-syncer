@@ -58,7 +58,9 @@ export class FileSyncerManager {
   }
 
   private async deleteTaskParameters(task: ITaskResponse<TaskParameters>): Promise<void> {
-    await this.taskHandler.jobManagerClient.updateTask(task.jobId, task.id, { ...task, parameters: {} })
+    const parameters = task.parameters;
+    await this.taskHandler.jobManagerClient.updateTask(task.jobId, task.id,
+      { ...task, parameters: { modelId: parameters.modelId, lastIndexError: parameters.lastIndexError } });
   }
 
   private async handleTaskWithRetries(task: ITaskResponse<TaskParameters>): Promise<boolean> {
