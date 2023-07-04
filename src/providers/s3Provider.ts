@@ -1,12 +1,12 @@
 import { Logger } from '@map-colonies/js-logger';
-import * as AWS from 'aws-sdk';
+import { S3 } from 'aws-sdk';
 import { inject } from 'tsyringe';
 import { SERVICES } from '../common/constants';
 import { Provider, S3Config, S3ProvidersConfig } from '../common/interfaces';
 
 export class S3Provider implements Provider {
-  private readonly s3Source: AWS.S3 | null;
-  private readonly s3Dest: AWS.S3 | null;
+  private readonly s3Source: S3 | null;
+  private readonly s3Dest: S3 | null;
 
   public constructor(
     @inject(SERVICES.LOGGER) private readonly logger: Logger,
@@ -23,7 +23,7 @@ export class S3Provider implements Provider {
     }
 
     /* eslint-disable @typescript-eslint/naming-convention */
-    const getParams: AWS.S3.GetObjectRequest = {
+    const getParams: S3.GetObjectRequest = {
       Bucket: this.s3Config.source.bucket,
       Key: filePath,
     };
@@ -44,7 +44,7 @@ export class S3Provider implements Provider {
     }
 
     /* eslint-disable @typescript-eslint/naming-convention */
-    const putParams: AWS.S3.PutObjectRequest = {
+    const putParams: S3.PutObjectRequest = {
       Bucket: this.s3Config.destination.bucket,
       Key: filePath,
       Body: data,
@@ -56,8 +56,8 @@ export class S3Provider implements Provider {
     this.logger.debug({ msg: 'Done postFile', filePath });
   }
 
-  private createS3Instance(config: S3Config): AWS.S3 {
-    return new AWS.S3({
+  private createS3Instance(config: S3Config): S3 {
+    return new S3({
       endpoint: config.endpointUrl,
       credentials: {
         accessKeyId: config.accessKeyId,

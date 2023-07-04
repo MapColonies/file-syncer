@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-non-null-assertion */
 import fs from 'fs';
 import path from 'path';
 import { Logger } from '@map-colonies/js-logger';
@@ -15,7 +16,7 @@ export class NFSProvider implements Provider {
   ) {}
 
   public async getFile(filePath: string): Promise<Buffer> {
-    const pvPath = this.config.source?.pvPath ?? '';
+    const pvPath = this.config.source!.pvPath;
     const fullPath = `${pvPath}/${filePath}`;
     if (!fs.existsSync(fullPath)) {
       throw new AppError(httpStatus.BAD_REQUEST, `File ${filePath} doesn't exists in the agreed folder`, true);
@@ -29,7 +30,7 @@ export class NFSProvider implements Provider {
   }
 
   public async postFile(filePath: string, data: Buffer): Promise<void> {
-    const pvPath = this.config.destination?.pvPath ?? '';
+    const pvPath = this.config.destination!.pvPath;
     const fullPath = `${pvPath}/${filePath}`;
     this.logger.debug({ msg: 'Starting postFile', fullPath });
     const dir = path.dirname(fullPath);
