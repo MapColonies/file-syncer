@@ -7,12 +7,12 @@ import { SERVICES } from '../../../src/common/constants';
 import { ProviderManager } from '../../../src/common/interfaces';
 import { getProviderManager } from '../../../src/providers/getProvider';
 import { providerConfigurationMockNFS2NFS } from '../../helpers/mockCreator';
-import { NfsHelper } from '../../helpers/nfsHelper';
+import { NFSHelper } from '../../helpers/nfsHelper';
 
 describe('NFSProvider', () => {
   let providerManager: ProviderManager;
-  let nfsHelperSource: NfsHelper;
-  let nfsHelperDest: NfsHelper;
+  let nfsHelperSource: NFSHelper;
+  let nfsHelperDest: NFSHelper;
 
   beforeAll(() => {
     getApp({
@@ -30,8 +30,8 @@ describe('NFSProvider', () => {
     });
 
     providerManager = container.resolve(SERVICES.PROVIDER_MANAGER);
-    nfsHelperSource = new NfsHelper(providerConfigurationMockNFS2NFS.source);
-    nfsHelperDest = new NfsHelper(providerConfigurationMockNFS2NFS.dest);
+    nfsHelperSource = new NFSHelper(providerConfigurationMockNFS2NFS.source);
+    nfsHelperDest = new NFSHelper(providerConfigurationMockNFS2NFS.dest);
   });
 
   beforeEach(() => {

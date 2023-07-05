@@ -37,12 +37,12 @@ const FakeProvider = (provider: string, name: string): ProviderConfig => {
   }
 }
 
-export const createTask = (): ITaskResponse<TaskParameters> => {
+export const createTask = (modelId?: string, paths?: string[]): ITaskResponse<TaskParameters> => {
   return {
     id: randUuid(),
     jobId: randUuid(),
     description: randWord(),
-    parameters: createTaskParameters(),
+    parameters: createTaskParameters(modelId, paths),
     created: '2020',
     updated: '2022',
     type: 'ingestion',
@@ -53,10 +53,10 @@ export const createTask = (): ITaskResponse<TaskParameters> => {
   };
 };
 
-export const createTaskParameters = (): TaskParameters => {
+export const createTaskParameters = (modelId?: string, paths?: string[]): TaskParameters => {
   return {
-    paths: [randWord(), randWord()],
-    modelId: randUuid(),
+    paths: paths ? paths : [randWord(), randWord()],
+    modelId: modelId != undefined ? modelId : randUuid(),
     lastIndexError: 0,
   };
 };

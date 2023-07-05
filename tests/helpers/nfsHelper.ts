@@ -2,12 +2,14 @@ import fs from 'fs';
 import { randSentence } from '@ngneat/falso';
 import { NFSConfig } from '../../src/common/interfaces';
 
-export class NfsHelper {
+export class NFSHelper {
   public constructor(private readonly config: NFSConfig) {}
 
   public async createFileOfModel(model: string, file: string): Promise<string> {
     const dirPath = `${this.config.pvPath}/${model}`;
-    await fs.promises.mkdir(dirPath);
+    if (!fs.existsSync(dirPath)) {
+      await fs.promises.mkdir(dirPath);
+    }
     const filePath = `${dirPath}/${file}`;
     const data = randSentence();
     await fs.promises.writeFile(filePath, data);
