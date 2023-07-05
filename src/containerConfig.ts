@@ -5,7 +5,7 @@ import config from 'config';
 import { DependencyContainer } from 'tsyringe/dist/typings/types';
 import { SERVICES, SERVICE_NAME } from './common/constants';
 import { InjectionObject, registerDependencies } from './common/dependencyRegistration';
-import { NFSProvidersConfig, Provider, ProviderConfig, S3ProvidersConfig } from './common/interfaces';
+import { NFSProvidersConfig, ProviderFunctions, ProviderConfig, S3ProvidersConfig } from './common/interfaces';
 import { tracing } from './common/tracing';
 import logger from './common/logger';
 import { getProvider } from './providers/getProvider';
@@ -49,7 +49,7 @@ export const registerExternalValues = (options?: RegisterOptions): DependencyCon
     {
       token: SERVICES.CONFIG_PROVIDER_FROM,
       provider: {
-        useFactory: (): Provider => {
+        useFactory: (): ProviderFunctions => {
           return getProvider(providerConfig.source);
         },
       },
@@ -57,7 +57,7 @@ export const registerExternalValues = (options?: RegisterOptions): DependencyCon
     {
       token: SERVICES.CONFIG_PROVIDER_TO,
       provider: {
-        useFactory: (): Provider => {
+        useFactory: (): ProviderFunctions => {
           return getProvider(providerConfig.destination);
         },
       },

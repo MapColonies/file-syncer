@@ -1,12 +1,12 @@
 import config from 'config';
-import { AppError } from '../../src/common/appError';
-import { NFSProvidersConfig, S3ProvidersConfig } from '../../src/common/interfaces';
-import { getProvider, getProviderConfig } from '../../src/providers/getProvider';
+import { AppError } from '../../../src/common/appError';
+import { NFSConfig, S3Config } from '../../../src/common/interfaces';
+import { getProvider } from '../../../src/providers/getProvider';
 
 describe('getProviderConfig tests', () => {
   it('should return the NFS config when the provider is NFS', () => {
     const provider = 'NFS';
-    const expected = config.get<NFSProvidersConfig>('NFS');
+    const expected = config.get<NFSConfig>('NFS');
 
     const response = getProviderConfig(provider);
 
@@ -15,7 +15,7 @@ describe('getProviderConfig tests', () => {
 
   it('should return the S3 config when the provider is S3', () => {
     const provider = 'S3';
-    const expected = config.get<S3ProvidersConfig>('S3');
+    const expected = config.get<S3Config>('S3');
 
     const response = getProviderConfig(provider);
 

@@ -21,41 +21,35 @@
     "url": "http://127.0.0.1:8082",
     "waitTime": 3000
   },
-  "S3": {
+  "provider": {
     "source": {
-      "accessKeyId": "minioadmin",
-      "secretAccessKey": "minioadmin",
-      "endpointUrl": "http://127.0.0.1:9000",
-      "bucket": "3dtiles",
-      "region": "us-east-1",
-      "forcePathStyle": true,
-      "sslEnabled": false,
-      "maxAttempts": 3
+      "type": "",
+      "config": {
+        "accessKeyId": "minioadmin",
+        "secretAccessKey": "minioadmin",
+        "endpointUrl": "http://127.0.0.1:9000",
+        "bucket": "3dtiles",
+        "region": "us-east-1",
+        "forcePathStyle": true,
+        "sslEnabled": false,
+        "maxAttempts": 3
+      }
     },
     "destination": {
-      "accessKeyId": "minioadmin",
-      "secretAccessKey": "minioadmin",
-      "endpointUrl": "http://127.0.0.1:9000",
-      "bucket": "3dtiles-destination",
-      "region": "us-east-1",
-      "forcePathStyle": true,
-      "sslEnabled": false,
-      "maxAttempts": 3
-    }
-  },
-  "NFS": {
-    "source": {
-      "pvPath": "/home/netanel/3DModels"
-    },
-    "destination": {
-      "pvPath": "/home/netanel/destination3DModels"
+      "type": "",
+      "config": {
+        "accessKeyId": "minioadmin",
+        "secretAccessKey": "minioadmin",
+        "endpointUrl": "http://127.0.0.1:9000",
+        "bucket": "3dtiles",
+        "region": "us-east-1",
+        "forcePathStyle": true,
+        "sslEnabled": false,
+        "maxAttempts": 3
+      }
     }
   },
   "fileSyncer": {
-    "provider": {
-      "source": "nfs",
-      "destination": "nfs"
-    },
     "job": {
       "type": "Ingestion_New_3D"
     },

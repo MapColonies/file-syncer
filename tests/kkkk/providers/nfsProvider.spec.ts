@@ -1,11 +1,11 @@
 import { container } from 'tsyringe';
 import jsLogger from '@map-colonies/js-logger';
 import { randFileExt, randWord } from '@ngneat/falso';
-import { getApp } from '../../src/app';
-import { NFSProvider } from '../../src/providers/nfsProvider';
-import { SERVICES } from '../../src/common/constants';
-import { AppError } from '../../src/common/appError';
-import { NfsHelper } from '../helpers/nfsHelper';
+import { getApp } from '../../../src/app';
+import { NFSProvider } from '../../../src/providers/nfsProvider';
+import { SERVICES } from '../../../src/common/constants';
+import { AppError } from '../../../src/common/appError';
+import { NfsHelper } from '../../helpers/nfsHelper';
 
 describe('NFSProvider', () => {
   let provider: NFSProvider;

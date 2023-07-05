@@ -3,7 +3,7 @@ import { ITaskResponse, IUpdateTaskBody, TaskHandler } from '@map-colonies/mc-pr
 import { IConfig } from 'config';
 import { inject, injectable } from 'tsyringe';
 import { JOB_TYPE, SERVICES } from '../common/constants';
-import { Provider, TaskParameters, TaskResult } from '../common/interfaces';
+import { ProviderFunctions, TaskParameters, TaskResult } from '../common/interfaces';
 import { sleep } from '../common/utils';
 
 @injectable()
@@ -19,8 +19,8 @@ export class FileSyncerManager {
     @inject(SERVICES.LOGGER) private readonly logger: Logger,
     @inject(SERVICES.CONFIG) private readonly config: IConfig,
     @inject(SERVICES.TASK_HANDLER) private readonly taskHandler: TaskHandler,
-    @inject(SERVICES.CONFIG_PROVIDER_FROM) private readonly configProviderFrom: Provider,
-    @inject(SERVICES.CONFIG_PROVIDER_TO) private readonly configProviderTo: Provider
+    @inject(SERVICES.CONFIG_PROVIDER_FROM) private readonly configProviderFrom: ProviderFunctions,
+    @inject(SERVICES.CONFIG_PROVIDER_TO) private readonly configProviderTo: ProviderFunctions
   ) {
     this.taskType = this.config.get<string>('fileSyncer.task.type');
     this.maxAttempts = this.config.get<number>('fileSyncer.task.maxAttempts');
