@@ -29,14 +29,14 @@ export class S3Helper {
     await this.deleteBucket(this.config.bucket);
   }
 
-  public async createBucket(bucket = this.config.bucket): Promise<void> {
+  public async createBucket(bucket: string): Promise<void> {
     const params: S3.CreateBucketRequest = {
       Bucket: bucket,
     };
     await this.s3.createBucket(params).promise();
   }
 
-  public async deleteBucket(bucket = this.config.bucket): Promise<void> {
+  public async deleteBucket(bucket: string): Promise<void> {
     const params: S3.DeleteBucketRequest = {
       Bucket: bucket,
     };
@@ -54,7 +54,7 @@ export class S3Helper {
     return data;
   }
 
-  public async clearBucket(bucket = this.config.bucket): Promise<void> {
+  public async clearBucket(bucket: string): Promise<void> {
     const paramsSource: S3.ListObjectsRequest = { Bucket: bucket };
     const dataSource = await this.s3.listObjects(paramsSource).promise();
     if (dataSource.Contents) {
@@ -66,7 +66,7 @@ export class S3Helper {
     }
   }
 
-  public async deleteObject(key: string, bucket = this.config.bucket): Promise<void> {
+  public async deleteObject(bucket: string, key: string): Promise<void> {
     const params: S3.DeleteObjectRequest = {
       Bucket: bucket,
       Key: key,
@@ -74,7 +74,7 @@ export class S3Helper {
     await this.s3.deleteObject(params).promise();
   }
 
-  public async readFile(key: string, bucket = this.config.bucket): Promise<S3.Body | undefined> {
+  public async readFile(bucket: string, key: string): Promise<S3.Body | undefined> {
     const params: S3.GetObjectRequest = {
       Bucket: bucket,
       Key: key,
