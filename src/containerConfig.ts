@@ -5,10 +5,10 @@ import config from 'config';
 import { DependencyContainer } from 'tsyringe/dist/typings/types';
 import { SERVICES, SERVICE_NAME } from './common/constants';
 import { InjectionObject, registerDependencies } from './common/dependencyRegistration';
-import { NFSProvidersConfig, ProviderFunctions, ProviderConfig, S3ProvidersConfig } from './common/interfaces';
-import { tracing } from './common/tracing';
+import { ProviderConfiguration, ProviderManager } from './common/interfaces';
 import logger from './common/logger';
-import { getProvider } from './providers/getProvider';
+import { tracing } from './common/tracing';
+import { getProviderManager } from './providers/getProvider';
 
 export interface RegisterOptions {
   override?: InjectionObject<unknown>[];
@@ -16,9 +16,7 @@ export interface RegisterOptions {
 }
 
 export const registerExternalValues = (options?: RegisterOptions): DependencyContainer => {
-  const nfsConfig = config.get<NFSProvidersConfig>('NFS');
-  const s3Config = config.get<S3ProvidersConfig>('S3');
-  const providerConfig = config.get<ProviderConfig>('fileSyncer.provider');
+  const providerConfiguration = config.get<ProviderConfiguration>('provider');
   const jobManagerBaseUrl = config.get<string>('jobManager.url');
   const heartbeatUrl = config.get<string>('heartbeat.url');
   const dequeueIntervalMs = config.get<number>('fileSyncer.waitTime');
@@ -36,8 +34,6 @@ export const registerExternalValues = (options?: RegisterOptions): DependencyCon
     { token: SERVICES.TRACER, provider: { useValue: tracer } },
     { token: SERVICES.METER, provider: { useValue: meter } },
     { token: SERVICES.METRICS, provider: { useValue: metrics } },
-    { token: SERVICES.NFS_CONFIG, provider: { useValue: nfsConfig } },
-    { token: SERVICES.S3_CONFIG, provider: { useValue: s3Config } },
     {
       token: SERVICES.TASK_HANDLER,
       provider: {
@@ -47,18 +43,10 @@ export const registerExternalValues = (options?: RegisterOptions): DependencyCon
       },
     },
     {
-      token: SERVICES.CONFIG_PROVIDER_FROM,
+      token: SERVICES.PROVIDER_MANAGER,
       provider: {
-        useFactory: (): ProviderFunctions => {
-          return getProvider(providerConfig.source);
-        },
-      },
-    },
-    {
-      token: SERVICES.CONFIG_PROVIDER_TO,
-      provider: {
-        useFactory: (): ProviderFunctions => {
-          return getProvider(providerConfig.destination);
+        useFactory: (): ProviderManager => {
+          return getProviderManager(providerConfiguration);
         },
       },
     },

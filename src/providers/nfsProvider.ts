@@ -1,19 +1,12 @@
-/* eslint-disable @typescript-eslint/no-non-null-assertion */
 import fs from 'fs';
 import path from 'path';
 import { Logger } from '@map-colonies/js-logger';
 import httpStatus from 'http-status-codes';
-import { inject, injectable } from 'tsyringe';
 import { AppError } from '../common/appError';
-import { SERVICES } from '../common/constants';
-import {  NFSConfig, ProviderFunctions } from '../common/interfaces';
+import { NFSConfig, Provider } from '../common/interfaces';
 
-@injectable()
-export class NFSProvider implements ProviderFunctions {
-  public constructor(
-    @inject(SERVICES.LOGGER) private readonly logger: Logger,
-    @inject(SERVICES.NFS_CONFIG) private readonly config: NFSConfig
-  ) {}
+export class NFSProvider implements Provider {
+  public constructor(private readonly logger: Logger, private readonly config: NFSConfig) {}
 
   public async getFile(filePath: string): Promise<Buffer> {
     const pvPath = this.config.pvPath;

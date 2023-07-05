@@ -1,16 +1,12 @@
-/* eslint-disable @typescript-eslint/no-non-null-assertion */
 /* eslint-disable @typescript-eslint/naming-convention */
-import { S3 } from 'aws-sdk';
 import { randSentence } from '@ngneat/falso';
-import { inject, injectable } from 'tsyringe';
-import { SERVICES } from '../../src/common/constants';
+import { S3 } from 'aws-sdk';
 import { S3Config } from '../../src/common/interfaces';
 
-@injectable()
 export class S3Helper {
   private readonly s3: S3;
 
-  public constructor(@inject(SERVICES.S3_CONFIG) private readonly config: S3Config) {
+  public constructor(private readonly config: S3Config) {
     const s3ClientConfig: S3.ClientConfiguration = {
       endpoint: config.endpointUrl,
       credentials: {
@@ -26,15 +22,12 @@ export class S3Helper {
 
   public async initialize(): Promise<void> {
     await this.createBucket(this.config.bucket);
-    await this.createBucket(this.config.bucket);
   }
 
   public async terminate(): Promise<void> {
     await this.clearBucket(this.config.bucket);
-    await this.clearBucket(this.config.bucket);
     await this.deleteBucket(this.config.bucket);
-    await this.deleteBucket(this.config.bucket);
-  } 
+  }
 
   public async createBucket(bucket: string): Promise<void> {
     const params: S3.CreateBucketRequest = {
@@ -74,15 +67,11 @@ export class S3Helper {
   }
 
   public async deleteObject(bucket: string, key: string): Promise<void> {
-    try {
-      const params: S3.DeleteObjectRequest = {
-        Bucket: bucket,
-        Key: key,
-      };
-      await this.s3.deleteObject(params).promise();
-    } catch (error) {
-      console.log(error);
-    }
+    const params: S3.DeleteObjectRequest = {
+      Bucket: bucket,
+      Key: key,
+    };
+    await this.s3.deleteObject(params).promise();
   }
 
   public async readFile(bucket: string, key: string): Promise<S3.Body | undefined> {

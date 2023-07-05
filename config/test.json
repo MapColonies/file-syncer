@@ -12,7 +12,7 @@
   "nginx": {
     "url": "http://127.0.0.1:8084"
   },
-  "S3": {
+  "provider": {
     "source": {
       "accessKeyId": "minioadmin",
       "secretAccessKey": "minioadmin",
@@ -23,30 +23,18 @@
       "sslEnabled": false,
       "maxAttempts": 3
     },
-    "destination": {
+    "dest": {
       "accessKeyId": "minioadmin",
       "secretAccessKey": "minioadmin",
       "endpointUrl": "http://127.0.0.1:9000",
-      "bucket": "3dtiles-destination",
+      "bucket": "3dtiles",
       "region": "us-east-1",
       "forcePathStyle": true,
       "sslEnabled": false,
       "maxAttempts": 3
     }
   },
-  "NFS": {
-    "source": {
-      "pvPath": "./tests/helpers/3DModels"
-    },
-    "destination": {
-      "pvPath": "./tests/helpers/3DModelsDestination"
-    }
-  },
   "fileSyncer": {
-    "provider": {
-      "source": "nfs",
-      "destination": "s3"
-    },
     "job": {
       "type": "Ingestion_New_3D"
     },

@@ -1,7 +1,6 @@
 import { Layer3DMetadata } from '@map-colonies/mc-model-types';
 import { NFSProvider } from '../providers/nfsProvider';
 import { S3Provider } from '../providers/s3Provider';
-import { ProviderTypes as ProviderType } from './enums';
 
 export interface IConfig {
   get: <T>(setting: string) => T;
@@ -36,27 +35,22 @@ export interface NFSConfig {
 }
 
 export interface ProviderManager {
-  source: S3Provider | NFSProvider,
-  dest: S3Provider | NFSProvider
-}
-
-export interface ProviderConfigOld {
-  type: ProviderType;
-  config: NFSConfig | S3Config
+  source: S3Provider | NFSProvider;
+  dest: S3Provider | NFSProvider;
 }
 
 export interface ProviderConfiguration {
   source: ProviderConfig;
-  dest: ProviderConfig
+  dest: ProviderConfig;
 }
 
 export type ProviderConfig = S3Config | NFSConfig;
 
 export interface ProviderMap {
-  [key: string]: ProviderFunctions;
+  [key: string]: Provider;
 }
 
-export interface ProviderFunctions {
+export interface Provider {
   getFile: (fileName: string) => Promise<Buffer>;
   postFile: (fileName: string, data: Buffer) => Promise<void>;
 }

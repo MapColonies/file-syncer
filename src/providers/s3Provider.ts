@@ -1,17 +1,11 @@
 import { Logger } from '@map-colonies/js-logger';
 import { S3 } from 'aws-sdk';
-import { inject, injectable } from 'tsyringe';
-import { SERVICES } from '../common/constants';
-import { ProviderFunctions, S3Config } from '../common/interfaces';
+import { Provider, S3Config } from '../common/interfaces';
 
-@injectable()
-export class S3Provider implements ProviderFunctions {
+export class S3Provider implements Provider {
   private readonly s3Instance: S3;
 
-  public constructor(
-    @inject(SERVICES.LOGGER) private readonly logger: Logger,
-    @inject(SERVICES.S3_CONFIG) private readonly config: S3Config
-  ) {
+  public constructor(private readonly logger: Logger, private readonly config: S3Config) {
     this.s3Instance = this.createS3Instance(config);
   }
 

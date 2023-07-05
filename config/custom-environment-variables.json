@@ -30,7 +30,7 @@
       "__format": "number"
     }
   },
-  "S3": {
+  "provider": {
     "source": {
       "accessKeyId": "S3_SOURCE_ACCESS_KEY_ID",
       "secretAccessKey": "S3_SOURCE_SECRET_ACCESS_KEY",
@@ -48,9 +48,10 @@
       "maxAttempts": {
         "__name": "S3_SOURCE_MAX_ATTEMPTS",
         "__format": "number"
-      }
+      },
+      "pvPath": "PV_SOURCE_PATH"
     },
-    "destination": {
+    "dest": {
       "accessKeyId": "S3_DEST_ACCESS_KEY_ID",
       "secretAccessKey": "S3_DEST_SECRET_ACCESS_KEY",
       "endpointUrl": "S3_DEST_END_POINT_URL",
@@ -67,22 +68,11 @@
       "maxAttempts": {
         "__name": "S3_DEST_MAX_ATTEMPTS",
         "__format": "number"
-      }
-    }
-  },
-  "NFS": {
-    "source": {
-      "pvPath": "PV_SOURCE_PATH"
-    },
-    "destination": {
+      },
       "pvPath": "PV_DEST_PATH"
     }
   },
   "fileSyncer": {
-    "provider": {
-      "source": "PROVIDER_FROM",
-      "destination": "PROVIDER_TO"
-    },
     "job": {
       "type": "JOB_TYPE"
     },

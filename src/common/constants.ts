@@ -15,10 +15,11 @@ export const SERVICES: Record<string, symbol> = {
   TRACER: Symbol('Tracer'),
   METER: Symbol('Meter'),
   METRICS: Symbol('Metrics'),
-  CONFIG_PROVIDER_FROM: Symbol('ConfigProviderFrom'),
-  CONFIG_PROVIDER_TO: Symbol('ConfigProviderTo'),
+  // CONFIG_PROVIDER_FROM: Symbol('ConfigProviderFrom'),
+  // CONFIG_PROVIDER_TO: Symbol('ConfigProviderTo'),
   S3_CONFIG: Symbol('S3Config'),
   NFS_CONFIG: Symbol('NFSConfig'),
   TASK_HANDLER: Symbol('TaskHandler'),
+  PROVIDER_MANAGER: Symbol('ProviderManager'),
 };
 /* eslint-enable @typescript-eslint/naming-convention */
