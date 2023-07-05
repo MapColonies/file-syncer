@@ -6,7 +6,7 @@ import { AppError } from '../../../src/common/appError';
 import { SERVICES } from '../../../src/common/constants';
 import { ProviderManager } from '../../../src/common/interfaces';
 import { getProviderManager } from '../../../src/providers/getProvider';
-import { providerConfigurationMockNfs } from '../../helpers/mockCreator';
+import { providerConfigurationMockNFS2NFS } from '../../helpers/mockCreator';
 import { NfsHelper } from '../../helpers/nfsHelper';
 
 describe('NFSProvider', () => {
@@ -22,7 +22,7 @@ describe('NFSProvider', () => {
           token: SERVICES.PROVIDER_MANAGER,
           provider: {
             useFactory: (): ProviderManager => {
-              return getProviderManager(providerConfigurationMockNfs);
+              return getProviderManager(providerConfigurationMockNFS2NFS);
             },
           },
         },
@@ -30,8 +30,8 @@ describe('NFSProvider', () => {
     });
 
     providerManager = container.resolve(SERVICES.PROVIDER_MANAGER);
-    nfsHelperSource = new NfsHelper(providerConfigurationMockNfs.source);
-    nfsHelperDest = new NfsHelper(providerConfigurationMockNfs.dest);
+    nfsHelperSource = new NfsHelper(providerConfigurationMockNFS2NFS.source);
+    nfsHelperDest = new NfsHelper(providerConfigurationMockNFS2NFS.dest);
   });
 
   beforeEach(() => {
