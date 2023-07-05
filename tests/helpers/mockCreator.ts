@@ -99,7 +99,7 @@ export const loggerMock = {
   debug: jest.fn(),
 };
 
-export const providerConfigurationMockNFS2NFS = fakeProvidersConfig('nfs', 'nfs') as {source: NFSConfig, dest: NFSConfig};
-export const providerConfigurationMockNFS2S3 = fakeProvidersConfig('nfs', 's3') as {source: NFSConfig, dest: S3Config};
-export const providerConfigurationMockS32NFS = fakeProvidersConfig('s3', 'nfs') as {source: S3Config, dest: NFSConfig};
-export const providerConfigurationMockS32S3 = fakeProvidersConfig('s3', 's3') as {source: S3Config, dest: S3Config};
+export const mockNFStNFS = fakeProvidersConfig('nfs', 'nfs') as {source: NFSConfig, dest: NFSConfig};
+export const mockNFStS3 = fakeProvidersConfig('nfs', 's3') as {source: NFSConfig, dest: S3Config};
+export const mockS3tNFS = fakeProvidersConfig('s3', 'nfs') as {source: S3Config, dest: NFSConfig};
+export const mockS3tS3 = fakeProvidersConfig('s3', 's3') as {source: S3Config, dest: S3Config};

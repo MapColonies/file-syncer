@@ -6,7 +6,7 @@ import { S3Helper } from '../../helpers/s3Helper';
 import { SERVICES } from '../../../src/common/constants';
 import { getApp } from '../../../src/app';
 import { getProviderManager } from '../../../src/providers/getProvider';
-import { providerConfigurationMockS32S3 } from '../../helpers/mockCreator';
+import { mockS3tS3 } from '../../helpers/mockCreator';
 
 jest.useFakeTimers();
 
@@ -23,7 +23,7 @@ describe('S3Provider', () => {
           token: SERVICES.PROVIDER_MANAGER,
           provider: {
             useFactory: (): ProviderManager => {
-              return getProviderManager(providerConfigurationMockS32S3);
+              return getProviderManager(mockS3tS3);
             },
           },
         }
@@ -32,8 +32,8 @@ describe('S3Provider', () => {
     });
 
     providerManager = container.resolve(SERVICES.PROVIDER_MANAGER);
-    s3HelperSource = new S3Helper(providerConfigurationMockS32S3.source);
-    s3HelperDest = new S3Helper(providerConfigurationMockS32S3.dest);
+    s3HelperSource = new S3Helper(mockS3tS3.source);
+    s3HelperDest = new S3Helper(mockS3tS3.dest);
   });
 
   beforeEach(async () => {
@@ -76,7 +76,7 @@ describe('S3Provider', () => {
       const data = Buffer.from(randSentence());
 
       await providerManager.dest.postFile(`${model}/${file}`, data);
-      const result = await s3HelperDest.readFile(providerConfigurationMockS32S3.dest.bucket, `${model}/${file}`);
+      const result = await s3HelperDest.readFile(mockS3tS3.dest.bucket, `${model}/${file}`);
 
       expect(result).toStrictEqual(data);
     });
