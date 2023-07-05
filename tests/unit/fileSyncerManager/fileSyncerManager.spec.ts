@@ -3,7 +3,7 @@ import { container } from 'tsyringe';
 import { getApp } from '../../../src/app';
 import { SERVICES } from '../../../src/common/constants';
 import { FileSyncerManager } from '../../../src/fileSyncerManager/fileSyncerManager';
-import { configProviderFromMock, configProviderToMock, createTask, taskHandlerMock } from '../../helpers/mockCreator';
+import { providerManagerMock, createTask, taskHandlerMock } from '../../helpers/mockCreator';
 
 describe('fileSyncerManager', () => {
   let fileSyncerManager: FileSyncerManager;
@@ -13,8 +13,7 @@ describe('fileSyncerManager', () => {
       override: [
         { token: SERVICES.LOGGER, provider: { useValue: jsLogger({ enabled: false }) } },
         { token: SERVICES.TASK_HANDLER, provider: { useValue: taskHandlerMock } },
-        { token: SERVICES.CONFIG_PROVIDER_FROM, provider: { useValue: configProviderFromMock } },
-        { token: SERVICES.CONFIG_PROVIDER_TO, provider: { useValue: configProviderToMock } },
+        { token: SERVICES.PROVIDER_MANAGER, provider: { useValue: providerManagerMock } },
       ],
     });
 
@@ -27,13 +26,10 @@ describe('fileSyncerManager', () => {
 
   describe('start', () => {
     it('When task counter is not smaller than pool size, it will not dequeue', async () => {
-      fileSyncerManager = container.resolve(FileSyncerManager);
       fileSyncerManager['taskCounter'] = 10;
 
       getApp({
-        override: [
-          { token: SERVICES.FILE_SYNCER_MANAGER, provider: { useValue: fileSyncerManager } },
-        ],
+        override: [{ token: SERVICES.FILE_SYNCER_MANAGER, provider: { useValue: fileSyncerManager } }],
       });
 
       const response = await fileSyncerManager.start();
@@ -48,23 +44,25 @@ describe('fileSyncerManager', () => {
       await fileSyncerManager.start();
 
       expect(taskHandlerMock.dequeue).toHaveBeenCalled();
-      expect(configProviderFromMock.getFile).not.toHaveBeenCalled();
-      expect(configProviderToMock.postFile).not.toHaveBeenCalled();
+      expect(providerManagerMock.source.getFile).not.toHaveBeenCalled();
+      expect(providerManagerMock.dest.postFile).not.toHaveBeenCalled();
     });
 
     it('When found a task, it syncs the files between the providers', async () => {
       taskHandlerMock.dequeue.mockResolvedValue(createTask());
+      providerManagerMock.source.getFile.mockResolvedValue('file data');
+      providerManagerMock.dest.postFile.mockResolvedValue(null);
 
       await fileSyncerManager.start();
 
       expect(taskHandlerMock.dequeue).toHaveBeenCalled();
-      expect(configProviderFromMock.getFile).toHaveBeenCalled();
-      expect(configProviderToMock.postFile).toHaveBeenCalled();
+      expect(providerManagerMock.source.getFile).toHaveBeenCalled();
+      expect(providerManagerMock.dest.postFile).toHaveBeenCalled();
     });
 
     it(`When found a task but didn't get or post file, throws an error`, async () => {
       taskHandlerMock.dequeue.mockResolvedValue(createTask());
-      configProviderFromMock.getFile.mockRejectedValue(new Error('error'));
+      providerManagerMock.source.getFile.mockRejectedValue(new Error('error'));
 
       await fileSyncerManager.start();
 
@@ -74,7 +72,7 @@ describe('fileSyncerManager', () => {
 
     it(`When found a task but there is a problem with the job-manager, throws an error`, async () => {
       taskHandlerMock.dequeue.mockResolvedValue(createTask());
-      configProviderFromMock.getFile.mockRejectedValue(new Error('error'));
+      providerManagerMock.source.getFile.mockRejectedValue(new Error('error'));
       taskHandlerMock.reject.mockRejectedValue(new Error('job-manager error'));
 
       const response = await fileSyncerManager.start();
