@@ -3,8 +3,8 @@ import { randUuid, randWord } from '@ngneat/falso';
 import { NFSConfig, ProviderConfig, ProvidersConfig, S3Config, TaskParameters } from '../../src/common/interfaces';
 
 const fakeNFSConfig = (name: string): NFSConfig => {
-  return {pvPath: `./tests/helpers/${name}`};
-}
+  return { pvPath: `./tests/helpers/${name}` };
+};
 
 const fakeS3Config = (bucket: string): S3Config => {
   return {
@@ -17,14 +17,14 @@ const fakeS3Config = (bucket: string): S3Config => {
     sslEnabled: false,
     maxAttempts: 3,
   };
-}
+};
 
 const fakeProvidersConfig = (source: string, dest: string): ProvidersConfig => {
   return {
     source: FakeProvider(source, 'source-models'),
     dest: FakeProvider(dest, 'dest-models'),
   };
-}
+};
 
 const FakeProvider = (provider: string, name: string): ProviderConfig => {
   switch (provider) {
@@ -35,7 +35,7 @@ const FakeProvider = (provider: string, name: string): ProviderConfig => {
     default:
       throw Error('wrong values');
   }
-}
+};
 
 export const createTask = (modelId?: string, paths?: string[]): ITaskResponse<TaskParameters> => {
   return {
@@ -99,7 +99,7 @@ export const loggerMock = {
   debug: jest.fn(),
 };
 
-export const providerConfigurationMockNFS2NFS = fakeProvidersConfig('nfs', 'nfs') as {source: NFSConfig, dest: NFSConfig};
-export const providerConfigurationMockNFS2S3 = fakeProvidersConfig('nfs', 's3') as {source: NFSConfig, dest: S3Config};
-export const providerConfigurationMockS32NFS = fakeProvidersConfig('s3', 'nfs') as {source: S3Config, dest: NFSConfig};
-export const providerConfigurationMockS32S3 = fakeProvidersConfig('s3', 's3') as {source: S3Config, dest: S3Config};
+export const mockNFStNFS = fakeProvidersConfig('nfs', 'nfs') as { source: NFSConfig; dest: NFSConfig };
+export const mockNFStS3 = fakeProvidersConfig('nfs', 's3') as { source: NFSConfig; dest: S3Config };
+export const mockS3tNFS = fakeProvidersConfig('s3', 'nfs') as { source: S3Config; dest: NFSConfig };
+export const mockS3tS3 = fakeProvidersConfig('s3', 's3') as { source: S3Config; dest: S3Config };
