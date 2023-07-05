@@ -1,6 +1,6 @@
 import httpStatus from 'http-status-codes';
 import { AppError } from '../common/appError';
-import { ProviderConfig, ProviderConfiguration, ProviderManager, NFSConfig, S3Config } from '../common/interfaces';
+import { ProviderConfig, ProvidersConfig, ProviderManager, NFSConfig, S3Config } from '../common/interfaces';
 import logger from '../common/logger';
 import { NFSProvider } from './nfsProvider';
 import { S3Provider } from './s3Provider';
@@ -28,7 +28,7 @@ function isNFSConfig(config: ProviderConfig): config is NFSConfig {
   return typeof (config as NFSConfig).pvPath === 'string';
 }
 
-function getProviderManager(providerConfiguration: ProviderConfiguration): ProviderManager {
+function getProviderManager(providerConfiguration: ProvidersConfig): ProviderManager {
   return {
     source: getProvider(providerConfiguration.source),
     dest: getProvider(providerConfiguration.dest),

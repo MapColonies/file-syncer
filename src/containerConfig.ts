@@ -5,7 +5,7 @@ import config from 'config';
 import { DependencyContainer } from 'tsyringe/dist/typings/types';
 import { SERVICES, SERVICE_NAME } from './common/constants';
 import { InjectionObject, registerDependencies } from './common/dependencyRegistration';
-import { ProviderConfiguration, ProviderManager } from './common/interfaces';
+import { ProvidersConfig, ProviderManager } from './common/interfaces';
 import logger from './common/logger';
 import { tracing } from './common/tracing';
 import { getProviderManager } from './providers/getProvider';
@@ -16,7 +16,7 @@ export interface RegisterOptions {
 }
 
 export const registerExternalValues = (options?: RegisterOptions): DependencyContainer => {
-  const providerConfiguration = config.get<ProviderConfiguration>('provider');
+  const providerConfiguration = config.get<ProvidersConfig>('provider');
   const jobManagerBaseUrl = config.get<string>('jobManager.url');
   const heartbeatUrl = config.get<string>('heartbeat.url');
   const dequeueIntervalMs = config.get<number>('fileSyncer.waitTime');

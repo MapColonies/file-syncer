@@ -39,7 +39,7 @@ export interface ProviderManager {
   dest: S3Provider | NFSProvider;
 }
 
-export interface ProviderConfiguration {
+export interface ProvidersConfig {
   source: ProviderConfig;
   dest: ProviderConfig;
 }
