@@ -1,22 +1,19 @@
-import { container } from 'tsyringe';
 import jsLogger from '@map-colonies/js-logger';
-import httpStatus from 'http-status-codes';
+import { container } from 'tsyringe';
 import { getApp } from '../../../src/app';
-import { AppError } from '../../../src/common/appError';
-import { FileSyncerManager } from '../../../src/fileSyncerManager/fileSyncerManager';
-import { configProviderFromMock, configProviderToMock, createTask, taskHandlerMock } from '../../helpers/mockCreator';
 import { SERVICES } from '../../../src/common/constants';
+import { FileSyncerManager } from '../../../src/fileSyncerManager/fileSyncerManager';
+import { providerManagerMock, createTask, taskHandlerMock } from '../../helpers/mockCreator';
 
 describe('fileSyncerManager', () => {
   let fileSyncerManager: FileSyncerManager;
 
-  beforeAll(() => {
+  beforeEach(() => {
     getApp({
       override: [
         { token: SERVICES.LOGGER, provider: { useValue: jsLogger({ enabled: false }) } },
         { token: SERVICES.TASK_HANDLER, provider: { useValue: taskHandlerMock } },
-        { token: SERVICES.CONFIG_PROVIDER_FROM, provider: { useValue: configProviderFromMock } },
-        { token: SERVICES.CONFIG_PROVIDER_TO, provider: { useValue: configProviderToMock } },
+        { token: SERVICES.PROVIDER_MANAGER, provider: { useValue: providerManagerMock } },
       ],
     });
 
@@ -27,84 +24,61 @@ describe('fileSyncerManager', () => {
     jest.clearAllMocks();
   });
 
-  describe('sendFilesToCloudProvider tests', () => {
-    it('resolves without errors', async () => {
-      //Arrange
-      const task = createTask();
-      configProviderFromMock.getFile.mockResolvedValue('data');
-      configProviderToMock.postFile.mockResolvedValue('');
+  describe('start', () => {
+    it('When task counter is not smaller than pool size, it will not dequeue', async () => {
+      fileSyncerManager['taskCounter'] = 10;
 
-      //Act
-      await fileSyncerManager['sendFilesToCloudProvider'](task);
+      getApp({
+        override: [{ token: SERVICES.FILE_SYNCER_MANAGER, provider: { useValue: fileSyncerManager } }],
+      });
 
-      //Assert
-      expect(configProviderFromMock.getFile).toHaveBeenCalledTimes(task.parameters.paths.length);
-      expect(configProviderToMock.postFile).toHaveBeenCalledWith(task.parameters.modelId, 'data');
-      expect(configProviderToMock.postFile).toHaveBeenCalledTimes(task.parameters.paths.length);
+      const response = await fileSyncerManager.start();
+
+      expect(response).toBeUndefined();
+      expect(taskHandlerMock.dequeue).not.toHaveBeenCalled();
     });
 
-    it('when there is a problem with getting the file, expect to reject the task', async () => {
-      //Arrange
-      const task = createTask();
-      configProviderFromMock.getFile.mockRejectedValue(new AppError(httpStatus.INTERNAL_SERVER_ERROR, 'error', true));
+    it(`When didn't find task, does nothing`, async () => {
+      taskHandlerMock.dequeue.mockResolvedValue(null);
 
-      //Act && Assert
-      await expect(fileSyncerManager['sendFilesToCloudProvider'](task)).rejects.toThrow(AppError);
+      await fileSyncerManager.start();
+
+      expect(taskHandlerMock.dequeue).toHaveBeenCalled();
+      expect(providerManagerMock.source.getFile).not.toHaveBeenCalled();
+      expect(providerManagerMock.dest.postFile).not.toHaveBeenCalled();
+    });
+
+    it('When found a task, it syncs the files between the providers', async () => {
+      taskHandlerMock.dequeue.mockResolvedValue(createTask());
+      providerManagerMock.source.getFile.mockResolvedValue('file data');
+      providerManagerMock.dest.postFile.mockResolvedValue(null);
+
+      await fileSyncerManager.start();
+
+      expect(taskHandlerMock.dequeue).toHaveBeenCalled();
+      expect(providerManagerMock.source.getFile).toHaveBeenCalled();
+      expect(providerManagerMock.dest.postFile).toHaveBeenCalled();
+    });
+
+    it(`When found a task but didn't get or post file, throws an error`, async () => {
+      taskHandlerMock.dequeue.mockResolvedValue(createTask());
+      providerManagerMock.source.getFile.mockRejectedValue(new Error('error'));
+
+      await fileSyncerManager.start();
+
+      expect(taskHandlerMock.dequeue).toHaveBeenCalled();
       expect(taskHandlerMock.reject).toHaveBeenCalled();
     });
 
-    it('when there is a problem with posting the file, expect to reject the task', async () => {
-      //Arrange
-      const task = createTask();
-      configProviderFromMock.getFile.mockResolvedValue('data');
-      configProviderToMock.postFile.mockRejectedValue(new AppError(httpStatus.INTERNAL_SERVER_ERROR, 'error', true));
+    it(`When found a task but there is a problem with the job-manager, throws an error`, async () => {
+      taskHandlerMock.dequeue.mockResolvedValue(createTask());
+      providerManagerMock.source.getFile.mockRejectedValue(new Error('error'));
+      taskHandlerMock.reject.mockRejectedValue(new Error('job-manager error'));
 
-      //Act && Assert
-      await expect(fileSyncerManager['sendFilesToCloudProvider'](task)).rejects.toThrow(AppError);
-      expect(configProviderFromMock.getFile).toHaveBeenCalled();
-      expect(configProviderToMock.postFile).toHaveBeenCalled();
-      expect(taskHandlerMock.reject).toHaveBeenCalled();
-    });
-  });
+      const response = await fileSyncerManager.start();
 
-  describe('rejectJobManager tests', () => {
-    it(`when hasn't reached max attempts, expect to resolve with isRecoverable as true`, async () => {
-      //Arrange
-      const task = createTask();
-      task.attempts = 0;
-      const error = new Error('error message');
-      taskHandlerMock.reject.mockResolvedValue('');
-
-      //Act
-      await fileSyncerManager['rejectJobManager'](error, task);
-
-      //Assert
-      expect(taskHandlerMock.reject).toHaveBeenCalledWith(task.jobId, task.id, true, 'error message');
-    });
-
-    it('when reached max attempts, expect to resolve with isRecoverable as false', async () => {
-      //Arrange
-      const task = createTask();
-      task.attempts = 1000;
-      const error = new Error('error message');
-      taskHandlerMock.reject.mockResolvedValue('');
-
-      //Act
-      await fileSyncerManager['rejectJobManager'](error, task);
-
-      //Assert
-      expect(taskHandlerMock.reject).toHaveBeenCalledWith(task.jobId, task.id, false, 'error message');
-    });
-  });
-
-  describe('changeModelName tests', () => {
-    it('returns the new model path without errors', () => {
-      const modelPath = 'model/path';
-      const newModelName = 'newName';
-
-      const response = fileSyncerManager['changeModelName'](modelPath, newModelName);
-
-      expect(response).toBe('newName/path');
+      expect(taskHandlerMock.dequeue).toHaveBeenCalled();
+      expect(response).toBeUndefined();
     });
   });
 });

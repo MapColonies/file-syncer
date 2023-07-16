@@ -1,16 +1,26 @@
 import { Logger } from '@map-colonies/js-logger';
 import { inject, singleton } from 'tsyringe';
+import { IConfig } from 'config';
 import { SERVICES } from './common/constants';
 import { registerExternalValues, RegisterOptions } from './containerConfig';
 import { FileSyncerManager } from './fileSyncerManager/fileSyncerManager';
 
 @singleton()
 export class App {
-  public constructor(@inject(SERVICES.LOGGER) private readonly logger: Logger, private readonly fileSyncerManager: FileSyncerManager) {}
+  private readonly intervalMs: number;
+
+  public constructor(
+    @inject(SERVICES.LOGGER) private readonly logger: Logger,
+    @inject(SERVICES.CONFIG) private readonly config: IConfig,
+    private readonly fileSyncerManager: FileSyncerManager
+  ) {
+    this.intervalMs = this.config.get<number>('fileSyncer.intervalMs');
+  }
 
   public run(): void {
     this.logger.info({ msg: 'Starting fileSyncer' });
-    this.fileSyncerManager.start();
+    // eslint-disable-next-line @typescript-eslint/no-misused-promises
+    setInterval(async () => this.fileSyncerManager.start(), this.intervalMs);
   }
 }
 

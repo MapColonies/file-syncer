@@ -3,7 +3,7 @@ import { ITaskResponse, IUpdateTaskBody, TaskHandler } from '@map-colonies/mc-pr
 import { IConfig } from 'config';
 import { inject, injectable } from 'tsyringe';
 import { JOB_TYPE, SERVICES } from '../common/constants';
-import { Provider, TaskParameters, TaskResult } from '../common/interfaces';
+import { ProviderManager, TaskParameters, TaskResult } from '../common/interfaces';
 import { sleep } from '../common/utils';
 
 @injectable()
@@ -12,7 +12,6 @@ export class FileSyncerManager {
   private readonly waitTime: number;
   private readonly maxAttempts: number;
   private readonly maxRetries: number;
-  private readonly intervalMs: number;
   private readonly taskPoolSize: number;
   private taskCounter: number;
 
@@ -20,39 +19,34 @@ export class FileSyncerManager {
     @inject(SERVICES.LOGGER) private readonly logger: Logger,
     @inject(SERVICES.CONFIG) private readonly config: IConfig,
     @inject(SERVICES.TASK_HANDLER) private readonly taskHandler: TaskHandler,
-    @inject(SERVICES.CONFIG_PROVIDER_FROM) private readonly configProviderFrom: Provider,
-    @inject(SERVICES.CONFIG_PROVIDER_TO) private readonly configProviderTo: Provider
+    @inject(SERVICES.PROVIDER_MANAGER) private readonly providerManager: ProviderManager
   ) {
     this.taskType = this.config.get<string>('fileSyncer.task.type');
     this.maxAttempts = this.config.get<number>('fileSyncer.task.maxAttempts');
     this.waitTime = this.config.get<number>('fileSyncer.waitTime');
     this.maxRetries = this.config.get<number>('fileSyncer.maxRetries');
-    this.intervalMs = this.config.get<number>('fileSyncer.intervalMs');
     this.taskPoolSize = this.config.get<number>('fileSyncer.taskPoolSize');
     this.taskCounter = 0;
   }
 
-  public start(): void {
-    // eslint-disable-next-line @typescript-eslint/no-misused-promises
-    setInterval(async () => {
-      if (this.taskCounter >= this.taskPoolSize) {
-        return;
-      }
+  public async start(): Promise<void> {
+    if (this.taskCounter >= this.taskPoolSize) {
+      return;
+    }
 
-      const task = await this.taskHandler.dequeue<TaskParameters>(JOB_TYPE, this.taskType);
-      if (!task) {
-        return;
-      }
+    const task = await this.taskHandler.dequeue<TaskParameters>(JOB_TYPE, this.taskType);
+    if (!task) {
+      return;
+    }
 
-      this.logger.info({ msg: 'Found a task to work on!', task: task.id });
-      this.taskCounter++;
-      const isCompleted: boolean = await this.handleTaskWithRetries(task);
-      if (isCompleted) {
-        await this.taskHandler.ack<IUpdateTaskBody<TaskParameters>>(task.jobId, task.id);
-      }
-      this.logger.info({ msg: 'Done working on a task in this interval', taskId: task.id });
-      this.taskCounter--;
-    }, this.intervalMs);
+    this.logger.info({ msg: 'Found a task to work on!', task: task.id });
+    this.taskCounter++;
+    const isCompleted: boolean = await this.handleTaskWithRetries(task);
+    if (isCompleted) {
+      await this.taskHandler.ack<IUpdateTaskBody<TaskParameters>>(task.jobId, task.id);
+    }
+    this.logger.info({ msg: 'Done working on a task in this interval', taskId: task.id });
+    this.taskCounter--;
   }
 
   private async handleTaskWithRetries(task: ITaskResponse<TaskParameters>): Promise<boolean> {
@@ -110,6 +104,7 @@ export class FileSyncerManager {
         }
         return taskResult;
       }
+
       taskResult.index++;
     }
 
@@ -125,9 +120,9 @@ export class FileSyncerManager {
   }
 
   private async syncFile(filePath: string, taskParameters: TaskParameters): Promise<void> {
-    const data = await this.configProviderFrom.getFile(filePath);
+    const data = await this.providerManager.source.getFile(filePath);
     const newModelName = this.changeModelName(filePath, taskParameters.modelId);
-    await this.configProviderTo.postFile(newModelName, data);
+    await this.providerManager.dest.postFile(newModelName, data);
   }
 
   private async rejectJobManager(err: Error, task: ITaskResponse<TaskParameters>): Promise<void> {

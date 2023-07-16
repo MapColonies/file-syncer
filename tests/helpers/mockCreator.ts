@@ -1,13 +1,49 @@
 import { ITaskResponse, OperationStatus } from '@map-colonies/mc-priority-queue';
 import { randUuid, randWord } from '@ngneat/falso';
-import { TaskParameters } from '../../src/common/interfaces';
+import { NFSConfig, ProviderConfig, ProvidersConfig, S3Config, TaskParameters } from '../../src/common/interfaces';
 
-export const createTask = (): ITaskResponse<TaskParameters> => {
+const fakeNFSConfig = (name: string): NFSConfig => {
+  return { pvPath: `./tests/helpers/${name}` };
+};
+
+const fakeS3Config = (bucket: string): S3Config => {
+  return {
+    accessKeyId: 'minioadmin',
+    secretAccessKey: 'minioadmin',
+    endpointUrl: 'http://127.0.0.1:9000',
+    bucket,
+    region: 'us-east-1',
+    forcePathStyle: true,
+    sslEnabled: false,
+    maxAttempts: 3,
+    sigVersion: 'v4',
+  };
+};
+
+const fakeProvidersConfig = (source: string, dest: string): ProvidersConfig => {
+  return {
+    source: FakeProvider(source, 'source-models'),
+    dest: FakeProvider(dest, 'dest-models'),
+  };
+};
+
+const FakeProvider = (provider: string, name: string): ProviderConfig => {
+  switch (provider) {
+    case 's3':
+      return fakeS3Config(name);
+    case 'nfs':
+      return fakeNFSConfig(name);
+    default:
+      throw Error('wrong values');
+  }
+};
+
+export const createTask = (modelId?: string, paths?: string[]): ITaskResponse<TaskParameters> => {
   return {
     id: randUuid(),
     jobId: randUuid(),
     description: randWord(),
-    parameters: createTaskParameters(),
+    parameters: createTaskParameters(modelId, paths),
     created: '2020',
     updated: '2022',
     type: 'ingestion',
@@ -18,10 +54,10 @@ export const createTask = (): ITaskResponse<TaskParameters> => {
   };
 };
 
-export const createTaskParameters = (): TaskParameters => {
+export const createTaskParameters = (modelId?: string, paths?: string[]): TaskParameters => {
   return {
-    paths: [randWord(), randWord()],
-    modelId: randUuid(),
+    paths: paths ? paths : [randWord(), randWord()],
+    modelId: modelId != undefined ? modelId : randUuid(),
     lastIndexError: 0,
   };
 };
@@ -33,14 +69,16 @@ export const taskHandlerMock = {
   waitForTask: jest.fn(),
   ack: jest.fn(),
   reject: jest.fn(),
+  dequeue: jest.fn(),
 };
 
-export const configProviderFromMock = {
-  getFile: jest.fn(),
-};
-
-export const configProviderToMock = {
-  postFile: jest.fn(),
+export const providerManagerMock = {
+  source: {
+    getFile: jest.fn(),
+  },
+  dest: {
+    postFile: jest.fn(),
+  },
 };
 
 export const fileSyncerManagerMock = {
@@ -61,3 +99,8 @@ export const loggerMock = {
   error: jest.fn(),
   debug: jest.fn(),
 };
+
+export const mockNFStNFS = fakeProvidersConfig('nfs', 'nfs') as { source: NFSConfig; dest: NFSConfig };
+export const mockNFStS3 = fakeProvidersConfig('nfs', 's3') as { source: NFSConfig; dest: S3Config };
+export const mockS3tNFS = fakeProvidersConfig('s3', 'nfs') as { source: S3Config; dest: NFSConfig };
+export const mockS3tS3 = fakeProvidersConfig('s3', 's3') as { source: S3Config; dest: S3Config };
