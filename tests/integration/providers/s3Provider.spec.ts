@@ -26,8 +26,7 @@ describe('S3Provider', () => {
               return getProviderManager(mockS3tS3);
             },
           },
-        }
-
+        },
       ],
     });
 
@@ -39,7 +38,7 @@ describe('S3Provider', () => {
   beforeEach(async () => {
     await s3HelperSource.initialize();
     await s3HelperDest.initialize();
-  })
+  });
 
   afterEach(async () => {
     await s3HelperSource.terminate();
