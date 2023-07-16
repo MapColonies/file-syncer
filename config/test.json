@@ -12,7 +12,7 @@
   "nginx": {
     "url": "http://127.0.0.1:8084"
   },
-  "S3": {
+  "provider": {
     "source": {
       "accessKeyId": "minioadmin",
       "secretAccessKey": "minioadmin",
@@ -24,11 +24,11 @@
       "maxAttempts": 3,
       "sigVersion": "v4"
     },
-    "destination": {
+    "dest": {
       "accessKeyId": "minioadmin",
       "secretAccessKey": "minioadmin",
       "endpointUrl": "http://127.0.0.1:9000",
-      "bucket": "3dtiles-destination",
+      "bucket": "3dtiles",
       "region": "us-east-1",
       "forcePathStyle": true,
       "sslEnabled": false,
@@ -36,19 +36,7 @@
       "sigVersion": "v4"
     }
   },
-  "NFS": {
-    "source": {
-      "pvPath": "/home/netanel/3DModels"
-    },
-    "destination": {
-      "pvPath": "/home/netanel/destination3DModels"
-    }
-  },
   "fileSyncer": {
-    "provider": {
-      "source": "nfs",
-      "destination": "s3"
-    },
     "job": {
       "type": "Ingestion_New_3D"
     },
@@ -56,8 +44,9 @@
       "type": "Ingestion",
       "maxAttempts": 3
     },
-    "waitTime": 5000,
+    "waitTime": 0,
     "maxRetries": 3,
+    "taskPoolSize": 3,
     "intervalMs": 5000
   }
 }
