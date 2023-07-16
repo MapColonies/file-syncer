@@ -49,7 +49,7 @@
         "__name": "S3_SOURCE_MAX_ATTEMPTS",
         "__format": "number"
       },
-      "pvPath": "PV_SOURCE_PATH"
+      "sigVersion": "S3_SOURCE_SIG_VERSION"
     },
     "dest": {
       "accessKeyId": "S3_DEST_ACCESS_KEY_ID",
@@ -69,6 +69,14 @@
         "__name": "S3_DEST_MAX_ATTEMPTS",
         "__format": "number"
       },
+      "sigVersion": "S3_DEST_SIG_VERSION"
+    }
+  },
+  "NFS": {
+    "source": {
+      "pvPath": "PV_SOURCE_PATH"
+    },
+    "destination": {
       "pvPath": "PV_DEST_PATH"
     }
   },
