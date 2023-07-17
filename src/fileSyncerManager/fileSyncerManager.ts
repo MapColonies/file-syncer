@@ -44,9 +44,19 @@ export class FileSyncerManager {
     const isCompleted: boolean = await this.handleTaskWithRetries(task);
     if (isCompleted) {
       await this.taskHandler.ack<IUpdateTaskBody<TaskParameters>>(task.jobId, task.id);
+      await this.deleteTaskParameters(task);
     }
-    this.logger.info({ msg: 'Done working on a task in this interval', taskId: task.id });
+
     this.taskCounter--;
+    this.logger.info({ msg: 'Done working on a task in this interval', taskId: task.id, isCompleted });
+  }
+
+  private async deleteTaskParameters(task: ITaskResponse<TaskParameters>): Promise<void> {
+    const parameters = task.parameters;
+    await this.taskHandler.jobManagerClient.updateTask(task.jobId, task.id, {
+      ...task,
+      parameters: { modelId: parameters.modelId, lastIndexError: parameters.lastIndexError },
+    });
   }
 
   private async handleTaskWithRetries(task: ITaskResponse<TaskParameters>): Promise<boolean> {
