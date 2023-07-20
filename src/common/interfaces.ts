@@ -20,6 +20,7 @@ export interface TaskParameters {
 }
 
 export interface S3Config {
+  type: "S3";
   accessKeyId: string;
   secretAccessKey: string;
   endpointUrl: string;
@@ -32,6 +33,7 @@ export interface S3Config {
 }
 
 export interface NFSConfig {
+  type: "NFS";
   pvPath: string;
 }
 
