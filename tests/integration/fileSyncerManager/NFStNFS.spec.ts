@@ -14,7 +14,7 @@ describe('fileSyncerManager NFS to NFS', () => {
   let nfsHelperSource: NFSHelper;
   let nfsHelperDest: NFSHelper;
 
-  beforeAll(() => {
+  beforeEach(() => {
     getApp({
       override: [
         { token: SERVICES.TASK_HANDLER, provider: { useValue: taskHandlerMock } },
@@ -32,9 +32,6 @@ describe('fileSyncerManager NFS to NFS', () => {
     fileSyncerManager = container.resolve(FileSyncerManager);
     nfsHelperSource = new NFSHelper(mockNFStNFS.source);
     nfsHelperDest = new NFSHelper(mockNFStNFS.dest);
-  });
-
-  beforeEach(() => {
     nfsHelperSource.initNFS();
     nfsHelperDest.initNFS();
   });
@@ -46,6 +43,19 @@ describe('fileSyncerManager NFS to NFS', () => {
   });
 
   describe('start function', () => {
+    it('When task counter is not smaller than pool size, it will not dequeue', async () => {
+      fileSyncerManager['taskCounter'] = 10;
+
+      getApp({
+        override: [{ token: SERVICES.FILE_SYNCER_MANAGER, provider: { useValue: fileSyncerManager } }],
+      });
+
+      const response = await fileSyncerManager.start();
+
+      expect(response).toBeUndefined();
+      expect(taskHandlerMock.dequeue).not.toHaveBeenCalled();
+    });
+
     it(`When didn't get task, should do nothing`, async () => {
       taskHandlerMock.dequeue.mockResolvedValue(null);
 
