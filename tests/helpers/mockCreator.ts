@@ -3,11 +3,12 @@ import { randUuid, randWord } from '@ngneat/falso';
 import { NFSConfig, ProviderConfig, ProvidersConfig, S3Config, TaskParameters } from '../../src/common/interfaces';
 
 const fakeNFSConfig = (name: string): NFSConfig => {
-  return { pvPath: `./tests/helpers/${name}` };
+  return { type: 'NFS', pvPath: `./tests/helpers/${name}` };
 };
 
 const fakeS3Config = (bucket: string): S3Config => {
   return {
+    type: 'S3',
     accessKeyId: 'minioadmin',
     secretAccessKey: 'minioadmin',
     endpointUrl: 'http://127.0.0.1:9000',
