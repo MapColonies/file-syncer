@@ -1,4 +1,3 @@
-import { TaskHandler } from '@map-colonies/mc-priority-queue';
 import { Metrics } from '@map-colonies/telemetry';
 import { trace } from '@opentelemetry/api';
 import config from 'config';
@@ -17,10 +16,6 @@ export interface RegisterOptions {
 
 export const registerExternalValues = (options?: RegisterOptions): DependencyContainer => {
   const providerConfiguration = config.get<ProvidersConfig>('provider');
-  const jobManagerBaseUrl = config.get<string>('jobManager.url');
-  const heartbeatUrl = config.get<string>('heartbeat.url');
-  const dequeueIntervalMs = config.get<number>('fileSyncer.waitTime');
-  const heartbeatIntervalMs = config.get<number>('heartbeat.waitTime');
 
   const metrics = new Metrics(SERVICE_NAME);
   const meter = metrics.start();
@@ -34,14 +29,6 @@ export const registerExternalValues = (options?: RegisterOptions): DependencyCon
     { token: SERVICES.TRACER, provider: { useValue: tracer } },
     { token: SERVICES.METER, provider: { useValue: meter } },
     { token: SERVICES.METRICS, provider: { useValue: metrics } },
-    {
-      token: SERVICES.TASK_HANDLER,
-      provider: {
-        useFactory: (): TaskHandler => {
-          return new TaskHandler(logger, jobManagerBaseUrl, heartbeatUrl, dequeueIntervalMs, heartbeatIntervalMs);
-        },
-      },
-    },
     {
       token: SERVICES.PROVIDER_MANAGER,
       provider: {

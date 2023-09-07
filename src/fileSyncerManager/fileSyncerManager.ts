@@ -13,12 +13,15 @@ export class FileSyncerManager {
   private readonly maxAttempts: number;
   private readonly maxRetries: number;
   private readonly taskPoolSize: number;
+  private readonly jobManagerBaseUrl: string
+  private readonly heartbeatUrl: string
+  private readonly dequeueIntervalMs: number
+  private readonly heartbeatIntervalMs: number
   private taskCounter: number;
 
   public constructor(
     @inject(SERVICES.LOGGER) private readonly logger: Logger,
     @inject(SERVICES.CONFIG) private readonly config: IConfig,
-    @inject(SERVICES.TASK_HANDLER) private readonly taskHandler: TaskHandler,
     @inject(SERVICES.PROVIDER_MANAGER) private readonly providerManager: ProviderManager
   ) {
     this.taskType = this.config.get<string>('fileSyncer.task.type');
@@ -26,6 +29,10 @@ export class FileSyncerManager {
     this.waitTime = this.config.get<number>('fileSyncer.waitTime');
     this.maxRetries = this.config.get<number>('fileSyncer.maxRetries');
     this.taskPoolSize = this.config.get<number>('fileSyncer.taskPoolSize');
+    this.jobManagerBaseUrl = this.config.get<string>('jobManager.url');
+    this.heartbeatUrl = this.config.get<string>('heartbeat.url');
+    this.dequeueIntervalMs = this.config.get<number>('fileSyncer.waitTime');
+    this.heartbeatIntervalMs = this.config.get<number>('heartbeat.waitTime');
     this.taskCounter = 0;
   }
 
@@ -33,20 +40,21 @@ export class FileSyncerManager {
     if (this.taskCounter >= this.taskPoolSize) {
       return;
     }
+    const taskHandler = new TaskHandler(this.logger, this.jobManagerBaseUrl, this.heartbeatUrl, this.dequeueIntervalMs, this.heartbeatIntervalMs);
 
-    this.logger.info({ msg: 'Try to dequeue new task' });
-    const task = await this.taskHandler.dequeue<TaskParameters>(JOB_TYPE, this.taskType);
+    this.logger.debug({ msg: 'Try to dequeue new task' });
+    const task = await taskHandler.dequeue<TaskParameters>(JOB_TYPE, this.taskType);
     if (!task) {
       return;
     }
 
     this.logger.info({ msg: 'Found a task to work on!', task: task.id });
     this.taskCounter++;
-    const isCompleted: boolean = await this.handleTaskWithRetries(task);
+    const isCompleted: boolean = await this.handleTaskWithRetries(task, taskHandler);
     if (isCompleted) {
-      await this.taskHandler.ack<IUpdateTaskBody<TaskParameters>>(task.jobId, task.id);
+      await taskHandler.ack<IUpdateTaskBody<TaskParameters>>(task.jobId, task.id);
       this.logger.info({ msg: 'Finished ack task', task: task.id });
-      await this.deleteTaskParameters(task);
+      await this.deleteTaskParameters(task, taskHandler);
       this.logger.info({ msg: `Deleted task's parameters successfully`, task: task.id });
     }
 
@@ -54,14 +62,14 @@ export class FileSyncerManager {
     this.logger.info({ msg: 'Done working on a task in this interval', taskId: task.id, isCompleted });
   }
 
-  private async deleteTaskParameters(task: ITaskResponse<TaskParameters>): Promise<void> {
+  private async deleteTaskParameters(task: ITaskResponse<TaskParameters>, taskHandler: TaskHandler): Promise<void> {
     const parameters = task.parameters;
-    await this.taskHandler.jobManagerClient.updateTask(task.jobId, task.id, {
+    await taskHandler.jobManagerClient.updateTask(task.jobId, task.id, {
       parameters: { modelId: parameters.modelId, lastIndexError: parameters.lastIndexError },
     });
   }
 
-  private async handleTaskWithRetries(task: ITaskResponse<TaskParameters>): Promise<boolean> {
+  private async handleTaskWithRetries(task: ITaskResponse<TaskParameters>, taskHandler: TaskHandler): Promise<boolean> {
     this.logger.info({ msg: 'Starting handleTaskWithRetries', taskId: task.id });
     let retry = 0;
     let taskResult!: TaskResult;
@@ -86,14 +94,14 @@ export class FileSyncerManager {
       taskId: task.id,
       reason: task.reason,
     });
-    await this.handleFailedTask(task, taskResult);
+    await this.handleFailedTask(task, taskResult, taskHandler);
     return false;
   }
 
-  private async handleFailedTask(task: ITaskResponse<TaskParameters>, taskResult: TaskResult): Promise<void> {
+  private async handleFailedTask(task: ITaskResponse<TaskParameters>, taskResult: TaskResult, taskHandler: TaskHandler): Promise<void> {
     try {
-      await this.updateIndexError(task, taskResult.index);
-      await this.rejectJobManager(taskResult.error ?? new Error('Default error'), task);
+      await this.updateIndexError(task, taskResult.index, taskHandler);
+      await this.rejectJobManager(taskResult.error ?? new Error('Default error'), task, taskHandler);
       this.logger.info({ msg: 'Updated failing the task in job manager' });
     } catch (err) {
       this.logger.error({ err, taskId: task.id });
@@ -137,16 +145,16 @@ export class FileSyncerManager {
     await this.providerManager.dest.postFile(newModelName, data);
   }
 
-  private async rejectJobManager(err: Error, task: ITaskResponse<TaskParameters>): Promise<void> {
+  private async rejectJobManager(err: Error, task: ITaskResponse<TaskParameters>, taskHandler: TaskHandler): Promise<void> {
     const isRecoverable: boolean = task.attempts < this.maxAttempts;
-    await this.taskHandler.reject<IUpdateTaskBody<TaskParameters>>(task.jobId, task.id, isRecoverable, err.message);
+    await taskHandler.reject<IUpdateTaskBody<TaskParameters>>(task.jobId, task.id, isRecoverable, err.message);
   }
 
-  private async updateIndexError(task: ITaskResponse<TaskParameters>, lastIndexError: number): Promise<void> {
+  private async updateIndexError(task: ITaskResponse<TaskParameters>, lastIndexError: number, taskHandler: TaskHandler): Promise<void> {
     const payload: IUpdateTaskBody<TaskParameters> = {
       parameters: { ...task.parameters, lastIndexError },
     };
-    await this.taskHandler.jobManagerClient.updateTask<TaskParameters>(task.jobId, task.id, payload);
+    await taskHandler.jobManagerClient.updateTask<TaskParameters>(task.jobId, task.id, payload);
   }
 
   private changeModelName(oldName: string, newName: string): string {
