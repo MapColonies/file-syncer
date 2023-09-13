@@ -74,12 +74,16 @@ export class FileSyncerManager {
       } else {
         retry++;
         this.logger.info({
-          msg: 'Increase retry', retry, maxRetries: this.maxRetries,
+          msg: 'Increase retry',
+          retry,
+          maxRetries: this.maxRetries,
         });
         await sleep(this.waitTime);
         this.logger.error({
-          error: taskResult.error?.message, taskId: task.id,
-          modelId: task.parameters.modelId, jobId: task.jobId
+          error: taskResult.error?.message,
+          taskId: task.id,
+          modelId: task.parameters.modelId,
+          jobId: task.jobId,
         });
       }
     }
