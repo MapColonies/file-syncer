@@ -45,13 +45,13 @@ export class FileSyncerManager {
     const isCompleted: boolean = await this.handleTaskWithRetries(task);
     if (isCompleted) {
       await this.taskHandler.ack<IUpdateTaskBody<TaskParameters>>(task.jobId, task.id);
-      this.logger.info({ msg: 'Finished ack task', task: task.id });
+      this.logger.info({ msg: 'Finished ack task', task: task.id, modelId: task.parameters.modelId });
       await this.deleteTaskParameters(task);
-      this.logger.info({ msg: `Deleted task's parameters successfully`, task: task.id });
+      this.logger.info({ msg: `Deleted task's parameters successfully`, task: task.id, modelId: task.parameters.modelId });
     }
 
     this.taskCounter--;
-    this.logger.info({ msg: 'Done working on a task in this interval', taskId: task.id, isCompleted });
+    this.logger.info({ msg: 'Done working on a task in this interval', taskId: task.id, isCompleted, modelId: task.parameters.modelId });
   }
 
   private async deleteTaskParameters(task: ITaskResponse<TaskParameters>): Promise<void> {
@@ -73,9 +73,18 @@ export class FileSyncerManager {
         return true;
       } else {
         retry++;
-        this.logger.info({ msg: 'Increase retry', retry, maxRetries: this.maxRetries });
+        this.logger.info({
+          msg: 'Increase retry',
+          retry,
+          maxRetries: this.maxRetries,
+        });
         await sleep(this.waitTime);
-        this.logger.error({ error: taskResult.error?.message, taskId: task.id });
+        this.logger.error({
+          error: taskResult.error?.message,
+          taskId: task.id,
+          modelId: task.parameters.modelId,
+          jobId: task.jobId,
+        });
       }
     }
 
