@@ -12,6 +12,16 @@ File Sync: For each pending task, the service copies the corresponding files fro
 
 Task Pool Size: The File Syncer service has a task pool that determines the number of tasks it can fetch and process in each interval. The size of the task pool is determined by the 'taskPoolSize' parameter in the configuration.
 
+## Retry mechanism: 
+The file syncer service incorporates a robust retry mechanism to ensure the successful completion of tasks, even when faced with potential external issues. This mechanism is designed to handle cases where the NFS/S3 providers experience temporary busy states, preventing task completion. The retry mechanism consists of two layers of retries, each serving a specific purpose. 
+#### Major Retry Layer - `maxAttempts`
+The major retry layer is known as `maxAttempts`, for the `attempts` column in the task. This parameter represents the total number of attempts made to accomplish a task. Each time the task encounters an obstacle, the `attempts` count is incremented. This allows the service to track the number of times the task has been attempted, ensuring that the system does not give up too soon. 
+#### Minor Retry Layer - `maxRetries`
+The minor retry layer, called `maxRetries`, operates within the service itself. It facilitates retries of the file syncing process within the service before reflecting them in the `attempts` count. This layer acknowledges that the NFS/S3 providers might experience temporary busy periods, which should not lead to task failure. Instead of immediately marking a task as failed due to provider congestion, the service tries syncing the files again for a number of times.
+#### Why the Retry Mechanism?
+
+The need for a retry mechanism arises from the unpredictable nature of external dependencies like NFS and S3. These providers may occasionally become overloaded or encounter transient issues, resulting in failed attempts to sync files. The retry mechanism prevents such instances from affecting task success rates. By incorporating a multi-layered approach to retries, the file syncer service enhances its reliability and resilience, ensuring that tasks have a higher likelihood of successful completion even in the face of external challenges.
+
 ## Dependencies
 The File Syncer service has the following dependencies:
 

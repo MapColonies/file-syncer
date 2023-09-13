@@ -34,7 +34,7 @@ export class FileSyncerManager {
       return;
     }
 
-    this.logger.info({ msg: 'Try to dequeue new task' });
+    this.logger.debug({ msg: 'Try to dequeue new task' });
     const task = await this.taskHandler.dequeue<TaskParameters>(JOB_TYPE, this.taskType);
     if (!task) {
       return;

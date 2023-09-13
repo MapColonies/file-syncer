@@ -1,16 +1,9 @@
-import { Layer3DMetadata } from '@map-colonies/mc-model-types';
 import { NFSProvider } from '../providers/nfsProvider';
 import { S3Provider } from '../providers/s3Provider';
 
 export interface IConfig {
   get: <T>(setting: string) => T;
   has: (setting: string) => boolean;
-}
-
-export interface JobParameters {
-  metadata: Layer3DMetadata;
-  modelId: string;
-  tilesetFilename: string;
 }
 
 export interface TaskParameters {
