@@ -40,7 +40,7 @@ export class FileSyncerManager {
       return;
     }
 
-    this.logger.info({ msg: 'Found a task to work on!', task: task.id });
+    this.logger.info({ msg: 'Found a task to work on!', task: task.id, modelId: task.parameters.modelId });
     this.taskCounter++;
     const isCompleted: boolean = await this.handleTaskWithRetries(task);
     if (isCompleted) {
@@ -62,7 +62,7 @@ export class FileSyncerManager {
   }
 
   private async handleTaskWithRetries(task: ITaskResponse<TaskParameters>): Promise<boolean> {
-    this.logger.info({ msg: 'Starting handleTaskWithRetries', taskId: task.id });
+    this.logger.debug({ msg: 'Starting handleTaskWithRetries', taskId: task.id, modelId: task.parameters.modelId });
     let retry = 0;
     let taskResult!: TaskResult;
 
@@ -103,14 +103,14 @@ export class FileSyncerManager {
     try {
       await this.updateIndexError(task, taskResult.index);
       await this.rejectJobManager(taskResult.error ?? new Error('Default error'), task);
-      this.logger.info({ msg: 'Updated failing the task in job manager' });
+      this.logger.info({ msg: 'Updated failing the task in job manager', task: task.id });
     } catch (err) {
       this.logger.error({ err, taskId: task.id });
     }
   }
 
   private async handleTask(task: ITaskResponse<TaskParameters>): Promise<TaskResult> {
-    this.logger.info({ msg: 'Starting handleTask', taskId: task.id });
+    this.logger.debug({ msg: 'Starting handleTask', taskId: task.id });
     const taskParameters = task.parameters;
     const taskResult: TaskResult = this.initTaskResult(taskParameters);
 
@@ -118,10 +118,10 @@ export class FileSyncerManager {
       const filePath = taskParameters.paths[taskResult.index];
       try {
         await this.syncFile(filePath, taskParameters);
-      } catch (err) {
-        if (err instanceof Error) {
-          this.logger.error({ err, taskId: task.id });
-          taskResult.error = err;
+      } catch (error) {
+        if (error instanceof Error) {
+          this.logger.error({ error, taskId: task.id });
+          taskResult.error = error;
         }
         return taskResult;
       }
