@@ -105,7 +105,7 @@ export class FileSyncerManager {
       await this.rejectJobManager(taskResult.error ?? new Error('Default error'), task);
       this.logger.info({ msg: 'Updated failing the task in job manager', task: task.id });
     } catch (err) {
-      this.logger.error({ err, taskId: task.id });
+      this.logger.error({ err, taskId: task.id, modelId: task.parameters.modelId });
     }
   }
 
@@ -120,7 +120,7 @@ export class FileSyncerManager {
         await this.syncFile(filePath, taskParameters);
       } catch (error) {
         if (error instanceof Error) {
-          this.logger.error({ error, taskId: task.id });
+          this.logger.error({ error, taskId: task.id, modelId: task.parameters.modelId });
           taskResult.error = error;
         }
         return taskResult;
