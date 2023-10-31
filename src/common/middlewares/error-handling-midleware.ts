@@ -7,8 +7,8 @@ export interface ErrorResponse {
 export type AppErrorResponse = Response<ErrorResponse>;
 
 export const getErrorHandlerMiddleware: () => ErrorRequestHandler = () => {
-  const errorHandlerMiddleware: ErrorRequestHandler = (err: Error, req: Request, res: AppErrorResponse): void => {
-    errorHandler.handleError(err, res);
+  const errorHandlerMiddleware: ErrorRequestHandler = (error: Error, req: Request, res: AppErrorResponse): void => {
+    errorHandler.handleError(error, res);
   };
   return errorHandlerMiddleware;
 };

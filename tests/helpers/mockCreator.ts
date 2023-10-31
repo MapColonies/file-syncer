@@ -59,7 +59,7 @@ export const createTaskParameters = (modelId?: string, paths?: string[]): TaskPa
   return {
     paths: paths ? paths : [randWord(), randWord()],
     modelId: modelId != undefined ? modelId : randUuid(),
-    lastIndexError: 0,
+    lastIndexError: -1,
   };
 };
 
