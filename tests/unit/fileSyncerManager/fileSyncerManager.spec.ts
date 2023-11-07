@@ -60,7 +60,7 @@ describe('fileSyncerManager', () => {
       expect(providerManagerMock.dest.postFile).toHaveBeenCalled();
     });
 
-    it('When found a task with index not 0, it starts from the index', async () => {
+    it('When found a task with index not -1, it starts from the index', async () => {
       const task = createTask();
       task.parameters.lastIndexError = 1;
       taskHandlerMock.dequeue.mockResolvedValue(task);
