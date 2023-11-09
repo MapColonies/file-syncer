@@ -45,9 +45,6 @@ describe('NFSProvider', () => {
     jest.clearAllMocks();
   });
 
-  // afterAll(async () => {
-  // })
-
   describe('getFile', () => {
     it('When calling getFile, should get the file content from pv path', async () => {
       const model = randWord();

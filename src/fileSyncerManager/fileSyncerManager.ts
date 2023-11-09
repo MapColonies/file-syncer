@@ -80,7 +80,8 @@ export class FileSyncerManager {
         });
         await sleep(this.waitTime);
         this.logger.error({
-          error: taskResult.error?.message,
+          // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+          error: taskResult.error!.message,
           taskId: task.id,
           modelId: task.parameters.modelId,
           jobId: task.jobId,
@@ -93,7 +94,6 @@ export class FileSyncerManager {
       error: taskResult.error,
       retry,
       taskId: task.id,
-      reason: task.reason,
     });
     await this.handleFailedTask(task, taskResult);
     return false;
@@ -102,10 +102,11 @@ export class FileSyncerManager {
   private async handleFailedTask(task: ITaskResponse<TaskParameters>, taskResult: TaskResult): Promise<void> {
     try {
       await this.updateIndexError(task, taskResult.index);
-      await this.rejectJobManager(taskResult.error ?? new Error('Default error'), task);
+      // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+      await this.rejectJobManager(taskResult.error!, task);
       this.logger.info({ msg: 'Updated failing the task in job manager', task: task.id });
-    } catch (err) {
-      this.logger.error({ err, taskId: task.id, modelId: task.parameters.modelId });
+    } catch (error) {
+      this.logger.error({ error, taskId: task.id, modelId: task.parameters.modelId });
     }
   }
 
@@ -119,10 +120,8 @@ export class FileSyncerManager {
       try {
         await this.syncFile(filePath, taskParameters);
       } catch (error) {
-        if (error instanceof Error) {
-          this.logger.error({ error, taskId: task.id, modelId: task.parameters.modelId });
-          taskResult.error = error;
-        }
+        this.logger.error({ error, taskId: task.id, modelId: task.parameters.modelId });
+        taskResult.error = error instanceof Error ? error : new Error(String(error));
         return taskResult;
       }
 
@@ -146,9 +145,9 @@ export class FileSyncerManager {
     await this.providerManager.dest.postFile(newModelName, data);
   }
 
-  private async rejectJobManager(err: Error, task: ITaskResponse<TaskParameters>): Promise<void> {
+  private async rejectJobManager(error: Error, task: ITaskResponse<TaskParameters>): Promise<void> {
     const isRecoverable: boolean = task.attempts < this.maxAttempts;
-    await this.taskHandler.reject<IUpdateTaskBody<TaskParameters>>(task.jobId, task.id, isRecoverable, err.message);
+    await this.taskHandler.reject<IUpdateTaskBody<TaskParameters>>(task.jobId, task.id, isRecoverable, error.message);
   }
 
   private async updateIndexError(task: ITaskResponse<TaskParameters>, lastIndexError: number): Promise<void> {

@@ -60,9 +60,33 @@ describe('fileSyncerManager', () => {
       expect(providerManagerMock.dest.postFile).toHaveBeenCalled();
     });
 
+    it('When found a task with index not -1, it starts from the index', async () => {
+      const task = createTask();
+      task.parameters.lastIndexError = 1;
+      taskHandlerMock.dequeue.mockResolvedValue(task);
+      providerManagerMock.source.getFile.mockResolvedValue('file data');
+      providerManagerMock.dest.postFile.mockResolvedValue(null);
+
+      await fileSyncerManager.start();
+
+      expect(taskHandlerMock.dequeue).toHaveBeenCalled();
+      expect(providerManagerMock.source.getFile).toHaveBeenCalled();
+      expect(providerManagerMock.dest.postFile).toHaveBeenCalled();
+    });
+
     it(`When found a task but didn't get or post file, throws an error`, async () => {
       taskHandlerMock.dequeue.mockResolvedValue(createTask());
       providerManagerMock.source.getFile.mockRejectedValue(new Error('error'));
+
+      await fileSyncerManager.start();
+
+      expect(taskHandlerMock.dequeue).toHaveBeenCalled();
+      expect(taskHandlerMock.reject).toHaveBeenCalled();
+    });
+
+    it(`When get or post file throws unknown error, catches the error`, async () => {
+      taskHandlerMock.dequeue.mockResolvedValue(createTask());
+      providerManagerMock.source.getFile.mockRejectedValue('error');
 
       await fileSyncerManager.start();
 
