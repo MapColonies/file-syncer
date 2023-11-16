@@ -22,7 +22,7 @@ export const registerExternalValues = (options?: RegisterOptions): DependencyCon
   const dequeueIntervalMs = config.get<number>('fileSyncer.waitTime');
   const heartbeatIntervalMs = config.get<number>('heartbeat.waitTime');
 
-  const metrics = new Metrics(SERVICE_NAME);
+  const metrics = new Metrics();
   const meter = metrics.start();
 
   tracing.start();

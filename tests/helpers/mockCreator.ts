@@ -58,7 +58,7 @@ export const createTask = (modelId?: string, paths?: string[]): ITaskResponse<Ta
 export const createTaskParameters = (modelId?: string, paths?: string[]): TaskParameters => {
   return {
     paths: paths ? paths : [randWord(), randWord()],
-    modelId: modelId != undefined ? modelId : randUuid(),
+    modelId: modelId ?? randUuid(),
     lastIndexError: -1,
   };
 };
