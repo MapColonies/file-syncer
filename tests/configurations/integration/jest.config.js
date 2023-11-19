@@ -2,9 +2,14 @@ module.exports = {
   transform: {
     '^.+\\.ts$': ['ts-jest', { tsconfig: 'tsconfig.test.json' }],
   },
+  globals: {
+    'ts-jest': {
+      tsconfig: 'tsconfig.test.json',
+    },
+  },
   coverageReporters: ['text', 'html'],
   collectCoverage: true,
-  collectCoverageFrom: ['<rootDir>/src/**/*.ts', '!*/node_modules/', '!/vendor/**', '!*/common/**', '!<rootDir>/src/*'],
+  collectCoverageFrom: ['<rootDir>/src/**/*.ts', '!*/node_modules/', '!/vendor/**', '!*/common/**', '!**/models/**', '!<rootDir>/src/*'],
   coverageDirectory: '<rootDir>/coverage',
   rootDir: '../../../.',
   testMatch: ['<rootDir>/tests/integration/**/*.spec.ts'],
@@ -18,6 +23,7 @@ module.exports = {
   ],
   collectCoverage: true,
   moduleDirectories: ['node_modules', 'src'],
+  collectCoverageFrom: ['<rootDir>/src/**/*.{ts}', '!**/node_modules/**', '!**/vendor/**'],
   preset: 'ts-jest',
   testEnvironment: 'node',
   coverageThreshold: {
@@ -28,6 +34,4 @@ module.exports = {
       statements: -10,
     },
   },
-  globalSetup: '<rootDir>/tests/configurations/runContainers/global-setup.js',
-  globalTeardown: '<rootDir>/tests/configurations/runContainers/global-teardown.js',
 };

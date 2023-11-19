@@ -1,6 +1,6 @@
 import { TaskHandler } from '@map-colonies/mc-priority-queue';
 import { Metrics } from '@map-colonies/telemetry';
-import { trace } from '@opentelemetry/api';
+import { trace, metrics as OtelMetrics } from '@opentelemetry/api';
 import config from 'config';
 import { DependencyContainer } from 'tsyringe/dist/typings/types';
 import { SERVICES, SERVICE_NAME } from './common/constants';
@@ -23,7 +23,7 @@ export const registerExternalValues = (options?: RegisterOptions): DependencyCon
   const heartbeatIntervalMs = config.get<number>('heartbeat.waitTime');
 
   const metrics = new Metrics();
-  const meter = metrics.start();
+  metrics.start();
 
   tracing.start();
   const tracer = trace.getTracer(SERVICE_NAME);
@@ -32,7 +32,7 @@ export const registerExternalValues = (options?: RegisterOptions): DependencyCon
     { token: SERVICES.CONFIG, provider: { useValue: config } },
     { token: SERVICES.LOGGER, provider: { useValue: logger } },
     { token: SERVICES.TRACER, provider: { useValue: tracer } },
-    { token: SERVICES.METER, provider: { useValue: meter } },
+    { token: SERVICES.METER, provider: { useValue: OtelMetrics.getMeterProvider().getMeter(SERVICE_NAME) } },
     { token: SERVICES.METRICS, provider: { useValue: metrics } },
     {
       token: SERVICES.TASK_HANDLER,
