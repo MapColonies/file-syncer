@@ -34,7 +34,7 @@
       "sslEnabled": false,
       "maxAttempts": 3,
       "sigVersion": "v4",
-      "storageClass": "STANDARD_IA"
+      "storageClass": "STANDARD"
     }
   },
   "fileSyncer": {
