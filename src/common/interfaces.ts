@@ -1,3 +1,4 @@
+import { S3 } from 'aws-sdk';
 import { NFSProvider } from '../providers/nfsProvider';
 import { S3Provider } from '../providers/s3Provider';
 
@@ -23,6 +24,7 @@ export interface S3Config {
   forcePathStyle: boolean;
   maxAttempts: number;
   sigVersion: string;
+  storageClass?: S3.StorageClass;
 }
 
 export interface NFSConfig {
