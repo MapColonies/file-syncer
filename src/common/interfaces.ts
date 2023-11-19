@@ -23,7 +23,7 @@ export interface S3Config {
   forcePathStyle: boolean;
   maxAttempts: number;
   sigVersion: string;
-  storageClass: string;
+  storageClass?: string;
 }
 
 export interface NFSConfig {
