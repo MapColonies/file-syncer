@@ -60,7 +60,7 @@
       "endpointUrl": "S3_DEST_END_POINT_URL",
       "bucket": "S3_DEST_BUCKET",
       "region": "S3_DEST_REGION",
-      "storageClass": "S3_STORAGECLASS",
+      "storageClass": "S3_DEST_STORAGE_CLASS",
       "forcePathStyle": {
         "__name": "S3_DEST_FORCE_PATH_STYLE",
         "__format": "boolean"
