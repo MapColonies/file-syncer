@@ -27,6 +27,7 @@ export class S3Provider implements Provider {
     /* eslint-disable @typescript-eslint/naming-convention */
     const putParams: S3.PutObjectRequest = {
       Bucket: this.config.bucket,
+      StorageClass: 'STANDARD_IA',
       Key: filePath,
       Body: data,
     };
@@ -48,6 +49,7 @@ export class S3Provider implements Provider {
       sslEnabled: config.sslEnabled,
       s3ForcePathStyle: config.forcePathStyle,
       signatureVersion: config.sigVersion,
+      
     });
   }
 }
