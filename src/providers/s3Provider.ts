@@ -27,6 +27,7 @@ export class S3Provider implements Provider {
     /* eslint-disable @typescript-eslint/naming-convention */
     const putParams: S3.PutObjectRequest = {
       Bucket: this.config.bucket,
+      StorageClass: this.config.storageClass,
       Key: filePath,
       Body: data,
     };
