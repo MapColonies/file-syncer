@@ -1,13 +1,13 @@
 /* eslint-disable @typescript-eslint/naming-convention */
 import { randSentence } from '@ngneat/falso';
-import { S3 } from 'aws-sdk';
+import { S3 } from '@aws-sdk/client-s3';
 import { S3Config } from '../../src/common/interfaces';
 
 export class S3Helper {
   private readonly s3: S3;
 
   public constructor(private readonly config: S3Config) {
-    const s3ClientConfig: S3.ClientConfiguration = {
+    const s3ClientConfig: RTCConfiguration = {
       endpoint: config.endpointUrl,
       credentials: {
         accessKeyId: config.accessKeyId,
