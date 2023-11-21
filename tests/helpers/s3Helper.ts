@@ -1,9 +1,9 @@
 /* eslint-disable @typescript-eslint/naming-convention */
 import { Readable } from 'stream';
 import { randSentence } from '@ngneat/falso';
-import { 
-  S3, 
-  DeleteBucketCommand, 
+import {
+  S3,
+  DeleteBucketCommand,
   DeleteBucketRequest,
   CreateBucketRequest,
   CreateBucketCommand,
@@ -15,8 +15,7 @@ import {
   DeleteObjectCommand,
   GetObjectRequest,
   GetObjectCommand,
- } 
-from '@aws-sdk/client-s3';
+} from '@aws-sdk/client-s3';
 import { S3Config } from '../../src/common/interfaces';
 
 export class S3Helper {
@@ -67,7 +66,7 @@ export class S3Helper {
       Key: `${model}/${file}`,
       Body: readableData,
     };
-      await this.s3.send(new PutObjectCommand(params));
+    await this.s3.send(new PutObjectCommand(params));
     return data;
   }
 

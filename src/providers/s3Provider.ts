@@ -3,7 +3,6 @@ import { Logger } from '@map-colonies/js-logger';
 import { GetObjectCommand, GetObjectRequest, PutObjectCommand, PutObjectRequest, S3 } from '@aws-sdk/client-s3';
 import { Provider, S3Config } from '../common/interfaces';
 
-
 export class S3Provider implements Provider {
   private readonly s3Instance: S3;
 
@@ -48,7 +47,7 @@ export class S3Provider implements Provider {
         accessKeyId: config.accessKeyId,
         secretAccessKey: config.secretAccessKey,
       },
-      maxAttempts: config.maxAttempts, 
+      maxAttempts: config.maxAttempts,
       sslEnabled: config.sslEnabled,
       s3ForcePathStyle: config.forcePathStyle,
       signatureVersion: config.sigVersion,
