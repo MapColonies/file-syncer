@@ -1,13 +1,29 @@
 /* eslint-disable @typescript-eslint/naming-convention */
+import { Readable } from 'stream';
 import { randSentence } from '@ngneat/falso';
-import { S3 } from '@aws-sdk/client-s3';
+import { 
+  S3, 
+  DeleteBucketCommand, 
+  DeleteBucketRequest,
+  CreateBucketRequest,
+  CreateBucketCommand,
+  PutObjectRequest,
+  PutObjectCommand,
+  ListObjectsRequest,
+  ListObjectsV2Command,
+  DeleteObjectRequest,
+  DeleteObjectCommand,
+  GetObjectRequest,
+  GetObjectCommand,
+ } 
+from '@aws-sdk/client-s3';
 import { S3Config } from '../../src/common/interfaces';
 
 export class S3Helper {
   private readonly s3: S3;
 
   public constructor(private readonly config: S3Config) {
-    const s3ClientConfig: RTCConfiguration = {
+    const s3ClientConfig = {
       endpoint: config.endpointUrl,
       credentials: {
         accessKeyId: config.accessKeyId,
@@ -30,33 +46,34 @@ export class S3Helper {
   }
 
   public async createBucket(bucket: string): Promise<void> {
-    const params: S3.CreateBucketRequest = {
+    const params: CreateBucketRequest = {
       Bucket: bucket,
     };
-    await this.s3.createBucket(params).promise();
+    await this.s3.send(new CreateBucketCommand(params));
   }
 
   public async deleteBucket(bucket: string): Promise<void> {
-    const params: S3.DeleteBucketRequest = {
+    const params: DeleteBucketRequest = {
       Bucket: bucket,
     };
-    await this.s3.deleteBucket(params).promise();
+    await this.s3.send(new DeleteBucketCommand(params));
   }
 
   public async createFileOfModel(model: string, file: string): Promise<Buffer> {
     const data = Buffer.from(randSentence());
-    const params: S3.PutObjectRequest = {
+    const readableData = Readable.from([data]);
+    const params: PutObjectRequest = {
       Bucket: this.config.bucket,
       Key: `${model}/${file}`,
-      Body: data,
+      Body: readableData,
     };
-    await this.s3.putObject(params).promise();
+      await this.s3.send(new PutObjectCommand(params));
     return data;
   }
 
   public async clearBucket(bucket: string): Promise<void> {
-    const paramsSource: S3.ListObjectsRequest = { Bucket: bucket };
-    const dataSource = await this.s3.listObjects(paramsSource).promise();
+    const paramsSource: ListObjectsRequest = { Bucket: bucket };
+    const dataSource = await this.s3.send(new ListObjectsV2Command(paramsSource));
     if (dataSource.Contents) {
       for (const dataContent of dataSource.Contents) {
         if (dataContent.Key != undefined) {
@@ -67,19 +84,19 @@ export class S3Helper {
   }
 
   public async deleteObject(bucket: string, key: string): Promise<void> {
-    const params: S3.DeleteObjectRequest = {
+    const params: DeleteObjectRequest = {
       Bucket: bucket,
       Key: key,
     };
-    await this.s3.deleteObject(params).promise();
+    await this.s3.send(new DeleteObjectCommand(params));
   }
 
-  public async readFile(bucket: string, key: string): Promise<S3.Body | undefined> {
-    const params: S3.GetObjectRequest = {
+  public async readFile(bucket: string, key: string): Promise<Body | undefined> {
+    const params: GetObjectRequest = {
       Bucket: bucket,
       Key: key,
     };
-    const response = await this.s3.getObject(params).promise();
-    return response.Body;
+    const response = await this.s3.send(new GetObjectCommand(params));
+    return response.Body as unknown as Body;
   }
 }

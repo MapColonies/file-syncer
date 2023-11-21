@@ -42,16 +42,17 @@ export class S3Provider implements Provider {
   }
 
   private createS3Instance(config: S3Config): S3 {
-    return new S3({
+    const s3ClientConfig = {
       endpoint: config.endpointUrl,
       credentials: {
         accessKeyId: config.accessKeyId,
         secretAccessKey: config.secretAccessKey,
       },
-      maxRetries: config.maxAttempts,
+      maxAttempts: config.maxAttempts, 
       sslEnabled: config.sslEnabled,
       s3ForcePathStyle: config.forcePathStyle,
       signatureVersion: config.sigVersion,
-    });
+    };
+    return new S3(s3ClientConfig);
   }
 }
