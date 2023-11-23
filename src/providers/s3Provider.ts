@@ -1,9 +1,9 @@
 import { Logger } from '@map-colonies/js-logger';
-import { S3 } from 'aws-sdk';
+import { GetObjectCommand, GetObjectCommandInput, PutObjectCommand, PutObjectCommandInput, S3Client } from '@aws-sdk/client-s3';
 import { Provider, S3Config } from '../common/interfaces';
 
 export class S3Provider implements Provider {
-  private readonly s3Instance: S3;
+  private readonly s3Instance: S3Client;
 
   public constructor(private readonly logger: Logger, private readonly config: S3Config) {
     this.s3Instance = this.createS3Instance(config);
@@ -11,21 +11,21 @@ export class S3Provider implements Provider {
 
   public async getFile(filePath: string): Promise<Buffer> {
     /* eslint-disable @typescript-eslint/naming-convention */
-    const getParams: S3.GetObjectRequest = {
+    const getParams: GetObjectCommandInput = {
       Bucket: this.config.bucket,
       Key: filePath,
     };
     /* eslint-enable @typescript-eslint/naming-convention */
 
     this.logger.debug({ msg: 'Starting getFile', filePath });
-    const response = await this.s3Instance.getObject(getParams).promise();
+    const response = await this.s3Instance.send(new GetObjectCommand(getParams));
 
-    return response.Body as Buffer;
+    return response.Body as unknown as Buffer;
   }
 
   public async postFile(filePath: string, data: Buffer): Promise<void> {
     /* eslint-disable @typescript-eslint/naming-convention */
-    const putParams: S3.PutObjectRequest = {
+    const putParams: PutObjectCommandInput = {
       Bucket: this.config.bucket,
       StorageClass: this.config.storageClass,
       Key: filePath,
@@ -34,21 +34,32 @@ export class S3Provider implements Provider {
     /* eslint-enable @typescript-eslint/naming-convention */
 
     this.logger.debug({ msg: 'Starting postFile', filePath });
-    await this.s3Instance.putObject(putParams).promise();
+    await this.s3Instance.send(new PutObjectCommand(putParams));
     this.logger.debug({ msg: 'Done postFile', filePath });
   }
 
-  private createS3Instance(config: S3Config): S3 {
-    return new S3({
+  private createS3Instance(config: S3Config): S3Client {
+    return new S3Client({
+      // The transformation for endpoint is not implemented.
+      // Refer to UPGRADING.md on aws-sdk-js-v3 for changes needed.
+      // Please create/upvote feature request on aws-sdk-js-codemod for endpoint.
+
       endpoint: config.endpointUrl,
       credentials: {
         accessKeyId: config.accessKeyId,
         secretAccessKey: config.secretAccessKey,
       },
-      maxRetries: config.maxAttempts,
-      sslEnabled: config.sslEnabled,
-      s3ForcePathStyle: config.forcePathStyle,
-      signatureVersion: config.sigVersion,
+      region: config.region,
+      // The key maxRetries is renamed to maxAttempts.
+      // The value of maxAttempts needs to be maxRetries + 1.
+      maxAttempts: config.maxAttempts,
+
+      // The key sslEnabled is renamed to tls.
+      tls: config.sslEnabled,
+
+      // The key s3ForcePathStyle is renamed to forcePathStyle.
+      forcePathStyle: config.forcePathStyle,
+
     });
   }
 }

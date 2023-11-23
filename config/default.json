@@ -28,10 +28,10 @@
       "secretAccessKey": "minioadmin",
       "endpointUrl": "http://127.0.0.1:9000",
       "bucket": "3dtiles",
-      "region": "us-east-1",
+      "region": "aws-global",
       "forcePathStyle": true,
       "sslEnabled": false,
-      "maxAttempts": 3,
+      "maxAttempts": 4,
       "sigVersion": "v4"
     },
     "dest": {
@@ -40,10 +40,10 @@
       "secretAccessKey": "minioadmin",
       "endpointUrl": "http://127.0.0.1:9000",
       "bucket": "3dtiles",
-      "region": "us-east-1",
+      "region": "aws-global",
       "forcePathStyle": true,
       "sslEnabled": false,
-      "maxAttempts": 3,
+      "maxAttempts": 4,
       "sigVersion": "v4",
       "storageClass": "STANDARD"
     }
@@ -54,10 +54,10 @@
     },
     "task": {
       "type": "Ingestion",
-      "maxAttempts": 3
+      "maxAttempts": 4
     },
     "waitTime": 5000,
-    "maxRetries": 3,
+    "maxRetries": 4,
     "intervalMs": 5000,
     "taskPoolSize": 1
   }
