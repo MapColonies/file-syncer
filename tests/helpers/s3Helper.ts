@@ -2,37 +2,42 @@
 import { Readable } from 'stream';
 import { randSentence } from '@ngneat/falso';
 import {
-  S3,
+  S3Client,
   DeleteBucketCommand,
-  DeleteBucketRequest,
-  CreateBucketRequest,
   CreateBucketCommand,
-  PutObjectRequest,
   PutObjectCommand,
-  ListObjectsRequest,
   ListObjectsV2Command,
-  DeleteObjectRequest,
   DeleteObjectCommand,
-  GetObjectRequest,
   GetObjectCommand,
+  CreateBucketCommandInput,
+  S3ClientConfig,
+  DeleteBucketCommandInput,
+  PutObjectCommandInput,
+  ListObjectsCommandInput,
+  DeleteObjectCommandInput,
+  GetObjectCommandInput,
 } from '@aws-sdk/client-s3';
 import { S3Config } from '../../src/common/interfaces';
 
 export class S3Helper {
-  private readonly s3: S3;
+  private readonly s3: S3Client;
 
   public constructor(private readonly config: S3Config) {
-    const s3ClientConfig = {
-      endpoint: config.endpointUrl,
+    const protocol = this.config.sslEnabled ? 'https' : 'http';
+    const endpointUrl = `${protocol}://${this.config.endpointUrl}`;
+
+    const s3ClientConfig: S3ClientConfig = {
+      endpoint: endpointUrl,
       credentials: {
         accessKeyId: config.accessKeyId,
         secretAccessKey: config.secretAccessKey,
       },
-      maxRetries: config.maxAttempts,
-      sslEnabled: config.sslEnabled,
-      s3ForcePathStyle: config.forcePathStyle,
+      region: config.region,
+      maxAttempts: config.maxAttempts,
+      // sslEnabled: config.sslEnabled,
+      forcePathStyle: config.forcePathStyle,
     };
-    this.s3 = new S3(s3ClientConfig);
+    this.s3 = new S3Client(s3ClientConfig);
   }
 
   public async initialize(): Promise<void> {
@@ -45,14 +50,14 @@ export class S3Helper {
   }
 
   public async createBucket(bucket: string): Promise<void> {
-    const params: CreateBucketRequest = {
+    const params: CreateBucketCommandInput = {
       Bucket: bucket,
     };
     await this.s3.send(new CreateBucketCommand(params));
   }
 
   public async deleteBucket(bucket: string): Promise<void> {
-    const params: DeleteBucketRequest = {
+    const params: DeleteBucketCommandInput = {
       Bucket: bucket,
     };
     await this.s3.send(new DeleteBucketCommand(params));
@@ -61,7 +66,7 @@ export class S3Helper {
   public async createFileOfModel(model: string, file: string): Promise<Buffer> {
     const data = Buffer.from(randSentence());
     const readableData = Readable.from([data]);
-    const params: PutObjectRequest = {
+    const params: PutObjectCommandInput = {
       Bucket: this.config.bucket,
       Key: `${model}/${file}`,
       Body: readableData,
@@ -71,7 +76,7 @@ export class S3Helper {
   }
 
   public async clearBucket(bucket: string): Promise<void> {
-    const paramsSource: ListObjectsRequest = { Bucket: bucket };
+    const paramsSource: ListObjectsCommandInput = { Bucket: bucket };
     const dataSource = await this.s3.send(new ListObjectsV2Command(paramsSource));
     if (dataSource.Contents) {
       for (const dataContent of dataSource.Contents) {
@@ -83,7 +88,7 @@ export class S3Helper {
   }
 
   public async deleteObject(bucket: string, key: string): Promise<void> {
-    const params: DeleteObjectRequest = {
+    const params: DeleteObjectCommandInput = {
       Bucket: bucket,
       Key: key,
     };
@@ -91,7 +96,7 @@ export class S3Helper {
   }
 
   public async readFile(bucket: string, key: string): Promise<Body | undefined> {
-    const params: GetObjectRequest = {
+    const params: GetObjectCommandInput = {
       Bucket: bucket,
       Key: key,
     };
