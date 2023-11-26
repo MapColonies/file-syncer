@@ -30,11 +30,11 @@
       "bucket": "3dtiles",
       "region": "aws-global",
       "forcePathStyle": true,
-      "sslEnabled": false,
+      "tls": false,
       "maxAttempts": 4,
       "sigVersion": "v4"
     },
-    "dest": {
+    "test": {
       "type": "S3",
       "accessKeyId": "minioadmin",
       "secretAccessKey": "minioadmin",
@@ -42,7 +42,7 @@
       "bucket": "3dtiles",
       "region": "aws-global",
       "forcePathStyle": true,
-      "sslEnabled": false,
+      "tls": false,
       "maxAttempts": 4,
       "sigVersion": "v4",
       "storageClass": "STANDARD"
@@ -57,7 +57,7 @@
       "maxAttempts": 4
     },
     "waitTime": 5000,
-    "maxRetries": 4,
+    "maxAttempts": 4,
     "intervalMs": 5000,
     "taskPoolSize": 1
   }

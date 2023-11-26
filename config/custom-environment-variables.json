@@ -39,11 +39,11 @@
       "bucket": "S3_SOURCE_BUCKET",
       "region": "S3_SOURCE_REGION",
       "forcePathStyle": {
-        "__name": "S3_SOURCE_FORCE_PATH_STYLE",
+        "__name": "FORCE_PATH_STYLE",
         "__format": "boolean"
       },
-      "sslEnabled": {
-        "__name": "S3_SOURCE_SSL_ENABLED",
+      "tls": {
+        "__name": "S3_SOURCE_TLS",
         "__format": "boolean"
       },
       "maxAttempts": {
@@ -62,11 +62,11 @@
       "region": "S3_DEST_REGION",
       "storageClass": "S3_DEST_STORAGE_CLASS",
       "forcePathStyle": {
-        "__name": "S3_DEST_FORCE_PATH_STYLE",
+        "__name": "FORCE_PATH_STYLE",
         "__format": "boolean"
       },
-      "sslEnabled": {
-        "__name": "S3_DEST_SSL_ENABLED",
+      "tls": {
+        "__name": "S3_DEST_TLS",
         "__format": "boolean"
       },
       "maxAttempts": {
@@ -92,7 +92,7 @@
       "__name": "FILE_SYNCER_WAIT_TIME",
       "__format": "number"
     },
-    "maxRetries": {
+    "maxAttempts": {
       "__name": "FILE_SYNCER_MAX_RETRIES",
       "__format": "number"
     },

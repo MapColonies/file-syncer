@@ -40,26 +40,17 @@ export class S3Provider implements Provider {
 
   private createS3Instance(config: S3Config): S3Client {
     return new S3Client({
-      // The transformation for endpoint is not implemented.
-      // Refer to UPGRADING.md on aws-sdk-js-v3 for changes needed.
-      // Please create/upvote feature request on aws-sdk-js-codemod for endpoint.
-
       endpoint: config.endpointUrl,
       credentials: {
         accessKeyId: config.accessKeyId,
         secretAccessKey: config.secretAccessKey,
       },
       region: config.region,
-      // The key maxRetries is renamed to maxAttempts.
-      // The value of maxAttempts needs to be maxRetries + 1.
       maxAttempts: config.maxAttempts,
 
-      // The key sslEnabled is renamed to tls.
-      tls: config.sslEnabled,
+      tls: config.tls,
 
-      // The key s3ForcePathStyle is renamed to forcePathStyle.
       forcePathStyle: config.forcePathStyle,
-
     });
   }
 }

@@ -6,15 +6,16 @@ import {
   DeleteBucketCommandInput,
   DeleteObjectCommandInput,
   GetObjectCommandInput,
-  ListObjectsCommandInput,
   PutObjectCommandInput,
   DeleteBucketCommand,
   S3Client,
-  S3ClientConfig,
   PutObjectCommand,
-  ListObjectsV2Command,
   DeleteObjectCommand,
   GetObjectCommand,
+  GetObjectCommandOutput,
+  ListObjectsRequest,
+  ListObjectsCommand,
+  S3ClientConfigType,
 } from '@aws-sdk/client-s3';
 import { S3Config } from '../../src/common/interfaces';
 
@@ -22,7 +23,7 @@ export class S3Helper {
   private readonly s3: S3Client;
 
   public constructor(private readonly config: S3Config) {
-    const s3ClientConfig: S3ClientConfig = {
+    const s3ClientConfig: S3ClientConfigType = {
       endpoint: config.endpointUrl,
       credentials: {
         accessKeyId: config.accessKeyId,
@@ -30,7 +31,7 @@ export class S3Helper {
       },
       region: config.region,
       maxAttempts: config.maxAttempts,
-      tls: config.sslEnabled,
+      tls: config.tls,
       forcePathStyle: config.forcePathStyle,
     };
     this.s3 = new S3Client(s3ClientConfig);
@@ -52,7 +53,7 @@ export class S3Helper {
     await this.s3.send(new CreateBucketCommand(params));
   }
 
-  public async deleteBucket(bucket: string): Promise<void> {
+  public async deleteBucket(bucket = this.config.bucket): Promise<void> {
     const params: DeleteBucketCommandInput = {
       Bucket: bucket,
     };
@@ -70,11 +71,14 @@ export class S3Helper {
     return data;
   }
 
-  public async clearBucket(bucket: string): Promise<void> {
-    const paramsSource: ListObjectsCommandInput = { Bucket: bucket };
-    const dataSource = await this.s3.send(new ListObjectsV2Command(paramsSource));
-    if (dataSource.Contents) {
-      for (const dataContent of dataSource.Contents) {
+  public async clearBucket(bucket = this.config.bucket): Promise<void> {
+    const params: ListObjectsRequest = {
+      Bucket: bucket,
+    };
+    const listObject = new ListObjectsCommand(params);
+    const data = await this.s3.send(listObject);
+    if (data.Contents) {
+      for (const dataContent of data.Contents) {
         if (dataContent.Key != undefined) {
           await this.deleteObject(bucket, dataContent.Key);
         }
@@ -87,7 +91,8 @@ export class S3Helper {
       Bucket: bucket,
       Key: key,
     };
-    await this.s3.send(new DeleteObjectCommand(params));
+    const command = new DeleteObjectCommand(params);
+    await this.s3.send(command);
   }
 
   public async readFile(bucket: string, key: string): Promise<Body | undefined> {
@@ -95,7 +100,7 @@ export class S3Helper {
       Bucket: bucket,
       Key: key,
     };
-    const response = await this.s3.send(new GetObjectCommand(params));
+    const response: GetObjectCommandOutput = await this.s3.send(new GetObjectCommand(params));
     return response.Body as unknown as Body;
   }
 }

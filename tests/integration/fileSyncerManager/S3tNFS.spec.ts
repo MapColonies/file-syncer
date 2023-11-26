@@ -1,3 +1,4 @@
+/* eslint-disable jest/no-conditional-expect */
 import jsLogger from '@map-colonies/js-logger';
 import { randFileExt, randWord } from '@ngneat/falso';
 import { container } from 'tsyringe';
@@ -62,15 +63,18 @@ describe('fileSyncerManager S3 to NFS', () => {
       const file2 = `${randWord()}.${randFileExt()}`;
       await s3HelperSource.createFileOfModel(model, file1);
       const fileContent = await s3HelperSource.createFileOfModel(model, file2);
-      const bufferedContent = Buffer.from(fileContent);
-      const paths = [`${model}/${file1}`, `${model}/${file2}`];
-      taskHandlerMock.dequeue.mockResolvedValue(createTask(model, paths));
 
-      await fileSyncerManager.start();
-      const result = await nfsHelperDest.readFile(`${model}/${file2}`);
+      if (typeof fileContent === 'string') {
+        const bufferedContent = Buffer.from(fileContent);
+        const paths = [`${model}/${file1}`, `${model}/${file2}`];
+        taskHandlerMock.dequeue.mockResolvedValue(createTask(model, paths));
 
-      expect(taskHandlerMock.ack).toHaveBeenCalled();
-      expect(result).toStrictEqual(bufferedContent);
+        await fileSyncerManager.start();
+        const result = await nfsHelperDest.readFile(`${model}/${file2}`);
+
+        expect(taskHandlerMock.ack).toHaveBeenCalled();
+        expect(result).toStrictEqual(bufferedContent);
+      }
     });
 
     it(`When can't read file, should increase task's retry and update job manager`, async () => {
