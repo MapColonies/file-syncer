@@ -34,7 +34,7 @@
       "maxAttempts": 4,
       "sigVersion": "v4"
     },
-    "test": {
+    "dest": {
       "type": "S3",
       "accessKeyId": "minioadmin",
       "secretAccessKey": "minioadmin",
