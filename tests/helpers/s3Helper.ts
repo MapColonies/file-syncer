@@ -14,8 +14,8 @@ import {
   ListObjectsRequest,
   ListObjectsCommand,
   S3ClientConfigType,
+  GetObjectCommandInput,
 } from '@aws-sdk/client-s3';
-import { S3 } from 'aws-sdk';
 import { S3Config } from '../../src/common/interfaces';
 
 export class S3Helper {
@@ -94,14 +94,12 @@ export class S3Helper {
     await this.s3.send(command);
   }
 
-  // eslint-disable-next-line @typescript-eslint/no-redundant-type-constituents
-  public async readFile(bucket: string, key: string): Promise<S3.Body | undefined> {
-    const params = {
+  public async readFile(bucket: string, key: string): Promise<Buffer | undefined> {
+    const params: GetObjectCommandInput = {
       Bucket: bucket,
       Key: key,
     };
     const response = await this.s3.send(new GetObjectCommand(params));
-    return response.Body as unknown as Buffer
-
+    return response.Body?.transformToString() as unknown as Buffer;
   }
 }

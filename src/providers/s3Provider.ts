@@ -20,7 +20,7 @@ export class S3Provider implements Provider {
     this.logger.debug({ msg: 'Starting getFile', filePath });
     const response = await this.s3Instance.send(new GetObjectCommand(getParams));
 
-    return response.Body as unknown as Buffer;
+    return response.Body?.transformToString() as unknown as Buffer;
   }
 
   public async postFile(filePath: string, data: Buffer): Promise<void> {
@@ -47,9 +47,7 @@ export class S3Provider implements Provider {
       },
       region: config.region,
       maxAttempts: config.maxAttempts,
-
       tls: config.tls,
-
       forcePathStyle: config.forcePathStyle,
     });
   }
