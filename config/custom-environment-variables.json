@@ -54,7 +54,7 @@
       "pvPath": "PV_SOURCE_PATH"
     },
     "dest": {
-      "type": "PROVIDER_TOO",
+      "type": "PROVIDER_TO",
       "accessKeyId": "S3_DEST_ACCESS_KEY_ID",
       "secretAccessKey": "S3_DEST_SECRET_ACCESS_KEY",
       "endpointUrl": "S3_DEST_END_POINT_URL",
