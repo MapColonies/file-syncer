@@ -67,10 +67,11 @@ describe('fileSyncerManager NFS to S3', () => {
       taskHandlerMock.dequeue.mockResolvedValue(createTask(model, paths));
 
       await fileSyncerManager.start();
-      const result = await s3HelperDest.readFile(mockNFStS3.dest.bucket, `${model}/${file2}`);
+      const resultString = await s3HelperDest.readFile(mockNFStS3.dest.bucket, `${model}/${file2}`);
+      const resultBuffer = resultString ? Buffer.from(resultString) : undefined;
 
       expect(taskHandlerMock.ack).toHaveBeenCalled();
-      expect(result).toStrictEqual(bufferedContent);
+      expect(resultBuffer).toStrictEqual(bufferedContent);
     });
 
     it(`When can't read file, should increase task's retry and update job manager`, async () => {

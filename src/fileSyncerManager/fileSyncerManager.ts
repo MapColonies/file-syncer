@@ -11,7 +11,6 @@ export class FileSyncerManager {
   private readonly taskType: string;
   private readonly waitTime: number;
   private readonly maxAttempts: number;
-  private readonly maxRetries: number;
   private readonly taskPoolSize: number;
   private taskCounter: number;
 
@@ -24,7 +23,7 @@ export class FileSyncerManager {
     this.taskType = this.config.get<string>('fileSyncer.task.type');
     this.maxAttempts = this.config.get<number>('fileSyncer.task.maxAttempts');
     this.waitTime = this.config.get<number>('fileSyncer.waitTime');
-    this.maxRetries = this.config.get<number>('fileSyncer.maxRetries');
+    this.maxAttempts = this.config.get<number>('fileSyncer.maxAttempts');
     this.taskPoolSize = this.config.get<number>('fileSyncer.taskPoolSize');
     this.taskCounter = 0;
   }
@@ -66,7 +65,7 @@ export class FileSyncerManager {
     let retry = 0;
     let taskResult!: TaskResult;
 
-    while (retry < this.maxRetries) {
+    while (retry < this.maxAttempts) {
       taskResult = await this.handleTask(task);
 
       if (taskResult.completed) {
@@ -76,7 +75,7 @@ export class FileSyncerManager {
         this.logger.info({
           msg: 'Increase retry',
           retry,
-          maxRetries: this.maxRetries,
+          maxAttempts: this.maxAttempts,
         });
         await sleep(this.waitTime);
         this.logger.error({
