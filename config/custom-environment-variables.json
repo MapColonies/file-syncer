@@ -21,7 +21,21 @@
     }
   },
   "jobManager": {
-    "url": "JOB_MANAGER_URL"
+    "url": "JOB_MANAGER_URL",
+    "job": {
+      "type": "INGESTION_JOB"
+    },
+    "task": {
+      "type": "INGESTION_TASK",
+      "maxAttempts": {
+        "__name": "TASK_MAX_ATTEMPTS",
+        "__format": "number"
+      }
+    },
+    "waitTime": {
+      "__name": "FILE_SYNCER_WAIT_TIME",
+      "__format": "number"
+    }
   },
   "heartbeat": {
     "url": "HEARTBEAT_URL",
@@ -78,20 +92,6 @@
     }
   },
   "fileSyncer": {
-    "job": {
-      "type": "INGESTION_JOB"
-    },
-    "task": {
-      "type": "INGESTION_TASK",
-      "maxAttempts": {
-        "__name": "TASK_MAX_ATTEMPTS",
-        "__format": "number"
-      }
-    },
-    "waitTime": {
-      "__name": "FILE_SYNCER_WAIT_TIME",
-      "__format": "number"
-    },
     "maxRetries": {
       "__name": "FILE_SYNCER_MAX_RETRIES",
       "__format": "number"
