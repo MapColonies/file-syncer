@@ -21,8 +21,8 @@ export class FileSyncerManager {
     @inject(SERVICES.TASK_HANDLER) private readonly taskHandler: TaskHandler,
     @inject(SERVICES.PROVIDER_MANAGER) private readonly providerManager: ProviderManager
   ) {
-    this.taskType = this.config.get<string>('fileSyncer.task.type');
-    this.maxAttempts = this.config.get<number>('fileSyncer.task.maxAttempts');
+    this.taskType = this.config.get<string>('jobManager.task.type');
+    this.maxAttempts = this.config.get<number>('jobManager.task.maxAttempts');
     this.waitTime = this.config.get<number>('fileSyncer.waitTime');
     this.maxRetries = this.config.get<number>('fileSyncer.maxRetries');
     this.taskPoolSize = this.config.get<number>('fileSyncer.taskPoolSize');
