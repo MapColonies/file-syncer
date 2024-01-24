@@ -31,10 +31,6 @@
         "__name": "TASK_MAX_ATTEMPTS",
         "__format": "number"
       }
-    },
-    "waitTime": {
-      "__name": "FILE_SYNCER_WAIT_TIME",
-      "__format": "number"
     }
   },
   "heartbeat": {
@@ -102,6 +98,10 @@
     },
     "taskPoolSize": {
       "__name": "FILE_SYNCER_TASK_POOL_SIZE",
+      "__format": "number"
+    },
+    "waitTime": {
+      "__name": "FILE_SYNCER_WAIT_TIME",
       "__format": "number"
     }
   }
