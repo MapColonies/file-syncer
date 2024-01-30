@@ -79,10 +79,10 @@
   },
   "fileSyncer": {
     "job": {
-      "type": "INGESTION_JOB"
+      "type": "INGESTION_JOB_TYPE"
     },
     "task": {
-      "type": "INGESTION_TASK",
+      "type": "INGESTION_TASK_TYPE",
       "maxAttempts": {
         "__name": "TASK_MAX_ATTEMPTS",
         "__format": "number"
