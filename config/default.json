@@ -15,7 +15,14 @@
     }
   },
   "jobManager": {
-    "url": "http://127.0.0.1:8080"
+    "url": "http://127.0.0.1:8080",
+    "job": {
+      "type": "Ingestion_New_3D"
+    },
+    "task": {
+      "type": "tilesCopying",
+      "maxAttempts": 3
+    }
   },
   "heartbeat": {
     "url": "http://127.0.0.1:8082",
@@ -44,17 +51,11 @@
       "forcePathStyle": true,
       "sslEnabled": false,
       "maxAttempts": 3,
-      "sigVersion": "v4"
+      "sigVersion": "v4",
+      "storageClass": "STANDARD"
     }
   },
   "fileSyncer": {
-    "job": {
-      "type": "Ingestion_New_3D"
-    },
-    "task": {
-      "type": "tilesCopying",
-      "maxAttempts": 3
-    },
     "waitTime": 5000,
     "maxRetries": 3,
     "intervalMs": 5000,

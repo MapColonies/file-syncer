@@ -5,7 +5,7 @@
       "type": "Ingestion_New_3D"
     },
     "task": {
-      "type": "Ingestion",
+      "type": "tilesCopying",
       "maxAttempts": 3
     }
   },

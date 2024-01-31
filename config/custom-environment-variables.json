@@ -21,7 +21,17 @@
     }
   },
   "jobManager": {
-    "url": "JOB_MANAGER_URL"
+    "url": "JOB_MANAGER_URL",
+    "job": {
+      "type": "INGESTION_JOB_TYPE"
+    },
+    "task": {
+      "type": "INGESTION_TASK_TYPE",
+      "maxAttempts": {
+        "__name": "TASK_MAX_ATTEMPTS",
+        "__format": "number"
+      }
+    }
   },
   "heartbeat": {
     "url": "HEARTBEAT_URL",
@@ -78,16 +88,6 @@
     }
   },
   "fileSyncer": {
-    "job": {
-      "type": "INGESTION_JOB_TYPE"
-    },
-    "task": {
-      "type": "INGESTION_TASK_TYPE",
-      "maxAttempts": {
-        "__name": "TASK_MAX_ATTEMPTS",
-        "__format": "number"
-      }
-    },
     "waitTime": {
       "__name": "FILE_SYNCER_WAIT_TIME",
       "__format": "number"
