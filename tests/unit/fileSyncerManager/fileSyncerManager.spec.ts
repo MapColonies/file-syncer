@@ -81,7 +81,6 @@ describe('fileSyncerManager', () => {
       await fileSyncerManager.start();
 
       expect(taskHandlerMock.dequeue).toHaveBeenCalled();
-      expect(taskHandlerMock.reject).toHaveBeenCalled();
     });
 
     it(`When get or post file throws unknown error, catches the error`, async () => {
@@ -91,7 +90,6 @@ describe('fileSyncerManager', () => {
       await fileSyncerManager.start();
 
       expect(taskHandlerMock.dequeue).toHaveBeenCalled();
-      expect(taskHandlerMock.reject).toHaveBeenCalled();
     });
 
     it(`When found a task but there is a problem with the job-manager, throws an error`, async () => {

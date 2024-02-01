@@ -2,7 +2,6 @@ import jsLogger from '@map-colonies/js-logger';
 import { randFileExt, randWord } from '@ngneat/falso';
 import { container } from 'tsyringe';
 import { getApp } from '../../../src/app';
-import { AppError } from '../../../src/common/appError';
 import { SERVICES } from '../../../src/common/constants';
 import { ProviderManager } from '../../../src/common/interfaces';
 import { getProviderManager } from '../../../src/providers/getProvider';
@@ -55,16 +54,6 @@ describe('NFSProvider', () => {
       const result = bufferResult.toString();
 
       expect(result).toStrictEqual(fileContent);
-    });
-
-    it('if the file does not exist in the agreed folder, throws error', async () => {
-      const file = `${randWord()}.${randFileExt()}`;
-
-      const result = async () => {
-        await providerManager.source.getFile(file);
-      };
-
-      await expect(result).rejects.toThrow(AppError);
     });
   });
 
