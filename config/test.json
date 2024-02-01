@@ -46,7 +46,6 @@
   },
   "fileSyncer": {
     "waitTime": 0,
-    "maxRetries": 3,
     "taskPoolSize": 3,
     "intervalMs": 5000
   }
