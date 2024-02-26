@@ -1,0 +1,123 @@
+global:
+  ingestion:
+    splunk:
+      enabled: false
+      annotations:
+        collectord.io/index: SPLUNK_INDEX
+        collectord.io/logs-output: splunk
+
+    providers:
+      source: NFS
+      destination: S3
+
+    NFS:
+      source:
+        name: 3d-pvc-source
+        pv_path: /Source3DModels
+        sub_path: ''
+      # destination:
+      #   name: 3d-pvc-dest
+      #   pv_path: /Destination3DModels
+      #   sub_path: ''
+
+  filebeat:
+    enabled: false
+    image: docker.elastic.co/beats/filebeat:7.12.1
+    mountPath: /usr/src/app/logs
+    pycsw:
+      mountPath: /var/log/pycsw
+      logFile: pycsw.log
+    nginxS3Gateway: 
+      mountPath: /var/log/nginx
+    elastic:
+      host: 10.8.0.8
+      port: 9200
+      protocol: http
+      username: 
+      password:
+      index: 3d-np
+      sslEnabled: false
+    kibana:
+      host: 10.8.0.8:5601
+
+  ca:
+    enabled: false
+    useExternal: true
+    secretName: "root-ca"
+    path: "/usr/local/share/ca-certificates"
+    key: "ca.crt"
+
+ingestion:
+  splunk:
+    enabled: false
+    annotations:
+      collectord.io/index: ''
+      collectord.io/logs-output: ''
+
+  providers:
+    source: NFS
+    destination: S3
+
+  NFS:
+    source:
+      name: ''
+      pv_path: /
+      sub_path: ''
+    # destination:
+    #   name: 3d-pvc-dest
+    #   pv_path: /Destination3DModels
+    #   sub_path: ''
+
+filebeat:
+  enabled: true
+  image: ''
+  mountPath: /
+  pycsw:
+    mountPath: /
+    logFile: ''
+  nginxS3Gateway: 
+    mountPath: /
+  elastic:
+    host: 10.8.0.8
+    port: 9200
+    protocol: http
+    username: 
+    password:
+    index: ''
+    sslEnabled: false
+  kibana:
+    host: 
+
+ca:
+  enabled: false
+  useExternal: true
+  secretName: ''
+  path: /
+  key: ''
+
+replicaCount: 1
+image:
+  repository: file-syncer
+  tag: ''
+env:
+  logLevel: info
+  logPrettyPrintEnabled: false
+  tracing:
+    enabled: false
+    url: 'http://localhost:55681/v1/trace'
+  metrics:
+    enabled: false
+    url: 'http://localhost:55681/v1/metrics'
+  waitTime: 3000
+  maxRetries: 3
+  intervalMs: 3000
+  taskPoolSize: 40
+resources:
+  enabled: true
+  value:
+    limits:
+      cpu: 100m
+      memory: 128Mi
+    requests:
+      cpu: 100m
+      memory: 128Mi

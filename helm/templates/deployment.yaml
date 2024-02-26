@@ -1,0 +1,123 @@
+{{- $releaseName := .Release.Name -}}
+{{- $chartName := include "file-syncer.name" . -}}
+{{- $cloudProviderFlavor := include "file-syncer.cloudProviderFlavor" . -}}
+{{- $cloudProviderDockerRegistryUrl := include "file-syncer.cloudProviderDockerRegistryUrl" . -}}
+{{- $cloudProviderImagePullSecretName := include "file-syncer.cloudProviderImagePullSecretName" . -}}
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ $releaseName }}-file-syncer
+  labels:
+    app: file-syncer
+    component: file-syncer
+    environment: {{ include "file-syncer.environment" . }}
+    release: {{ $releaseName }}-file-syncer
+    {{- include "file-syncer.labels" . | nindent 4 }}
+    {{-  $splunk := (include "common.splunk.merged" . ) | fromYaml }}
+{{- if $splunk.enabled }}
+{{- with $splunk.annotations }}
+  annotations:
+{{ toYaml . | indent 4 }}
+{{- end }}
+{{- end }}
+spec:
+  replicas: {{ .Values.replicaCount }}
+  selector:
+    matchLabels:
+      app: file-syncer
+      release: {{ $releaseName }}
+      run: {{ $releaseName }}-file-syncer
+      {{- include "file-syncer.selectorLabels" . | nindent 6 }}
+  template:
+    metadata:
+      labels:
+        app: file-syncer
+        release: {{ $releaseName }}
+        run: {{ $releaseName }}-file-syncer
+        {{- include "file-syncer.selectorLabels" . | nindent 8 }}
+      {{- if .Values.resetOnConfigChange }}
+      annotations:
+        checksum/configmap: {{ include (print $.Template.BasePath "/configmap.yaml") . | sha256sum }}
+      {{- end }}
+    spec:
+      {{- if $cloudProviderImagePullSecretName }}
+      imagePullSecrets:
+        - name: {{ $cloudProviderImagePullSecretName | quote }}
+      {{- end }}
+      containers:
+        - name: {{ $releaseName }}-file-syncer-deployment
+          {{- with .Values.image }}
+          image: {{ $cloudProviderDockerRegistryUrl }}{{ .repository }}:{{ .tag }}
+          {{- end }}
+          volumeMounts:
+            {{-  $providers := (include "common.providers.merged" . ) | fromYaml }}
+            {{- if eq $providers.source "NFS" }}
+            - name: ingestion-source-storage
+              {{- $NFS := (include "common.NFS.merged" . ) | fromYaml }}
+              mountPath: {{ $NFS.source.pv_path }}
+              subPath: {{ $NFS.source.sub_path }}
+            {{- end }}
+            {{-  $ca := (include "common.ca.merged" . ) | fromYaml }}
+            {{- if $ca.enabled }}
+            - mountPath: {{ printf "%s/%s" $ca.path $ca.key | quote }}
+              name: root-ca
+              subPath: {{ quote $ca.key }}
+            {{- end }}
+            {{- if eq $providers.destination "NFS" }}
+            - name: ingestion-destination-storage
+            {{-  $NFS := (include "common.NFS.merged" . ) | fromYaml }}
+              mountPath: {{ $NFS.destination.pv_path }}
+              subPath: {{ $NFS.destination.sub_path }}
+            {{- end }}
+            {{-  $filebeat := (include "common.filebeat.merged" . ) | fromYaml }}
+            {{- if $filebeat.enabled }}
+            - name: logs
+              mountPath: {{ $filebeat.mountPath }}
+            {{- end }}
+          envFrom:
+            - configMapRef:
+                name: {{ .Release.Name }}-{{ $chartName }}-configmap
+            - configMapRef:
+                name: {{ $releaseName }}-ingestion-configmap
+          {{- if .Values.resources.enabled }}
+          resources:
+            {{- toYaml .Values.resources.value | nindent 12 }}
+          {{- end }}
+        {{- if $filebeat.enabled }}
+          command: ["/bin/sh", "-c", "node --max_old_space_size=512 ./index.js >> /usr/src/app/logs/log.log 2>&1"]
+        - name: filebeat
+          image: {{ $filebeat.image }}
+          args: [ "-c", "/etc/filebeat.yml", "-e" ]
+          volumeMounts:
+            - name: logs
+              mountPath: {{ $filebeat.mountPath }}
+            - name: config
+              mountPath: /etc/filebeat.yml
+              subPath: filebeat.yml
+        {{- end }}
+      volumes:
+        {{- if $ca.enabled }}
+        - name: root-ca
+          secret:
+            secretName: {{ $ca.secretName }}
+        {{- end }}
+        {{- if eq $providers.source "NFS" }}
+        - name: ingestion-source-storage
+          persistentVolumeClaim:
+        {{-  $NFS := (include "common.NFS.merged" . ) | fromYaml }}
+            claimName: {{ $NFS.source.name }}
+        {{- end }}
+        {{- if eq $providers.destination "NFS" }}
+        - name: ingestion-destination-storage
+          persistentVolumeClaim:
+        {{-  $NFS := (include "common.NFS.merged" . ) | fromYaml }}
+            claimName: {{ $NFS.destination.name }}
+        {{- end }}
+        {{- if $filebeat.enabled }}
+        - name: logs
+          emptyDir: {}
+        - name: config
+          configMap:
+            name: filebeat-config-{{ .Release.Name }}
+        {{- end }}
+      terminationGracePeriodSeconds: 30
