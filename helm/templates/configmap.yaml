@@ -25,3 +25,46 @@ data:
   FILE_SYNCER_MAX_RETRIES: {{ .Values.env.maxRetries | quote }}
   FILE_SYNCER_INTERVAL_MS: {{ .Values.env.intervalMs | quote }}
   FILE_SYNCER_TASK_POOL_SIZE: {{ .Values.env.taskPoolSize | quote }}
+  {{- $providers := (include "common.providers.merged" . ) | fromYaml }}
+  {{ if eq $providers.source "S3" }}
+  {{- $S3Source := (include "common.S3-source.merged" . ) | fromYaml }}
+  S3_SOURCE_ACCESS_KEY_ID: {{ $S3Source.accessKey | quote }}
+  S3_SOURCE_SECRET_ACCESS_KEY: {{ $S3Source.secretAccessKey | quote }}
+  S3_SOURCE_END_POINT_URL: "{{ $S3Source.serverProto }}://{{ $S3Source.server }}:{{ $S3Source.serverPort }}"
+  S3_SOURCE_BUCKET: {{ $S3Source.bucket | quote }}
+  S3_SOURCE_REGION: {{ $S3Source.region | quote }}
+  S3_SOURCE_FORCE_PATH_STYLE: {{ eq $S3Source.style "path" | ternary "true" "false" }}
+  S3_SOURCE_SSL_ENABLED: {{ $S3Source.sslEnabled | quote }}
+  S3_SOURCE_MAX_ATTEMPTS: {{ $S3Source.maxAttempts | quote }}
+  S3_SOURCE_SIG_VERSION: v{{ $S3Source.sigVersion }}
+  {{ end }}
+  {{- $NFS := (include "common.NFS.merged" . ) | fromYaml }}
+  {{ if eq $providers.source "NFS" }}
+  PV_SOURCE_PATH: {{ $NFS.source.pv_path | quote }}
+  {{ end }}
+  {{- $S3Destination := (include "common.S3-destination.merged" . ) | fromYaml }}
+  {{ if eq $providers.destination "S3" }}
+  S3_DEST_ACCESS_KEY_ID: {{ $S3Destination.accessKey | quote }}
+  S3_DEST_SECRET_ACCESS_KEY: {{ $S3Destination.secretAccessKey | quote }}
+  S3_DEST_END_POINT_URL: "{{ $S3Destination.serverProto }}://{{ $S3Destination.server }}:{{ $S3Destination.serverPort }}"
+  S3_DEST_BUCKET: {{ $S3Destination.bucket | quote }}
+  S3_DEST_REGION: {{ $S3Destination.region | quote }}
+  S3_DEST_STORAGE_CLASS: {{ $S3Destination.storageClass | quote }} 
+  S3_DEST_FORCE_PATH_STYLE: {{ eq $S3Destination.style "path" | ternary "true" "false" | quote }}
+  S3_DEST_SSL_ENABLED: {{ $S3Destination.sslEnabled | quote}}
+  S3_DEST_MAX_ATTEMPTS: {{ $S3Destination.maxAttempts | quote}}
+  S3_DEST_SIG_VERSION: v{{ $S3Destination.sigVersion }}
+  {{ end }}
+  {{ if eq $providers.destination "NFS" }}
+  PV_DEST_PATH: {{ $NFS.destination.pv_path | quote }}
+  {{ end }}
+  {{- $job := (include "common.job.merged" . ) | fromYaml }}
+  {{- $task := (include "common.task.merged" . ) | fromYaml }}
+  {{- $heartBeat := (include "common.heart-beat.merged" . ) | fromYaml }}
+  {{- $jobManager := (include "common.job-manager.merged" . ) | fromYaml }}
+  PROVIDER_FROM: {{ $providers.source | quote }}
+  PROVIDER_TO: {{ $providers.destination | quote }}
+  JOB_TYPE: {{ $job.type | quote }} 
+  TASK_TYPE: {{ $task.type | quote }}
+  JOB_MANAGER_URL: {{ $jobManager.url | quote }}
+  HEARTBEAT_URL: {{ $heartBeat.url | quote }}

@@ -1,4 +1,32 @@
 global:
+  S3:
+    source:
+      accessKey: vector
+      secretAccessKey: vectorPassword
+      server: 10.8.0.9
+      serverPort: 9000
+      serverProto: http
+      bucket: 3dtiles
+      region: "ui-east-1"
+      style: path
+      sslEnabled: false
+      maxAttempts: 3
+      sigVersion: 4
+    destination:
+      accessKey: vector
+      secretAccessKey: vectorPassword
+      server: 10.8.0.9
+      serverPort: 9000
+      serverProto: http
+      bucket: 3dtiles
+      region: "us-east-1"
+      style: path
+      sslEnabled: false
+      maxAttempts: 3
+      sigVersion: 4
+      storageClass: 'STANDARD'
+
+
   ingestion:
     splunk:
       enabled: false
@@ -19,6 +47,18 @@ global:
       #   name: 3d-pvc-dest
       #   pv_path: /Destination3DModels
       #   sub_path: ''
+
+    job:
+      type: Ingestion_New_3D
+    task:
+      type: tilesCopying
+      batches: 1000
+      maxAttempts: 3
+    jobManager:
+      url: http://common-job-manager
+    heartbeat:
+      url: http://common-heartbeat-manager
+      waitTime: 5000
 
   filebeat:
     enabled: false
@@ -47,6 +87,33 @@ global:
     path: "/usr/local/share/ca-certificates"
     key: "ca.crt"
 
+S3:
+  source:
+    accessKey: vector
+    secretAccessKey: vectorPassword
+    server: 10.8.0.9
+    serverPort: 9000
+    serverProto: http
+    bucket: 3dtiles
+    region: "ui-east-1"
+    style: path
+    sslEnabled: false
+    maxAttempts: 3
+    sigVersion: 4
+  destination:
+    accessKey: vector
+    secretAccessKey: vectorPassword
+    server: 10.8.0.9
+    serverPort: 9000
+    serverProto: http
+    bucket: 3dtiles
+    region: "us-east-1"
+    style: path
+    sslEnabled: false
+    maxAttempts: 3
+    sigVersion: 4
+    storageClass: 'STANDARD'
+
 ingestion:
   splunk:
     enabled: false
@@ -55,28 +122,40 @@ ingestion:
       collectord.io/logs-output: ''
 
   providers:
-    source: NFS
-    destination: S3
+    source: ''
+    destination: ''
 
   NFS:
     source:
       name: ''
-      pv_path: /
+      pv_path: {}
       sub_path: ''
     # destination:
-    #   name: 3d-pvc-dest
-    #   pv_path: /Destination3DModels
+    #   name: ''
+    #   pv_path: /
     #   sub_path: ''
+
+  job:
+    type: Ingestion_New_3D
+  task:
+    type: tilesCopying
+    batches: 1000
+    maxAttempts: 3
+  jobManager:
+    url: http://common-job-manager
+  heartbeat:
+    url: http://common-heartbeat-manager
+    waitTime: 5000
 
 filebeat:
   enabled: true
-  image: ''
-  mountPath: /
+  image: docker.elastic.co/beats/filebeat:7.12.1
+  mountPath: ''
   pycsw:
-    mountPath: /
+    mountPath: ''
     logFile: ''
   nginxS3Gateway: 
-    mountPath: /
+    mountPath: ''
   elastic:
     host: 10.8.0.8
     port: 9200
@@ -86,7 +165,19 @@ filebeat:
     index: ''
     sslEnabled: false
   kibana:
-    host: 
+    host: ''
+
+sidecars:
+  filebeat:
+    name: filebeat
+    image: docker.elastic.co/beats/filebeat:7.12.1
+    args: [ "-c", "/etc/filebeat.yml", "-e" ]
+    volumeMounts:
+      - name: ''
+        mountPath: ''
+      - name: ''
+        mountPath: ''
+        subPath: ''
 
 ca:
   enabled: false

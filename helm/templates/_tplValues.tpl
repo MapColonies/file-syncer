@@ -64,3 +64,28 @@ Custom definitions
 {{- define "common.ca.merged" -}}
 {{- include "common.tplvalues.merge" ( dict "values" ( list .Values.ca .Values.global.ca ) "context" . ) }}
 {{- end -}}
+
+{{- define "common.S3-destination.merged" -}}
+{{- include "common.tplvalues.merge" ( dict "values" ( list .Values.S3.destination .Values.global.S3.destination ) "context" . ) }}
+{{- end -}}
+
+{{- define "common.S3-source.merged" -}}
+{{- include "common.tplvalues.merge" ( dict "values" ( list .Values.S3.source .Values.global.S3.source ) "context" . ) }}
+{{- end -}}
+
+{{- define "common.job-manager.merged" -}}
+{{- include "common.tplvalues.merge" ( dict "values" ( list .Values.ingestion.jobManager .Values.global.ingestion.jobManager ) "context" . ) }}
+{{- end -}}
+
+{{- define "common.job.merged" -}}
+{{- include "common.tplvalues.merge" ( dict "values" ( list .Values.ingestion.job .Values.global.ingestion.job ) "context" . ) }}
+{{- end -}}
+
+{{- define "common.task.merged" -}}
+{{- include "common.tplvalues.merge" ( dict "values" ( list .Values.ingestion.task .Values.global.ingestion.task ) "context" . ) }}
+{{- end -}}
+
+{{- define "common.heart-beat.merged" -}}
+{{- include "common.tplvalues.merge" ( dict "values" ( list .Values.ingestion.heartbeat .Values.global.ingestion.heartbeat ) "context" . ) }}
+{{- end -}}
+

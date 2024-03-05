@@ -78,7 +78,7 @@ spec:
             - configMapRef:
                 name: {{ .Release.Name }}-{{ $chartName }}-configmap
             - configMapRef:
-                name: {{ $releaseName }}-ingestion-configmap
+                name: {{ .Release.Name }}-{{ $chartName }}-configmap
           {{- if .Values.resources.enabled }}
           resources:
             {{- toYaml .Values.resources.value | nindent 12 }}
