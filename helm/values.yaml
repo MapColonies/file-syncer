@@ -148,7 +148,7 @@ ingestion:
     waitTime: 5000
 
 filebeat:
-  enabled: true
+  enabled: false
   image: docker.elastic.co/beats/filebeat:7.12.1
   mountPath: ''
   pycsw:
