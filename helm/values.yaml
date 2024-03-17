@@ -1,30 +1,30 @@
 global:
   S3:
     source:
-      accessKey: vector
-      secretAccessKey: vectorPassword
-      server: 10.8.0.9
+      accessKey: ''
+      secretAccessKey: ''
+      server: ''
       serverPort: 9000
-      serverProto: http
-      bucket: 3dtiles
-      region: "ui-east-1"
-      style: path
+      serverProto: ''
+      bucket: ''
+      region: ''
+      style: ''
       sslEnabled: false
-      maxAttempts: 3
-      sigVersion: 4
+      maxAttempts: ''
+      sigVersion: ''
     destination:
-      accessKey: vector
-      secretAccessKey: vectorPassword
-      server: 10.8.0.9
+      accessKey: ''
+      secretAccessKey: ''
+      server: ''
       serverPort: 9000
-      serverProto: http
-      bucket: 3dtiles
-      region: "us-east-1"
-      style: path
+      serverProto: ''
+      bucket: ''
+      region: ''
+      style: ''
       sslEnabled: false
-      maxAttempts: 3
-      sigVersion: 4
-      storageClass: 'STANDARD'
+      maxAttempts: 
+      sigVersion: 
+      storageClass: ''
 
 
   ingestion:
@@ -40,79 +40,79 @@ global:
 
     NFS:
       source:
-        name: 3d-pvc-source
-        pv_path: /Source3DModels
+        name: ''
+        pv_path: ''
         sub_path: ''
       # destination:
-      #   name: 3d-pvc-dest
-      #   pv_path: /Destination3DModels
+      #   name: ''
+      #   pv_path: ''
       #   sub_path: ''
 
     job:
-      type: Ingestion_New_3D
+      type: ''
     task:
-      type: tilesCopying
+      type: ''
       batches: 1000
       maxAttempts: 3
     jobManager:
-      url: http://common-job-manager
+      url: ''
     heartbeat:
-      url: http://common-heartbeat-manager
+      url: ''
       waitTime: 5000
 
   filebeat:
     enabled: false
     image: docker.elastic.co/beats/filebeat:7.12.1
-    mountPath: /usr/src/app/logs
+    mountPath: ''
     pycsw:
-      mountPath: /var/log/pycsw
-      logFile: pycsw.log
+      mountPath: ''
+      logFile: ''
     nginxS3Gateway: 
-      mountPath: /var/log/nginx
+      mountPath: ''
     elastic:
-      host: 10.8.0.8
+      host: 
       port: 9200
-      protocol: http
+      protocol: ''
       username: 
       password:
-      index: 3d-np
+      index: ''
       sslEnabled: false
     kibana:
-      host: 10.8.0.8:5601
+      host: ''
 
   ca:
     enabled: false
     useExternal: true
-    secretName: "root-ca"
-    path: "/usr/local/share/ca-certificates"
-    key: "ca.crt"
+    secretName: ''
+    path: ''
+    key: ''
 
 S3:
   source:
-    accessKey: vector
-    secretAccessKey: vectorPassword
-    server: 10.8.0.9
+    accessKey: ''
+    secretAccessKey: ''
+    server: ''
     serverPort: 9000
-    serverProto: http
-    bucket: 3dtiles
-    region: "ui-east-1"
-    style: path
+    serverProto: ''
+    bucket: ''
+    region: ''
+    style: ''
     sslEnabled: false
-    maxAttempts: 3
-    sigVersion: 4
+    maxAttempts: 
+    sigVersion: 
   destination:
-    accessKey: vector
-    secretAccessKey: vectorPassword
-    server: 10.8.0.9
+    accessKey: ''
+    secretAccessKey: ''
+    server: ''
     serverPort: 9000
-    serverProto: http
-    bucket: 3dtiles
-    region: "us-east-1"
-    style: path
+    serverProto: ''
+    bucket: ''
+    region: ''
+    style: ''
     sslEnabled: false
-    maxAttempts: 3
-    sigVersion: 4
-    storageClass: 'STANDARD'
+    maxAttempts: 
+    sigVersion: 
+    storageClass: ''
 
 ingestion:
   splunk:
@@ -136,15 +136,15 @@ ingestion:
     #   sub_path: ''
 
   job:
-    type: Ingestion_New_3D
+    type: ''
   task:
-    type: tilesCopying
+    type: ''
     batches: 1000
     maxAttempts: 3
   jobManager:
-    url: http://common-job-manager
+    url: ''
   heartbeat:
-    url: http://common-heartbeat-manager
+    url: ''
     waitTime: 5000
 
 filebeat:
@@ -157,9 +157,9 @@ filebeat:
   nginxS3Gateway: 
     mountPath: ''
   elastic:
-    host: 10.8.0.8
+    host: ''
     port: 9200
-    protocol: http
+    protocol: ''
     username: 
     password:
     index: ''
@@ -183,7 +183,7 @@ ca:
   enabled: false
   useExternal: true
   secretName: ''
-  path: /
+  path: ''
   key: ''
 
 replicaCount: 1
