@@ -60,26 +60,6 @@ global:
       url: ''
       waitTime: 5000
 
-  filebeat:
-    enabled: false
-    image: docker.elastic.co/beats/filebeat:7.12.1
-    mountPath: ''
-    pycsw:
-      mountPath: ''
-      logFile: ''
-    nginxS3Gateway: 
-      mountPath: ''
-    elastic:
-      host: 
-      port: 9200
-      protocol: ''
-      username: 
-      password:
-      index: ''
-      sslEnabled: false
-    kibana:
-      host: ''
-
   ca:
     enabled: false
     useExternal: true
@@ -146,38 +126,6 @@ ingestion:
   heartbeat:
     url: ''
     waitTime: 5000
-
-filebeat:
-  enabled: false
-  image: docker.elastic.co/beats/filebeat:7.12.1
-  mountPath: ''
-  pycsw:
-    mountPath: ''
-    logFile: ''
-  nginxS3Gateway: 
-    mountPath: ''
-  elastic:
-    host: ''
-    port: 9200
-    protocol: ''
-    username: 
-    password:
-    index: ''
-    sslEnabled: false
-  kibana:
-    host: ''
-
-sidecars:
-  filebeat:
-    name: filebeat
-    image: docker.elastic.co/beats/filebeat:7.12.1
-    args: [ "-c", "/etc/filebeat.yml", "-e" ]
-    volumeMounts:
-      - name: ''
-        mountPath: ''
-      - name: ''
-        mountPath: ''
-        subPath: ''
 
 ca:
   enabled: false
