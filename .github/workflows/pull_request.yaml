@@ -33,10 +33,7 @@ jobs:
         uses: nwestfall/openapi-action@v1.0.2
         with:
          github_token: ${{ secrets.GITHUB_TOKEN }}
-         file: 
-          required: false
-          description: ./openapi3.yaml 
-          
+         file: ./openapi3.yaml
 
   security:
     runs-on: ubuntu-latest
