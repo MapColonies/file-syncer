@@ -9,4 +9,4 @@ jobs:
     with:
       openApi:
         required: false
-        file: './openapi3.yaml'
+        openApi: './openapi3.yaml'
