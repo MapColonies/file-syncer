@@ -7,4 +7,4 @@ jobs:
     uses: MapColonies/shared-workflows/.github/workflows/pull_request.yaml@openApi
     secrets: inherit
     with:
-      openApi: ''
+      enableOpenApiCheck: false
