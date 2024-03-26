@@ -7,5 +7,6 @@ jobs:
     uses: MapColonies/shared-workflows/.github/workflows/pull_request.yaml@openApi-lint
     secrets: inherit
     with:
-      required: false
-      file: './openapi3.yaml'
+      openApi:
+        required: false
+        file: './openapi3.yaml'
