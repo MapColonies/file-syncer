@@ -6,4 +6,3 @@ jobs:
   pull_request:
     uses: MapColonies/shared-workflows/.github/workflows/pull_request.yaml@openApi-lint
     secrets: inherit
-    
