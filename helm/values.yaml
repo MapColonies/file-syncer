@@ -1,0 +1,173 @@
+global:
+  S3:
+    source:
+      accessKey: ''
+      secretAccessKey: ''
+      server: ''
+      serverPort: 9000
+      serverProto: ''
+      bucket: ''
+      region: ''
+      style: ''
+      sslEnabled: false
+      maxAttempts: ''
+      sigVersion: ''
+    destination:
+      accessKey: ''
+      secretAccessKey: ''
+      server: ''
+      serverPort: 9000
+      serverProto: ''
+      bucket: ''
+      region: ''
+      style: ''
+      sslEnabled: false
+      maxAttempts: 
+      sigVersion: 
+      storageClass: ''
+
+
+  ingestion:
+    splunk:
+      enabled: false
+      annotations:
+        collectord.io/index: SPLUNK_INDEX
+        collectord.io/logs-output: splunk
+
+    providers:
+      source: NFS
+      destination: S3
+
+    NFS:
+      source:
+        name: ''
+        pv_path: ''
+        sub_path: ''
+      # destination:
+      #   name: ''
+      #   pv_path: ''
+      #   sub_path: ''
+
+    job:
+      type: ''
+    task:
+      type: ''
+      batches: 1000
+      maxAttempts: 3
+    jobManager:
+      url: ''
+    heartbeat:
+      url: ''
+      waitTime: 5000
+
+  ca:
+    enabled: false
+    useExternal: true
+    secretName: ''
+    path: ''
+    key: ''
+
+S3:
+  source:
+    accessKey: ''
+    secretAccessKey: ''
+    server: ''
+    serverPort: 9000
+    serverProto: ''
+    bucket: ''
+    region: ''
+    style: ''
+    sslEnabled: false
+    maxAttempts: 
+    sigVersion: 
+  destination:
+    accessKey: ''
+    secretAccessKey: ''
+    server: ''
+    serverPort: 9000
+    serverProto: ''
+    bucket: ''
+    region: ''
+    style: ''
+    sslEnabled: false
+    maxAttempts: 
+    sigVersion: 
+    storageClass: ''
+
+ingestion:
+  splunk:
+    enabled: false
+    annotations:
+      collectord.io/index: ''
+      collectord.io/logs-output: ''
+
+  providers:
+    source: ''
+    destination: ''
+
+  NFS:
+    source:
+      name: ''
+      pv_path: {}
+      sub_path: ''
+    # destination:
+    #   name: ''
+    #   pv_path: /
+    #   sub_path: ''
+
+  job:
+    type: ''
+  task:
+    type: ''
+    batches: 1000
+    maxAttempts: 3
+  jobManager:
+    url: ''
+  heartbeat:
+    url: ''
+    waitTime: 5000
+
+ca:
+  enabled: false
+  useExternal: true
+  secretName: ''
+  path: ''
+  key: ''
+
+# Add side car to the Deployment, for example
+# sidecars: |-
+#   - name: sidecar
+#     image: "{{ .Values.sidecar.image }}:{{ .Values.sidecar.imageTag }}"
+#     volumeMounts: []
+#     args: []
+#     ports: []
+#     resources:
+#     {{- toYaml .Values.sidecar.resources.value | nindent 12 }}
+sidecars: ''
+
+replicaCount: 1
+image:
+  repository: file-syncer
+  tag: ''
+env:
+  logLevel: info
+  logPrettyPrintEnabled: false
+  tracing:
+    enabled: false
+    url: 'http://localhost:55681/v1/trace'
+  metrics:
+    enabled: false
+    url: 'http://localhost:55681/v1/metrics'
+  waitTime: 3000
+  maxRetries: 3
+  intervalMs: 3000
+  taskPoolSize: 40
+resources:
+  enabled: true
+  value:
+    limits:
+      cpu: 100m
+      memory: 128Mi
+    requests:
+      cpu: 100m
+      memory: 128Mi
