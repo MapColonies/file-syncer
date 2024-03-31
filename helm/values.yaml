@@ -4,7 +4,7 @@ global:
       accessKey: ''
       secretAccessKey: ''
       server: ''
-      serverPort: 9000
+      serverPort: 
       serverProto: ''
       bucket: ''
       region: ''
@@ -16,7 +16,7 @@ global:
       accessKey: ''
       secretAccessKey: ''
       server: ''
-      serverPort: 9000
+      serverPort: 
       serverProto: ''
       bucket: ''
       region: ''
@@ -72,7 +72,7 @@ S3:
     accessKey: ''
     secretAccessKey: ''
     server: ''
-    serverPort: 9000
+    serverPort: 
     serverProto: ''
     bucket: ''
     region: ''
@@ -84,7 +84,7 @@ S3:
     accessKey: ''
     secretAccessKey: ''
     server: ''
-    serverPort: 9000
+    serverPort: 
     serverProto: ''
     bucket: ''
     region: ''
@@ -120,7 +120,7 @@ ingestion:
   task:
     type: ''
     batches: 1000
-    maxAttempts: 3
+    maxAttempts: 
   jobManager:
     url: ''
   heartbeat:
@@ -149,6 +149,7 @@ replicaCount: 1
 image:
   repository: file-syncer
   tag: ''
+  
 env:
   logLevel: info
   logPrettyPrintEnabled: false
@@ -162,8 +163,9 @@ env:
   maxRetries: 3
   intervalMs: 3000
   taskPoolSize: 40
+
 resources:
-  enabled: true
+  enabled: false
   value:
     limits:
       cpu: 100m
