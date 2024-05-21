@@ -4,6 +4,7 @@ import { IConfig } from 'config';
 import express, { Request, Response } from 'express';
 import { collectMetricsExpressMiddleware } from '@map-colonies/telemetry';
 import { Registry } from 'prom-client';
+import { StatusCodes } from 'http-status-codes';
 import { SERVICES } from './common/constants';
 import { registerExternalValues, RegisterOptions } from './containerConfig';
 import { FileSyncerManager } from './fileSyncerManager/fileSyncerManager';
@@ -28,8 +29,7 @@ export class App {
       this.serverInstance.use(collectMetricsExpressMiddleware({ registry: this.metricsRegistry, collectNodeMetrics: true }));
     }
     this.serverInstance.get('/liveness', (req: Request, res: Response) => {
-      // eslint-disable-next-line @typescript-eslint/no-magic-numbers
-      res.status(200).send('OK');
+      res.status(StatusCodes.OK).send('OK');
     });
   }
 
@@ -37,7 +37,7 @@ export class App {
     this.logger.info({ msg: 'Starting fileSyncer' });
 
     this.serverInstance.listen(this.port, () => {
-      this.logger.info(`Liveness endpoint running at http://localhost:${this.port}/liveness`);
+      this.logger.info(`app started on port ${this.port}`);
     });
 
     // eslint-disable-next-line @typescript-eslint/no-misused-promises
