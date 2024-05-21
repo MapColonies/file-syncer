@@ -17,7 +17,7 @@ describe('fileSyncerManager', () => {
         { token: SERVICES.PROVIDER_MANAGER, provider: { useValue: providerManagerMock } },
       ],
     });
-    
+
     register.clear();
     fileSyncerManager = container.resolve(FileSyncerManager);
   });
@@ -28,13 +28,13 @@ describe('fileSyncerManager', () => {
 
   describe('start', () => {
     it('When task counter is not smaller than pool size, it will not dequeue', async () => {
-    fileSyncerManager['taskCounter'] = 10;
+      fileSyncerManager['taskCounter'] = 10;
 
       getApp({
         override: [
           { token: SERVICES.METRICS_REGISTRY, provider: { useValue: undefined } },
           { token: SERVICES.FILE_SYNCER_MANAGER, provider: { useValue: fileSyncerManager } },
-        ]
+        ],
       });
 
       const response = await fileSyncerManager.start();
