@@ -27,6 +27,7 @@ export class FileSyncerManager {
     @inject(SERVICES.PROVIDER_MANAGER) private readonly providerManager: ProviderManager,
     @inject(SERVICES.METRICS_REGISTRY) registry?: client.Registry
   ) {
+    this.taskType = this.config.get<string>('fileSyncer.task.type');
     if (registry !== undefined) {
       this.tasksGauge = new client.Gauge({
         name: 'working_tasks',
@@ -34,6 +35,7 @@ export class FileSyncerManager {
         labelNames: ['type'] as const,
         registers: [registry],
       });
+      this.tasksGauge.set({ type: this.taskType }, 0);
 
       this.tasksHistogram = new client.Histogram({
         name: 'tasks_duration_seconds',
@@ -44,7 +46,6 @@ export class FileSyncerManager {
       });
     }
 
-    this.taskType = this.config.get<string>('fileSyncer.task.type');
     this.maxAttempts = this.config.get<number>('fileSyncer.task.maxAttempts');
     this.waitTime = this.config.get<number>('fileSyncer.waitTime');
     this.maxRetries = this.config.get<number>('fileSyncer.maxRetries');
@@ -65,7 +66,7 @@ export class FileSyncerManager {
 
     this.logger.info({ msg: 'Found a task to work on!', task: task.id, modelId: task.parameters.modelId });
     this.taskCounter++;
-    this.tasksGauge?.inc();
+    this.tasksGauge?.inc({ type: this.taskType });
     const workingTaskTimerEnd = this.tasksHistogram?.startTimer({ type: this.taskType });
     const isCompleted: boolean = await this.handleTaskWithRetries(task);
     if (isCompleted) {
@@ -79,7 +80,7 @@ export class FileSyncerManager {
     }
 
     this.taskCounter--;
-    this.tasksGauge?.dec();
+    this.tasksGauge?.dec({ type: this.taskType });
     this.logger.info({ msg: 'Done working on a task in this interval', taskId: task.id, isCompleted, modelId: task.parameters.modelId });
   }
 
