@@ -1,6 +1,7 @@
 import { Logger } from '@map-colonies/js-logger';
 import { ITaskResponse, IUpdateTaskBody, TaskHandler } from '@map-colonies/mc-priority-queue';
 import { IConfig } from 'config';
+import client from 'prom-client';
 import { inject, injectable } from 'tsyringe';
 import { JOB_TYPE, SERVICES } from '../common/constants';
 import { ProviderManager, TaskParameters, TaskResult } from '../common/interfaces';
@@ -8,6 +9,10 @@ import { sleep } from '../common/utils';
 
 @injectable()
 export class FileSyncerManager {
+  //metrics
+  private readonly tasksHistogram?: client.Histogram<'type'>;
+  private readonly tasksGauge?: client.Gauge<'type'>;
+
   private readonly taskType: string;
   private readonly waitTime: number;
   private readonly maxAttempts: number;
@@ -19,8 +24,26 @@ export class FileSyncerManager {
     @inject(SERVICES.LOGGER) private readonly logger: Logger,
     @inject(SERVICES.CONFIG) private readonly config: IConfig,
     @inject(SERVICES.TASK_HANDLER) private readonly taskHandler: TaskHandler,
-    @inject(SERVICES.PROVIDER_MANAGER) private readonly providerManager: ProviderManager
+    @inject(SERVICES.PROVIDER_MANAGER) private readonly providerManager: ProviderManager,
+    @inject(SERVICES.METRICS_REGISTRY) registry?: client.Registry
   ) {
+    if (registry !== undefined) {
+      this.tasksGauge = new client.Gauge({
+        name: 'working_tasks',
+        help: 'working tasks',
+        labelNames: ['type'] as const,
+        registers: [registry],
+      });
+
+      this.tasksHistogram = new client.Histogram({
+        name: 'tasks_duration_seconds',
+        help: 'tasks duration time (seconds)',
+        buckets: config.get<number[]>('telemetry.metrics.buckets'),
+        labelNames: ['type'] as const,
+        registers: [registry],
+      });
+    }
+
     this.taskType = this.config.get<string>('fileSyncer.task.type');
     this.maxAttempts = this.config.get<number>('fileSyncer.task.maxAttempts');
     this.waitTime = this.config.get<number>('fileSyncer.waitTime');
@@ -42,6 +65,8 @@ export class FileSyncerManager {
 
     this.logger.info({ msg: 'Found a task to work on!', task: task.id, modelId: task.parameters.modelId });
     this.taskCounter++;
+    this.tasksGauge?.inc();
+    const workingTaskTimerEnd = this.tasksHistogram?.startTimer({ type: this.taskType });
     const isCompleted: boolean = await this.handleTaskWithRetries(task);
     if (isCompleted) {
       await this.taskHandler.ack<IUpdateTaskBody<TaskParameters>>(task.jobId, task.id);
@@ -49,8 +74,12 @@ export class FileSyncerManager {
       await this.deleteTaskParameters(task);
       this.logger.info({ msg: `Deleted task's parameters successfully`, task: task.id, modelId: task.parameters.modelId });
     }
+    if (workingTaskTimerEnd) {
+      workingTaskTimerEnd();
+    }
 
     this.taskCounter--;
+    this.tasksGauge?.dec();
     this.logger.info({ msg: 'Done working on a task in this interval', taskId: task.id, isCompleted, modelId: task.parameters.modelId });
   }
 

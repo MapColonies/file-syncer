@@ -1,6 +1,7 @@
 import jsLogger from '@map-colonies/js-logger';
 import { randFileExt, randWord } from '@ngneat/falso';
 import { container } from 'tsyringe';
+import { register } from 'prom-client';
 import { getApp } from '../../../src/app';
 import { SERVICES } from '../../../src/common/constants';
 import { ProviderManager } from '../../../src/common/interfaces';
@@ -30,6 +31,7 @@ describe('fileSyncerManager NFS to S3', () => {
         },
       ],
     });
+    register.clear();
     fileSyncerManager = container.resolve(FileSyncerManager);
     nfsHelperSource = new NFSHelper(mockNFStS3.source);
     s3HelperDest = new S3Helper(mockNFStS3.dest);
