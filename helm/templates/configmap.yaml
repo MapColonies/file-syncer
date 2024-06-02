@@ -1,33 +1,36 @@
 {{- $chartName := include "file-syncer.name" . -}}
-{{- $tracingUrl := include "file-syncer.tracingUrl" . -}}
-{{- $metricsUrl := include "file-syncer.metricsUrl" . -}}
+{{- $fullName := include "file-syncer.fullname" . -}}
+{{- $ca := (include "merged.ca" . ) | fromYaml }}
+{{- $tracing := (include "merged.tracing" . ) | fromYaml }}
+{{- $metrics := (include "merged.metrics" . ) | fromYaml }}
+{{- $jobManager := (include "merged.jobManager" . ) | fromYaml }}
+{{- $providers := (include "merged.providers" . ) | fromYaml }}
 apiVersion: v1
 kind: ConfigMap
 metadata:
-  name: {{ .Release.Name }}-{{ $chartName }}-configmap
+  name: {{ $fullName }}
 data:
+  SERVER_PORT: {{ .Values.env.targetPort | quote }}
   LOG_LEVEL: {{ .Values.env.logLevel | quote }}
   LOG_PRETTY_PRINT_ENABLED: {{ .Values.env.logPrettyPrintEnabled | quote }}
-  {{ if .Values.env.tracing.enabled }}
+  {{ if $tracing.enabled }}
   TELEMETRY_TRACING_ENABLED: 'true'
-  TELEMETRY_TRACING_URL: {{ $tracingUrl }}
+  TELEMETRY_TRACING_URL: {{ $tracing.url }}
   {{ end }}
-  {{ if .Values.env.metrics.enabled }}
+  {{ if $metrics.enabled }}
   TELEMETRY_METRICS_ENABLED: 'true'
-  TELEMETRY_METRICS_URL: {{ $metricsUrl }}
+  TELEMETRY_METRICS_URL: {{ $metrics.url }}
   {{ end }}
-  {{-  $ca := (include "common.ca.merged" . ) | fromYaml }}
   {{- if $ca.enabled }}
   REQUESTS_CA_BUNDLE: {{ printf "%s/%s" $ca.path $ca.key | quote }}
-  NODE_EXTRA_CA_CERTS: {{ printf "%s/%s" $ca.path $ca.ca.key | quote }}
+  NODE_EXTRA_CA_CERTS: {{ printf "%s/%s" $ca.path $ca.key | quote }}
   {{- end }}
   FILE_SYNCER_WAIT_TIME: {{ .Values.env.waitTime | quote }}
   FILE_SYNCER_MAX_RETRIES: {{ .Values.env.maxRetries | quote }}
   FILE_SYNCER_INTERVAL_MS: {{ .Values.env.intervalMs | quote }}
   FILE_SYNCER_TASK_POOL_SIZE: {{ .Values.env.taskPoolSize | quote }}
-  {{- $providers := (include "common.providers.merged" . ) | fromYaml }}
   {{ if eq $providers.source "S3" }}
-  {{- $S3Source := (include "common.S3-source.merged" . ) | fromYaml }}
+  {{- $S3Source := (include "merged.S3.source" . ) | fromYaml }}
   S3_SOURCE_ACCESS_KEY_ID: {{ $S3Source.accessKey | quote }}
   S3_SOURCE_SECRET_ACCESS_KEY: {{ $S3Source.secretAccessKey | quote }}
   S3_SOURCE_END_POINT_URL: "{{ $S3Source.serverProto }}://{{ $S3Source.server }}:{{ $S3Source.serverPort }}"
@@ -38,12 +41,12 @@ data:
   S3_SOURCE_MAX_ATTEMPTS: {{ $S3Source.maxAttempts | quote }}
   S3_SOURCE_SIG_VERSION: v{{ $S3Source.sigVersion }}
   {{ end }}
-  {{- $NFS := (include "common.NFS.merged" . ) | fromYaml }}
   {{ if eq $providers.source "NFS" }}
-  PV_SOURCE_PATH: {{ $NFS.source.pv_path | quote }}
+  {{- $NFSource := (include "merged.NFS.source" . ) | fromYaml }}
+  PV_SOURCE_PATH: {{ $NFSource.pv_path | quote }}
   {{ end }}
-  {{- $S3Destination := (include "common.S3-destination.merged" . ) | fromYaml }}
   {{ if eq $providers.destination "S3" }}
+  {{- $S3Destination := (include "merged.S3.destination" . ) | fromYaml }}
   S3_DEST_ACCESS_KEY_ID: {{ $S3Destination.accessKey | quote }}
   S3_DEST_SECRET_ACCESS_KEY: {{ $S3Destination.secretAccessKey | quote }}
   S3_DEST_END_POINT_URL: "{{ $S3Destination.serverProto }}://{{ $S3Destination.server }}:{{ $S3Destination.serverPort }}"
@@ -56,15 +59,14 @@ data:
   S3_DEST_SIG_VERSION: v{{ $S3Destination.sigVersion }}
   {{ end }}
   {{ if eq $providers.destination "NFS" }}
-  PV_DEST_PATH: {{ $NFS.destination.pv_path | quote }}
+  {{- $NFSDestination := (include "merged.NFS.destination" . ) | fromYaml }}
+  PV_DEST_PATH: {{ $NFSDestination.pv_path | quote }}
   {{ end }}
-  {{- $job := (include "common.job.merged" . ) | fromYaml }}
-  {{- $task := (include "common.task.merged" . ) | fromYaml }}
-  {{- $heartBeat := (include "common.heart-beat.merged" . ) | fromYaml }}
-  {{- $jobManager := (include "common.job-manager.merged" . ) | fromYaml }}
   PROVIDER_FROM: {{ $providers.source | quote }}
   PROVIDER_TO: {{ $providers.destination | quote }}
-  JOB_TYPE: {{ $job.type | quote }} 
-  TASK_TYPE: {{ $task.type | quote }}
+  JOB_TYPE: {{ $jobManager.job.type | quote }} 
+  TASK_TYPE: {{ $jobManager.task.type | quote }}
+  TASK_MAX_ATTEMPTS: {{ $jobManager.task.maxAttempts | quote }}
   JOB_MANAGER_URL: {{ $jobManager.url | quote }}
-  HEARTBEAT_URL: {{ $heartBeat.url | quote }}
+  HEARTBEAT_URL: {{ $jobManager.heartbeat.url | quote }}
+  HEARTBEAT_WAIT_TIME: {{ $jobManager.heartbeat.waitTime | quote }}

@@ -1,86 +1,29 @@
 global:
-  S3:
-    source:
-      accessKey: ''
-      secretAccessKey: ''
-      server: ''
-      serverPort: 
-      serverProto: ''
-      bucket: ''
-      region: ''
-      style: ''
-      sslEnabled: false
-      maxAttempts: ''
-      sigVersion: ''
-    destination:
-      accessKey: ''
-      secretAccessKey: ''
-      server: ''
-      serverPort: 
-      serverProto: ''
-      bucket: ''
-      region: ''
-      style: ''
-      sslEnabled: false
-      maxAttempts: 
-      sigVersion: 
-      storageClass: ''
+  cloudProvider:
+    dockerRegistryUrl: 
+    flavor: openshift
+    imagePullSecretName: 
+  imagePullPolicy: IfNotPresent
+  tracing: {}
+  metrics: {}
+  environment: development
 
-
-  ingestion:
-    splunk:
-      enabled: false
-      annotations:
-        collectord.io/index: SPLUNK_INDEX
-        collectord.io/logs-output: splunk
-
-    providers:
-      source: NFS
-      destination: S3
-
-    NFS:
-      source:
-        name: ''
-        pv_path: ''
-        sub_path: ''
-      # destination:
-      #   name: ''
-      #   pv_path: ''
-      #   sub_path: ''
-
+  jobManager:
+    url: ''
     job:
       type: ''
     task:
       type: ''
-      batches: 1000
-      maxAttempts: 3
-    jobManager:
-      url: ''
+      maxAttempts: 
     heartbeat:
       url: ''
-      waitTime: 5000
+      waitTime: 
+  
+  providers:
+    source: NFS
+    destination: S3
 
-  ca:
-    enabled: false
-    useExternal: true
-    secretName: ''
-    path: ''
-    key: ''
-
-S3:
-  source:
-    accessKey: ''
-    secretAccessKey: ''
-    server: ''
-    serverPort: 
-    serverProto: ''
-    bucket: ''
-    region: ''
-    style: ''
-    sslEnabled: false
-    maxAttempts: 
-    sigVersion: 
-  destination:
+  S3:
     accessKey: ''
     secretAccessKey: ''
     server: ''
@@ -94,63 +37,94 @@ S3:
     sigVersion: 
     storageClass: ''
 
-ingestion:
-  splunk:
-    enabled: false
-    annotations:
-      collectord.io/index: ''
-      collectord.io/logs-output: ''
-
-  providers:
-    source: ''
-    destination: ''
-
   NFS:
-    source:
-      name: ''
-      pv_path: {}
-      sub_path: ''
-    # destination:
-    #   name: ''
-    #   pv_path: /
-    #   sub_path: ''
+    name: ''
+    pv_path: ''
+    sub_path: ''
 
+cloudProvider:
+    dockerRegistryUrl:
+    flavor: 
+    imagePullSecretName: 
+imagePullPolicy: 
+environment: 
+
+ca:
+  enabled: false
+  useExternal: false
+  secretName: 
+  path: 
+  key: 
+
+providers:
+  source: NFS
+  destination: S3
+
+NFS:
+  name: ''
+  pv_path: ''
+  sub_path: ''
+
+S3:
+  accessKey: ''
+  secretAccessKey: ''
+  server: ''
+  serverPort: 
+  serverProto: ''
+  bucket: ''
+  region: ''
+  style: ''
+  sslEnabled: false
+  maxAttempts: 
+  sigVersion: 
+  storageClass: ''
+
+destinationNFS:
+  name: ''
+  pv_path: ''
+  sub_path: ''
+
+sourceS3:
+  accessKey: ''
+  secretAccessKey: ''
+  server: ''
+  serverPort: 
+  serverProto: ''
+  bucket: ''
+  region: ''
+  style: ''
+  sslEnabled: false
+  maxAttempts: 
+  sigVersion: 
+
+jobManager:
+  url: ''
   job:
     type: ''
   task:
     type: ''
-    batches: 1000
     maxAttempts: 
-  jobManager:
-    url: ''
   heartbeat:
     url: ''
-    waitTime: 5000
-
-ca:
-  enabled: false
-  useExternal: true
-  secretName: ''
-  path: ''
-  key: ''
-
-# Add side car to the Deployment, for example
-# sidecars: |-
-#   - name: sidecar
-#     image: "{{ .Values.sidecar.image }}:{{ .Values.sidecar.imageTag }}"
-#     volumeMounts: []
-#     args: []
-#     ports: []
-#     resources:
-#     {{- toYaml .Values.sidecar.resources.value | nindent 12 }}
-sidecars: ''
+    waitTime: 
 
 replicaCount: 1
+revisionHistoryLimit: 5 # Amount of revisions we keep
+
 image:
   repository: file-syncer
-  tag: ''
-  
+  tag: latest
+
+extraVolumes: {}
+
+extraVolumeMounts: {}
+
+sidecars: {}
+
+podAnnotations: {}
+
 env:
+  targetPort: 8080
   logLevel: info
   logPrettyPrintEnabled: false
   tracing:
@@ -165,7 +139,7 @@ env:
   taskPoolSize: 40
 
 resources:
-  enabled: false
+  enabled: true
   value:
     limits:
       cpu: 100m
@@ -173,3 +147,17 @@ resources:
     requests:
       cpu: 100m
       memory: 128Mi
+
+livenessProbe:
+  enabled: true
+  initialDelaySeconds: 10
+  timeoutSeconds: 5
+  failureThreshold: 6
+  path: /liveness
+
+readinessProbe:
+  enabled: true
+  initialDelaySeconds: 10
+  timeoutSeconds: 5
+  failureThreshold: 6
+  path: /liveness

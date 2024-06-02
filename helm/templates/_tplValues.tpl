@@ -36,54 +36,64 @@ Usage:
 {{- end -}}
 {{ $dst | toYaml }}
 {{- end -}}
-
 {{/*
 End of usage example
 */}}
 
 {{/*
-Custom definitions
+Common definitions
 */}}
-
-{{- define "common.splunk.merged" -}}
-{{- include "common.tplvalues.merge" ( dict "values" ( list .Values.ingestion.splunk .Values.global.ingestion.splunk ) "context" . ) }}
-{{- end -}}
-
-{{- define "common.providers.merged" -}}
-{{- include "common.tplvalues.merge" ( dict "values" ( list .Values.ingestion.providers .Values.global.ingestion.providers ) "context" . ) }}
-{{- end -}}
-
-{{- define "common.NFS.merged" -}}
-{{- include "common.tplvalues.merge" ( dict "values" ( list .Values.ingestion.NFS .Values.global.ingestion.NFS ) "context" . ) }}
-{{- end -}}
-
-
-
-{{- define "common.ca.merged" -}}
+{{- define "merged.ca" -}}
 {{- include "common.tplvalues.merge" ( dict "values" ( list .Values.ca .Values.global.ca ) "context" . ) }}
 {{- end -}}
 
-{{- define "common.S3-destination.merged" -}}
-{{- include "common.tplvalues.merge" ( dict "values" ( list .Values.S3.destination .Values.global.S3.destination ) "context" . ) }}
+{{- define "merged.podAnnotations" -}}
+{{- include "common.tplvalues.merge" ( dict "values" ( list .Values.podAnnotations .Values.global.podAnnotations ) "context" . ) }}
 {{- end -}}
 
-{{- define "common.S3-source.merged" -}}
-{{- include "common.tplvalues.merge" ( dict "values" ( list .Values.S3.source .Values.global.S3.source ) "context" . ) }}
+{{- define "merged.extraVolumes" -}}
+{{- include "common.tplvalues.merge" ( dict "values" ( list .Values.extraVolumes .Values.global.extraVolumes ) "context" . ) }}
 {{- end -}}
 
-{{- define "common.job-manager.merged" -}}
-{{- include "common.tplvalues.merge" ( dict "values" ( list .Values.ingestion.jobManager .Values.global.ingestion.jobManager ) "context" . ) }}
+{{- define "merged.sidecars" -}}
+{{- include "common.tplvalues.merge" ( dict "values" ( list .Values.sidecars .Values.global.sidecars ) "context" . ) }}
 {{- end -}}
 
-{{- define "common.job.merged" -}}
-{{- include "common.tplvalues.merge" ( dict "values" ( list .Values.ingestion.job .Values.global.ingestion.job ) "context" . ) }}
+{{- define "merged.extraVolumeMounts" -}}
+{{- include "common.tplvalues.merge" ( dict "values" ( list .Values.extraVolumeMounts .Values.global.extraVolumeMounts ) "context" . ) }}
 {{- end -}}
 
-{{- define "common.task.merged" -}}
-{{- include "common.tplvalues.merge" ( dict "values" ( list .Values.ingestion.task .Values.global.ingestion.task ) "context" . ) }}
+{{- define "merged.metrics" -}}
+{{- include "common.tplvalues.merge" ( dict "values" ( list .Values.env.metrics .Values.global.metrics ) "context" . ) }}
 {{- end -}}
 
-{{- define "common.heart-beat.merged" -}}
-{{- include "common.tplvalues.merge" ( dict "values" ( list .Values.ingestion.heartbeat .Values.global.ingestion.heartbeat ) "context" . ) }}
+{{- define "merged.tracing" -}}
+{{- include "common.tplvalues.merge" ( dict "values" ( list .Values.env.tracing .Values.global.tracing ) "context" . ) }}
 {{- end -}}
 
+{{/*
+Custom definitions
+*/}}
+{{- define "merged.jobManager" -}}
+{{- include "common.tplvalues.merge" ( dict "values" ( list .Values.jobManager .Values.global.jobManager ) "context" . ) }}
+{{- end -}}
+
+{{- define "merged.providers" -}}
+{{- include "common.tplvalues.merge" ( dict "values" ( list .Values.providers .Values.global.providers ) "context" . ) }}
+{{- end -}}
+
+{{- define "merged.NFS.source" -}}
+{{- include "common.tplvalues.merge" ( dict "values" ( list .Values.NFS .Values.global.NFS ) "context" . ) }}
+{{- end -}}
+
+{{- define "merged.S3.destination" -}}
+{{- include "common.tplvalues.merge" ( dict "values" ( list .Values.S3 .Values.global.S3 ) "context" . ) }}
+{{- end -}}
+
+{{- define "merged.NFS.destination" -}}
+{{- include "common.tplvalues.merge" ( dict "values" ( list .Values.destinationNFS .Values.global.destinationNFS ) "context" . ) }}
+{{- end -}}
+
+{{- define "merged.S3.source" -}}
+{{- include "common.tplvalues.merge" ( dict "values" ( list .Values.sourceS3 .Values.global.sourceS3 ) "context" . ) }}
+{{- end -}}
