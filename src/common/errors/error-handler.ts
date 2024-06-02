@@ -1,27 +1,36 @@
+import config from 'config';
 import { StatusCodes } from 'http-status-codes';
-import logger from '../logger';
+import jsLogger, { Logger, LoggerOptions } from '@map-colonies/js-logger';
+import { getOtelMixin } from '@map-colonies/telemetry';
 import { AppErrorResponse } from '../middlewares/error-handling-midleware';
 import { AppError, httpErrorCodeMapper } from './error-types';
 
 class ErrorHandler {
+  private readonly logger: Logger;
+
+  public constructor() {
+    const loggerConfig = config.get<LoggerOptions>('telemetry.logger');
+    this.logger = jsLogger({ ...loggerConfig, prettyPrint: loggerConfig.prettyPrint, mixin: getOtelMixin() });
+  }
+
   public listenToErrorEvents(): void {
     process.on('uncaughtException', (error: Error) => {
-      logger.error({ msg: error.message });
+      this.logger.error({ msg: error.message });
     });
 
     process.on('unhandledRejection', (reason: Error) => {
-      logger.error({ msg: reason.message });
+      this.logger.error({ msg: reason.message });
     });
 
     process.on('SIGTERM', () => {
-      logger.error({
+      this.logger.error({
         msg: 'App received SIGTERM event, try to gracefully close the server',
       });
       this.exit();
     });
 
     process.on('SIGINT', () => {
-      logger.error({
+      this.logger.error({
         msg: 'App received SIGINT event, try to gracefully close the server',
       });
       this.exit();
@@ -42,7 +51,7 @@ class ErrorHandler {
   }
 
   private handleCriticalError(error: Error | AppError, response?: AppErrorResponse): void {
-    logger.error({ msg: error.message, metadata: error });
+    this.logger.error({ msg: error.message, metadata: error });
     if (response !== undefined) {
       response.status(StatusCodes.INTERNAL_SERVER_ERROR).json({ message: 'Internal server error' });
     }
@@ -56,7 +65,7 @@ class ErrorHandler {
   }
 
   private exit(): void {
-    logger.error({ msg: 'Gracefully closing the server' });
+    this.logger.error({ msg: 'Gracefully closing the server' });
     process.exit(1);
   }
 }

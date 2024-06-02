@@ -1,20 +1,21 @@
+import { Logger } from '@map-colonies/js-logger';
+import { Tracer } from '@opentelemetry/api';
 import { ProviderConfig, ProviderManager, ProvidersConfig } from '../common/interfaces';
-import logger from '../common/logger';
 import { NFSProvider } from './nfsProvider';
 import { S3Provider } from './s3Provider';
 
-function getProvider(config: ProviderConfig): S3Provider | NFSProvider {
+function getProvider(logger: Logger, tracer: Tracer, config: ProviderConfig): S3Provider | NFSProvider {
   if (config.type === 'S3') {
-    return new S3Provider(logger, config);
+    return new S3Provider(logger, tracer, config);
   } else {
-    return new NFSProvider(logger, config);
+    return new NFSProvider(logger, tracer, config);
   }
 }
 
-function getProviderManager(providerConfiguration: ProvidersConfig): ProviderManager {
+function getProviderManager(logger: Logger, tracer: Tracer, providerConfiguration: ProvidersConfig): ProviderManager {
   return {
-    source: getProvider(providerConfiguration.source),
-    dest: getProvider(providerConfiguration.dest),
+    source: getProvider(logger, tracer, providerConfiguration.source),
+    dest: getProvider(logger, tracer, providerConfiguration.dest),
   };
 }
 
