@@ -10,4 +10,4 @@ jobs:
     uses: MapColonies/shared-workflows/.github/workflows/release-on-tag-push.yaml@master
     secrets: inherit
     with:
-      enableOpenApiCheck: false
+      enableOpenApiToPostman: false
