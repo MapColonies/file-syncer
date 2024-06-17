@@ -37,8 +37,7 @@
       "region": "us-east-1",
       "forcePathStyle": true,
       "sslEnabled": false,
-      "maxAttempts": 3,
-      "sigVersion": "v4"
+      "maxAttempts": 4
     },
     "dest": {
       "type": "S3",
@@ -49,8 +48,7 @@
       "region": "us-east-1",
       "forcePathStyle": true,
       "sslEnabled": false,
-      "maxAttempts": 3,
-      "sigVersion": "v4",
+      "maxAttempts": 4,
       "storageClass": "STANDARD"
     }
   },

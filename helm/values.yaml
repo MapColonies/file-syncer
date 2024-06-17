@@ -34,7 +34,6 @@ global:
     style: ''
     sslEnabled: false
     maxAttempts: 
-    sigVersion: 
     storageClass: ''
 
   NFS:
@@ -76,7 +75,6 @@ S3:
   style: ''
   sslEnabled: false
   maxAttempts: 
-  sigVersion: 
   storageClass: ''
 
 destinationNFS:
@@ -95,7 +93,6 @@ sourceS3:
   style: ''
   sslEnabled: false
   maxAttempts: 
-  sigVersion: 
 
 jobManager:
   url: ''

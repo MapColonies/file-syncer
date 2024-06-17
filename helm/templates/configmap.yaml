@@ -37,7 +37,6 @@ data:
   S3_SOURCE_FORCE_PATH_STYLE: {{ eq $S3Source.style "path" | ternary "true" "false" }}
   S3_SOURCE_SSL_ENABLED: {{ $S3Source.sslEnabled | quote }}
   S3_SOURCE_MAX_ATTEMPTS: {{ $S3Source.maxAttempts | quote }}
-  S3_SOURCE_SIG_VERSION: v{{ $S3Source.sigVersion }}
   {{ end }}
   {{ if eq $providers.source "NFS" }}
   {{- $NFSource := (include "merged.NFS.source" . ) | fromYaml }}
@@ -54,7 +53,6 @@ data:
   S3_DEST_FORCE_PATH_STYLE: {{ eq $S3Destination.style "path" | ternary "true" "false" | quote }}
   S3_DEST_SSL_ENABLED: {{ $S3Destination.sslEnabled | quote}}
   S3_DEST_MAX_ATTEMPTS: {{ $S3Destination.maxAttempts | quote}}
-  S3_DEST_SIG_VERSION: v{{ $S3Destination.sigVersion }}
   {{ end }}
   {{ if eq $providers.destination "NFS" }}
   {{- $NFSDestination := (include "merged.NFS.destination" . ) | fromYaml }}

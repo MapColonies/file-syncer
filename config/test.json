@@ -34,8 +34,7 @@
       "region": "us-east-1",
       "forcePathStyle": true,
       "sslEnabled": false,
-      "maxAttempts": 3,
-      "sigVersion": "v4"
+      "maxAttempts": 4
     },
     "dest": {
       "accessKeyId": "minioadmin",
@@ -45,8 +44,7 @@
       "region": "us-east-1",
       "forcePathStyle": true,
       "sslEnabled": false,
-      "maxAttempts": 3,
-      "sigVersion": "v4",
+      "maxAttempts": 4,
       "storageClass": "STANDARD"
     }
   },
