@@ -10,7 +10,7 @@
     }
   },
   "server": {
-    "port": "8081"
+    "port": "8080"
   },
   "jobManager": {
     "url": "http://127.0.0.1:8080",
@@ -19,12 +19,13 @@
     },
     "task": {
       "type": "tilesCopying",
+      "pollingIntervalTime": 5000,
       "maxAttempts": 3
     }
   },
   "heartbeat": {
-    "url": "http://127.0.0.1:8082",
-    "waitTime": 3000
+    "url": "http://127.0.0.1:8080",
+    "pingingIntervalTime": 3000
   },
   "provider": {
     "source": {
@@ -54,7 +55,6 @@
     }
   },
   "fileSyncer": {
-    "waitTime": 5000,
     "intervalMs": 5000,
     "taskPoolSize": 1
   }

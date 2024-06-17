@@ -65,19 +65,18 @@ export class FileSyncerManager {
     const workingTaskTimerEnd = this.tasksHistogram?.startTimer({ type: this.taskType });
     const taskResult = await this.handleTask(task);
     if (taskResult.completed) {
-      const isCompleted: boolean = true;
       await this.taskHandler.ack<IUpdateTaskBody<TaskParameters>>(task.jobId, task.id);
       this.logger.info({ msg: 'Finished ack task', task: task.id, modelId: task.parameters.modelId });
       await this.deleteTaskParameters(task);
-      if (workingTaskTimerEnd) {
-        workingTaskTimerEnd();
-      }
       this.logger.info({ msg: `Deleted task's parameters successfully`, task: task.id, modelId: task.parameters.modelId });
-      this.tasksGauge?.dec({ type: this.taskType });
-      this.taskCounter--;
-      this.logger.info({ msg: 'Done working on a task in this interval', taskId: task.id, isCompleted, modelId: task.parameters.modelId });
+    }
+    if (workingTaskTimerEnd) {
+      workingTaskTimerEnd();
     }
 
+    this.taskCounter--;
+    this.tasksGauge?.dec({ type: this.taskType });
+    this.logger.info({ msg: 'Done working on a task in this interval', taskId: task.id, isCompleted: taskResult.completed, modelId: task.parameters.modelId });
   }
 
   private async deleteTaskParameters(task: ITaskResponse<TaskParameters>): Promise<void> {

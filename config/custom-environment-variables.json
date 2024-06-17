@@ -37,6 +37,10 @@
     },
     "task": {
       "type": "TASK_TYPE",
+      "pollingIntervalTime": {
+        "__name": "TASK_POLLING_INTERVAL_TIME",
+        "__format": "number"
+      },
       "maxAttempts": {
         "__name": "TASK_MAX_ATTEMPTS",
         "__format": "number"
@@ -46,7 +50,7 @@
   "heartbeat": {
     "url": "HEARTBEAT_URL",
     "waitTime": {
-      "__name": "HEARTBEAT_WAIT_TIME",
+      "__name": "HEARTBEAT_PINGING_INTERVAL_TIME",
       "__format": "number"
     }
   },
@@ -98,10 +102,6 @@
     }
   },
   "fileSyncer": {
-    "waitTime": {
-      "__name": "FILE_SYNCER_WAIT_TIME",
-      "__format": "number"
-    },
     "intervalMs": {
       "__name": "FILE_SYNCER_INTERVAL_MS",
       "__format": "number"
