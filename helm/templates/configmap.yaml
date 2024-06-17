@@ -1,0 +1,69 @@
+{{- $chartName := include "file-syncer.name" . -}}
+{{- $fullName := include "file-syncer.fullname" . -}}
+{{- $ca := (include "merged.ca" . ) | fromYaml }}
+{{- $tracing := (include "merged.tracing" . ) | fromYaml }}
+{{- $metrics := (include "merged.metrics" . ) | fromYaml }}
+{{- $jobManager := (include "merged.jobManager" . ) | fromYaml }}
+{{- $providers := (include "merged.providers" . ) | fromYaml }}
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ $fullName }}
+data:
+  SERVER_PORT: {{ .Values.env.targetPort | quote }}
+  LOG_LEVEL: {{ .Values.env.logLevel | quote }}
+  LOG_PRETTY_PRINT_ENABLED: {{ .Values.env.logPrettyPrintEnabled | quote }}
+  {{ if $tracing.enabled }}
+  TELEMETRY_TRACING_ENABLED: 'true'
+  TELEMETRY_TRACING_URL: {{ $tracing.url }}
+  {{ end }}
+  {{ if $metrics.enabled }}
+  TELEMETRY_METRICS_ENABLED: 'true'
+  TELEMETRY_METRICS_URL: {{ $metrics.url }}
+  {{ end }}
+  {{- if $ca.enabled }}
+  REQUESTS_CA_BUNDLE: {{ printf "%s/%s" $ca.path $ca.key | quote }}
+  NODE_EXTRA_CA_CERTS: {{ printf "%s/%s" $ca.path $ca.key | quote }}
+  {{- end }}
+  FILE_SYNCER_INTERVAL_MS: {{ .Values.env.intervalMs | quote }}
+  FILE_SYNCER_TASK_POOL_SIZE: {{ .Values.env.taskPoolSize | quote }}
+  {{ if eq $providers.source "S3" }}
+  {{- $S3Source := (include "merged.S3.source" . ) | fromYaml }}
+  S3_SOURCE_ACCESS_KEY_ID: {{ $S3Source.accessKey | quote }}
+  S3_SOURCE_SECRET_ACCESS_KEY: {{ $S3Source.secretAccessKey | quote }}
+  S3_SOURCE_END_POINT_URL: "{{ $S3Source.serverProto }}://{{ $S3Source.server }}:{{ $S3Source.serverPort }}"
+  S3_SOURCE_BUCKET: {{ $S3Source.bucket | quote }}
+  S3_SOURCE_REGION: {{ $S3Source.region | quote }}
+  S3_SOURCE_FORCE_PATH_STYLE: {{ eq $S3Source.style "path" | ternary "true" "false" }}
+  S3_SOURCE_SSL_ENABLED: {{ $S3Source.sslEnabled | quote }}
+  S3_SOURCE_MAX_ATTEMPTS: {{ $S3Source.maxAttempts | quote }}
+  {{ end }}
+  {{ if eq $providers.source "NFS" }}
+  {{- $NFSource := (include "merged.NFS.source" . ) | fromYaml }}
+  PV_SOURCE_PATH: {{ $NFSource.pv_path | quote }}
+  {{ end }}
+  {{ if eq $providers.destination "S3" }}
+  {{- $S3Destination := (include "merged.S3.destination" . ) | fromYaml }}
+  S3_DEST_ACCESS_KEY_ID: {{ $S3Destination.accessKey | quote }}
+  S3_DEST_SECRET_ACCESS_KEY: {{ $S3Destination.secretAccessKey | quote }}
+  S3_DEST_END_POINT_URL: "{{ $S3Destination.serverProto }}://{{ $S3Destination.server }}:{{ $S3Destination.serverPort }}"
+  S3_DEST_BUCKET: {{ $S3Destination.bucket | quote }}
+  S3_DEST_REGION: {{ $S3Destination.region | quote }}
+  S3_DEST_STORAGE_CLASS: {{ $S3Destination.storageClass | quote }} 
+  S3_DEST_FORCE_PATH_STYLE: {{ eq $S3Destination.style "path" | ternary "true" "false" | quote }}
+  S3_DEST_SSL_ENABLED: {{ $S3Destination.sslEnabled | quote}}
+  S3_DEST_MAX_ATTEMPTS: {{ $S3Destination.maxAttempts | quote}}
+  {{ end }}
+  {{ if eq $providers.destination "NFS" }}
+  {{- $NFSDestination := (include "merged.NFS.destination" . ) | fromYaml }}
+  PV_DEST_PATH: {{ $NFSDestination.pv_path | quote }}
+  {{ end }}
+  PROVIDER_FROM: {{ $providers.source | quote }}
+  PROVIDER_TO: {{ $providers.destination | quote }}
+  JOB_TYPE: {{ $jobManager.job.type | quote }} 
+  TASK_TYPE: {{ $jobManager.task.type | quote }}
+  TASK_POLLING_INTERVAL_TIME: {{ $jobManager.task.pollingIntervalTime | quote }}
+  TASK_MAX_ATTEMPTS: {{ $jobManager.task.maxAttempts | quote }}
+  JOB_MANAGER_URL: {{ $jobManager.url | quote }}
+  HEARTBEAT_URL: {{ $jobManager.heartbeat.url | quote }}
+  HEARTBEAT_PINGING_INTERVAL_TIME: {{ $jobManager.heartbeat.pingingIntervalTime | quote }}

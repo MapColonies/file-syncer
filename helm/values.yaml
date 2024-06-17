@@ -1,0 +1,159 @@
+global:
+  cloudProvider:
+    dockerRegistryUrl: 
+    flavor: openshift
+    imagePullSecretName: 
+  imagePullPolicy: IfNotPresent
+  tracing: {}
+  metrics: {}
+  environment: development
+
+  jobManager:
+    url: ''
+    job:
+      type: ''
+    task:
+      type: ''
+      maxAttempts: 
+    heartbeat:
+      url: ''
+      waitTime: 
+  
+  providers:
+    source: NFS
+    destination: S3
+
+  S3:
+    accessKey: ''
+    secretAccessKey: ''
+    server: ''
+    serverPort: 
+    serverProto: ''
+    bucket: ''
+    region: ''
+    style: ''
+    sslEnabled: false
+    maxAttempts: 
+    storageClass: ''
+
+  NFS:
+    name: ''
+    pv_path: ''
+    sub_path: ''
+
+cloudProvider:
+    dockerRegistryUrl:
+    flavor: 
+    imagePullSecretName: 
+imagePullPolicy: 
+environment: 
+
+ca:
+  enabled: false
+  useExternal: false
+  secretName: 
+  path: 
+  key: 
+
+providers:
+  source: 
+  destination: 
+
+NFS:
+  name: ''
+  pv_path: ''
+  sub_path: ''
+
+S3:
+  accessKey: ''
+  secretAccessKey: ''
+  server: ''
+  serverPort: 
+  serverProto: ''
+  bucket: ''
+  region: ''
+  style: ''
+  sslEnabled: false
+  maxAttempts: 
+  storageClass: ''
+
+destinationNFS:
+  name: ''
+  pv_path: ''
+  sub_path: ''
+
+sourceS3:
+  accessKey: ''
+  secretAccessKey: ''
+  server: ''
+  serverPort: 
+  serverProto: ''
+  bucket: ''
+  region: ''
+  style: ''
+  sslEnabled: false
+  maxAttempts: 
+
+jobManager:
+  url: ''
+  job:
+    type: ''
+  task:
+    type: ''
+    pollingIntervalTime: 
+    maxAttempts: 
+  heartbeat:
+    url: ''
+    pingingIntervalTime: 
+
+replicaCount: 1
+revisionHistoryLimit: 5 # Amount of revisions we keep
+
+image:
+  repository: file-syncer
+  tag: latest
+
+extraVolumes: {}
+
+extraVolumeMounts: {}
+
+sidecars: {}
+
+podAnnotations: {}
+
+env:
+  targetPort: 8080
+  logLevel: info
+  logPrettyPrintEnabled: false
+  tracing:
+    enabled: false
+    url: 'http://localhost:55681/v1/trace'
+  metrics:
+    enabled: false
+    url: 'http://localhost:55681/v1/metrics'
+  intervalMs: 3000
+  taskPoolSize: 40
+
+resources:
+  enabled: true
+  value:
+    limits:
+      cpu: 100m
+      memory: 128Mi
+    requests:
+      cpu: 100m
+      memory: 128Mi
+
+livenessProbe:
+  enabled: true
+  initialDelaySeconds: 10
+  timeoutSeconds: 5
+  failureThreshold: 6
+  path: /liveness
+
+readinessProbe:
+  enabled: true
+  initialDelaySeconds: 10
+  timeoutSeconds: 5
+  failureThreshold: 6
+  path: /liveness

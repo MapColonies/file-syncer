@@ -15,18 +15,42 @@
       "url": "TELEMETRY_TRACING_URL"
     },
     "metrics": {
-      "enabled": "TELEMETRY_METRICS_ENABLED",
+      "enabled": {
+        "__name": "TELEMETRY_METRICS_ENABLED",
+        "__format": "boolean"
+      },
       "url": "TELEMETRY_METRICS_URL",
-      "interval": "TELEMETRY_METRICS_INTERVAL"
+      "interval": "TELEMETRY_METRICS_INTERVAL",
+      "buckets": {
+        "__name": "TELEMETRY_METRICS_BUCKETS",
+        "__format": "json"
+      }
     }
   },
+  "server": {
+    "port": "SERVER_PORT"
+  },
   "jobManager": {
-    "url": "JOB_MANAGER_URL"
+    "url": "JOB_MANAGER_URL",
+    "job": {
+      "type": "JOB_TYPE"
+    },
+    "task": {
+      "type": "TASK_TYPE",
+      "pollingIntervalTime": {
+        "__name": "TASK_POLLING_INTERVAL_TIME",
+        "__format": "number"
+      },
+      "maxAttempts": {
+        "__name": "TASK_MAX_ATTEMPTS",
+        "__format": "number"
+      }
+    }
   },
   "heartbeat": {
     "url": "HEARTBEAT_URL",
     "waitTime": {
-      "__name": "HEARTBEAT_WAIT_TIME",
+      "__name": "HEARTBEAT_PINGING_INTERVAL_TIME",
       "__format": "number"
     }
   },
@@ -50,11 +74,10 @@
         "__name": "S3_SOURCE_MAX_ATTEMPTS",
         "__format": "number"
       },
-      "sigVersion": "S3_SOURCE_SIG_VERSION",
       "pvPath": "PV_SOURCE_PATH"
     },
     "dest": {
-      "type": "PROVIDER_TOO",
+      "type": "PROVIDER_TO",
       "accessKeyId": "S3_DEST_ACCESS_KEY_ID",
       "secretAccessKey": "S3_DEST_SECRET_ACCESS_KEY",
       "endpointUrl": "S3_DEST_END_POINT_URL",
@@ -73,29 +96,10 @@
         "__name": "S3_DEST_MAX_ATTEMPTS",
         "__format": "number"
       },
-      "sigVersion": "S3_DEST_SIG_VERSION",
       "pvPath": "PV_DEST_PATH"
     }
   },
   "fileSyncer": {
-    "job": {
-      "type": "JOB_TYPE"
-    },
-    "task": {
-      "type": "TASK_TYPE",
-      "maxAttempts": {
-        "__name": "TASK_MAX_ATTEMPTS",
-        "__format": "number"
-      }
-    },
-    "waitTime": {
-      "__name": "FILE_SYNCER_WAIT_TIME",
-      "__format": "number"
-    },
-    "maxAttempts": {
-      "__name": "FILE_SYNCER_MAX_RETRIES",
-      "__format": "number"
-    },
     "intervalMs": {
       "__name": "FILE_SYNCER_INTERVAL_MS",
       "__format": "number"

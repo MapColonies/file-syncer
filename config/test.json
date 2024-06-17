@@ -1,10 +1,23 @@
 {
+  "telemetry": {
+    "metrics": {
+      "enabled": true
+    }
+  },
   "jobManager": {
-    "url": "http://127.0.0.1:8080"
+    "url": "http://127.0.0.1:8080",
+    "job": {
+      "type": "Ingestion_New_3D"
+    },
+    "task": {
+      "type": "tilesCopying",
+      "pollingIntervalTime": 0,
+      "maxAttempts": 3
+    }
   },
   "heartbeat": {
     "url": "http://127.0.0.1:8082",
-    "waitTime": 3000
+    "pingingIntervalTime": 3000
   },
   "catalog": {
     "url": "http://127.0.0.1:8083"
@@ -21,8 +34,7 @@
       "region": "aws-global",
       "forcePathStyle": true,
       "tls": false,
-      "maxAttempts": 4,
-      "sigVersion": "v4"
+      "maxAttempts": 4
     },
     "dest": {
       "accessKeyId": "minioadmin",
@@ -33,20 +45,10 @@
       "forcePathStyle": true,
       "tls": false,
       "maxAttempts": 4,
-      "sigVersion": "v4",
       "storageClass": "STANDARD"
     }
   },
   "fileSyncer": {
-    "job": {
-      "type": "Ingestion_New_3D"
-    },
-    "task": {
-      "type": "Ingestion",
-      "maxAttempts": 4
-    },
-    "waitTime": 0,
-    "maxAttempts": 4,
     "taskPoolSize": 3,
     "intervalMs": 5000
   }
