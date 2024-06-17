@@ -27,7 +27,7 @@ export class FileSyncerManager {
     @inject(SERVICES.PROVIDER_MANAGER) private readonly providerManager: ProviderManager,
     @inject(SERVICES.METRICS_REGISTRY) registry?: client.Registry
   ) {
-    this.taskType = this.config.get<string>('fileSyncer.task.type');
+    this.taskType = this.config.get<string>('jobManager.task.type');
     if (registry !== undefined) {
       this.tasksGauge = new client.Gauge({
         name: 'working_tasks',
@@ -46,7 +46,7 @@ export class FileSyncerManager {
       });
     }
 
-    this.maxAttempts = this.config.get<number>('fileSyncer.task.maxAttempts');
+    this.maxAttempts = this.config.get<number>('jobManager.task.maxAttempts');
     this.waitTime = this.config.get<number>('fileSyncer.waitTime');
     this.maxRetries = this.config.get<number>('fileSyncer.maxRetries');
     this.taskPoolSize = this.config.get<number>('fileSyncer.taskPoolSize');

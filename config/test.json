@@ -5,7 +5,14 @@
     }
   },
   "jobManager": {
-    "url": "http://127.0.0.1:8080"
+    "url": "http://127.0.0.1:8080",
+    "job": {
+      "type": "Ingestion_New_3D"
+    },
+    "task": {
+      "type": "tilesCopying",
+      "maxAttempts": 3
+    }
   },
   "heartbeat": {
     "url": "http://127.0.0.1:8082",
@@ -43,13 +50,6 @@
     }
   },
   "fileSyncer": {
-    "job": {
-      "type": "Ingestion_New_3D"
-    },
-    "task": {
-      "type": "Ingestion",
-      "maxAttempts": 3
-    },
     "waitTime": 0,
     "maxRetries": 3,
     "taskPoolSize": 3,
