@@ -1,5 +1,6 @@
 import jsLogger from '@map-colonies/js-logger';
 import { container } from 'tsyringe';
+import { register } from 'prom-client';
 import { getApp } from '../../../src/app';
 import { SERVICES } from '../../../src/common/constants';
 import { FileSyncerManager } from '../../../src/fileSyncerManager/fileSyncerManager';
@@ -17,6 +18,7 @@ describe('fileSyncerManager', () => {
       ],
     });
 
+    register.clear();
     fileSyncerManager = container.resolve(FileSyncerManager);
   });
 
@@ -29,7 +31,10 @@ describe('fileSyncerManager', () => {
       fileSyncerManager['taskCounter'] = 10;
 
       getApp({
-        override: [{ token: SERVICES.FILE_SYNCER_MANAGER, provider: { useValue: fileSyncerManager } }],
+        override: [
+          { token: SERVICES.METRICS_REGISTRY, provider: { useValue: undefined } },
+          { token: SERVICES.FILE_SYNCER_MANAGER, provider: { useValue: fileSyncerManager } },
+        ],
       });
 
       const response = await fileSyncerManager.start();
