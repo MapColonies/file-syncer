@@ -63,11 +63,11 @@
       "bucket": "S3_SOURCE_BUCKET",
       "region": "S3_SOURCE_REGION",
       "forcePathStyle": {
-        "__name": "FORCE_PATH_STYLE",
+        "__name": "S3_SOURCE_FORCE_PATH_STYLE",
         "__format": "boolean"
       },
-      "tls": {
-        "__name": "S3_SOURCE_TLS",
+      "sslEnabled": {
+        "__name": "S3_SOURCE_SSL_ENABLED",
         "__format": "boolean"
       },
       "maxAttempts": {
@@ -85,11 +85,11 @@
       "region": "S3_DEST_REGION",
       "storageClass": "S3_DEST_STORAGE_CLASS",
       "forcePathStyle": {
-        "__name": "FORCE_PATH_STYLE",
+        "__name": "S3_DEST_FORCE_PATH_STYLE",
         "__format": "boolean"
       },
-      "tls": {
-        "__name": "S3_DEST_TLS",
+      "sslEnabled": {
+        "__name": "S3_DEST_SSL_ENABLED",
         "__format": "boolean"
       },
       "maxAttempts": {

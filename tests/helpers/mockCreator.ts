@@ -15,7 +15,7 @@ const fakeS3Config = (bucket: string): S3Config => {
     bucket,
     region: 'us-east-1',
     forcePathStyle: true,
-    tls: false,
+    sslEnabled: false,
     maxAttempts: 3,
     sigVersion: 'v4',
   };

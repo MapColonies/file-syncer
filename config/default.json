@@ -34,9 +34,9 @@
       "secretAccessKey": "minioadmin",
       "endpointUrl": "http://127.0.0.1:9000",
       "bucket": "3dtiles",
-      "region": "aws-global",
+      "region": "us-east-1",
       "forcePathStyle": true,
-      "tls": false,
+      "sslEnabled": false,
       "maxAttempts": 4
     },
     "dest": {
@@ -45,9 +45,9 @@
       "secretAccessKey": "minioadmin",
       "endpointUrl": "http://127.0.0.1:9000",
       "bucket": "3dtiles",
-      "region": "aws-global",
+      "region": "us-east-1",
       "forcePathStyle": true,
-      "tls": false,
+      "sslEnabled": false,
       "maxAttempts": 4,
       "storageClass": "STANDARD"
     }

@@ -47,7 +47,7 @@ export class S3Provider implements Provider {
       },
       region: config.region,
       maxAttempts: config.maxAttempts,
-      tls: config.tls,
+      tls: config.sslEnabled,
       forcePathStyle: config.forcePathStyle,
     });
   }
