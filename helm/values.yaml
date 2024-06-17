@@ -103,10 +103,11 @@ jobManager:
     type: ''
   task:
     type: ''
+    pollingIntervalTime: 
     maxAttempts: 
   heartbeat:
     url: ''
-    waitTime: 
+    pingingIntervalTime: 
 
 replicaCount: 1
 revisionHistoryLimit: 5 # Amount of revisions we keep
@@ -133,8 +134,6 @@ env:
   metrics:
     enabled: false
     url: 'http://localhost:55681/v1/metrics'
-  waitTime: 3000
-  maxRetries: 3
   intervalMs: 3000
   taskPoolSize: 40
 

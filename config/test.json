@@ -11,12 +11,13 @@
     },
     "task": {
       "type": "tilesCopying",
+      "pollingIntervalTime": 0,
       "maxAttempts": 3
     }
   },
   "heartbeat": {
     "url": "http://127.0.0.1:8082",
-    "waitTime": 3000
+    "pingingIntervalTime": 3000
   },
   "catalog": {
     "url": "http://127.0.0.1:8083"
@@ -50,8 +51,6 @@
     }
   },
   "fileSyncer": {
-    "waitTime": 0,
-    "maxRetries": 3,
     "taskPoolSize": 3,
     "intervalMs": 5000
   }

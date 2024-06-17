@@ -25,8 +25,6 @@ data:
   REQUESTS_CA_BUNDLE: {{ printf "%s/%s" $ca.path $ca.key | quote }}
   NODE_EXTRA_CA_CERTS: {{ printf "%s/%s" $ca.path $ca.key | quote }}
   {{- end }}
-  FILE_SYNCER_WAIT_TIME: {{ .Values.env.waitTime | quote }}
-  FILE_SYNCER_MAX_RETRIES: {{ .Values.env.maxRetries | quote }}
   FILE_SYNCER_INTERVAL_MS: {{ .Values.env.intervalMs | quote }}
   FILE_SYNCER_TASK_POOL_SIZE: {{ .Values.env.taskPoolSize | quote }}
   {{ if eq $providers.source "S3" }}
@@ -66,7 +64,8 @@ data:
   PROVIDER_TO: {{ $providers.destination | quote }}
   JOB_TYPE: {{ $jobManager.job.type | quote }} 
   TASK_TYPE: {{ $jobManager.task.type | quote }}
+  TASK_POLLING_INTERVAL_TIME: {{ $jobManager.task.pollingIntervalTime | quote }}
   TASK_MAX_ATTEMPTS: {{ $jobManager.task.maxAttempts | quote }}
   JOB_MANAGER_URL: {{ $jobManager.url | quote }}
   HEARTBEAT_URL: {{ $jobManager.heartbeat.url | quote }}
-  HEARTBEAT_WAIT_TIME: {{ $jobManager.heartbeat.waitTime | quote }}
+  HEARTBEAT_PINGING_INTERVAL_TIME: {{ $jobManager.heartbeat.pingingIntervalTime | quote }}

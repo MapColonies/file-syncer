@@ -5,7 +5,6 @@ import client from 'prom-client';
 import { inject, injectable } from 'tsyringe';
 import { JOB_TYPE, SERVICES } from '../common/constants';
 import { ProviderManager, TaskParameters, TaskResult } from '../common/interfaces';
-import { sleep } from '../common/utils';
 
 @injectable()
 export class FileSyncerManager {
@@ -14,9 +13,7 @@ export class FileSyncerManager {
   private readonly tasksGauge?: client.Gauge<'type'>;
 
   private readonly taskType: string;
-  private readonly waitTime: number;
   private readonly maxAttempts: number;
-  private readonly maxRetries: number;
   private readonly taskPoolSize: number;
   private taskCounter: number;
 
@@ -47,8 +44,6 @@ export class FileSyncerManager {
     }
 
     this.maxAttempts = this.config.get<number>('jobManager.task.maxAttempts');
-    this.waitTime = this.config.get<number>('fileSyncer.waitTime');
-    this.maxRetries = this.config.get<number>('fileSyncer.maxRetries');
     this.taskPoolSize = this.config.get<number>('fileSyncer.taskPoolSize');
     this.taskCounter = 0;
   }
@@ -68,8 +63,8 @@ export class FileSyncerManager {
     this.taskCounter++;
     this.tasksGauge?.inc({ type: this.taskType });
     const workingTaskTimerEnd = this.tasksHistogram?.startTimer({ type: this.taskType });
-    const isCompleted: boolean = await this.handleTaskWithRetries(task);
-    if (isCompleted) {
+    const taskResult = await this.handleTask(task);
+    if (taskResult.completed) {
       await this.taskHandler.ack<IUpdateTaskBody<TaskParameters>>(task.jobId, task.id);
       this.logger.info({ msg: 'Finished ack task', task: task.id, modelId: task.parameters.modelId });
       await this.deleteTaskParameters(task);
@@ -81,7 +76,12 @@ export class FileSyncerManager {
 
     this.taskCounter--;
     this.tasksGauge?.dec({ type: this.taskType });
-    this.logger.info({ msg: 'Done working on a task in this interval', taskId: task.id, isCompleted, modelId: task.parameters.modelId });
+    this.logger.info({
+      msg: 'Done working on a task in this interval',
+      taskId: task.id,
+      isCompleted: taskResult.completed,
+      modelId: task.parameters.modelId,
+    });
   }
 
   private async deleteTaskParameters(task: ITaskResponse<TaskParameters>): Promise<void> {
@@ -89,44 +89,6 @@ export class FileSyncerManager {
     await this.taskHandler.jobManagerClient.updateTask(task.jobId, task.id, {
       parameters: { modelId: parameters.modelId, lastIndexError: parameters.lastIndexError },
     });
-  }
-
-  private async handleTaskWithRetries(task: ITaskResponse<TaskParameters>): Promise<boolean> {
-    this.logger.debug({ msg: 'Starting handleTaskWithRetries', taskId: task.id, modelId: task.parameters.modelId });
-    let retry = 0;
-    let taskResult!: TaskResult;
-
-    while (retry < this.maxRetries) {
-      taskResult = await this.handleTask(task);
-
-      if (taskResult.completed) {
-        return true;
-      } else {
-        retry++;
-        this.logger.info({
-          msg: 'Increase retry',
-          retry,
-          maxRetries: this.maxRetries,
-        });
-        await sleep(this.waitTime);
-        this.logger.error({
-          // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-          error: taskResult.error!.message,
-          taskId: task.id,
-          modelId: task.parameters.modelId,
-          jobId: task.jobId,
-        });
-      }
-    }
-
-    this.logger.error({
-      msg: 'Reaching maximum retries, failing the task',
-      error: taskResult.error,
-      retry,
-      taskId: task.id,
-    });
-    await this.handleFailedTask(task, taskResult);
-    return false;
   }
 
   private async handleFailedTask(task: ITaskResponse<TaskParameters>, taskResult: TaskResult): Promise<void> {
@@ -150,6 +112,7 @@ export class FileSyncerManager {
       try {
         await this.syncFile(filePath, taskParameters);
       } catch (error) {
+        await this.handleFailedTask(task, taskResult);
         this.logger.error({ error, taskId: task.id, modelId: task.parameters.modelId });
         taskResult.error = error instanceof Error ? error : new Error(String(error));
         return taskResult;

@@ -97,7 +97,6 @@ describe('fileSyncerManager NFS to NFS', () => {
       await fileSyncerManager.start();
 
       expect(taskHandlerMock.ack).not.toHaveBeenCalled();
-      expect(taskHandlerMock.reject).toHaveBeenCalled();
     });
 
     it(`When can't update job manager, should finish the function`, async () => {
@@ -113,7 +112,6 @@ describe('fileSyncerManager NFS to NFS', () => {
       await fileSyncerManager.start();
 
       expect(taskHandlerMock.ack).not.toHaveBeenCalled();
-      expect(taskHandlerMock.reject).toHaveBeenCalled();
     });
   });
 });
