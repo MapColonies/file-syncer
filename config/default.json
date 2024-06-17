@@ -4,22 +4,28 @@
       "level": "info",
       "prettyPrint": false
     },
-    "tracing": {
-      "enabled": false,
-      "url": "http://telemetryUrl/tracing"
-    },
     "metrics": {
-      "enabled": false,
-      "url": "http://telemetryUrl/metrics",
-      "interval": "3"
+      "enabled": true,
+      "buckets": [0.005, 0.01, 0.025, 0.05, 0.1, 0.25, 0.5, 1, 2.5, 5, 10, 15, 50, 250, 500]
     }
   },
+  "server": {
+    "port": "8080"
+  },
   "jobManager": {
-    "url": "http://127.0.0.1:8080"
+    "url": "http://127.0.0.1:8080",
+    "job": {
+      "type": "Ingestion_New_3D"
+    },
+    "task": {
+      "type": "tilesCopying",
+      "pollingIntervalTime": 5000,
+      "maxAttempts": 3
+    }
   },
   "heartbeat": {
-    "url": "http://127.0.0.1:8082",
-    "waitTime": 3000
+    "url": "http://127.0.0.1:8080",
+    "pingingIntervalTime": 3000
   },
   "provider": {
     "source": {
@@ -49,15 +55,6 @@
     }
   },
   "fileSyncer": {
-    "job": {
-      "type": "Ingestion_New_3D"
-    },
-    "task": {
-      "type": "Ingestion",
-      "maxAttempts": 3
-    },
-    "waitTime": 5000,
-    "maxRetries": 3,
     "intervalMs": 5000,
     "taskPoolSize": 1
   }

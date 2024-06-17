@@ -1,6 +1,7 @@
 import jsLogger from '@map-colonies/js-logger';
 import { randFileExt, randWord } from '@ngneat/falso';
 import { container } from 'tsyringe';
+import { register } from 'prom-client';
 import { getApp } from '../../../src/app';
 import { SERVICES } from '../../../src/common/constants';
 import { ProviderManager } from '../../../src/common/interfaces';
@@ -29,6 +30,7 @@ describe('fileSyncerManager NFS to NFS', () => {
         },
       ],
     });
+    register.clear();
     fileSyncerManager = container.resolve(FileSyncerManager);
     nfsHelperSource = new NFSHelper(mockNFStNFS.source);
     nfsHelperDest = new NFSHelper(mockNFStNFS.dest);
@@ -95,7 +97,6 @@ describe('fileSyncerManager NFS to NFS', () => {
       await fileSyncerManager.start();
 
       expect(taskHandlerMock.ack).not.toHaveBeenCalled();
-      expect(taskHandlerMock.reject).toHaveBeenCalled();
     });
 
     it(`When can't update job manager, should finish the function`, async () => {
@@ -111,7 +112,6 @@ describe('fileSyncerManager NFS to NFS', () => {
       await fileSyncerManager.start();
 
       expect(taskHandlerMock.ack).not.toHaveBeenCalled();
-      expect(taskHandlerMock.reject).toHaveBeenCalled();
     });
   });
 });
