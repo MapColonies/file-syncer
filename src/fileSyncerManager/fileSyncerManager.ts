@@ -76,7 +76,12 @@ export class FileSyncerManager {
 
     this.taskCounter--;
     this.tasksGauge?.dec({ type: this.taskType });
-    this.logger.info({ msg: 'Done working on a task in this interval', taskId: task.id, isCompleted: taskResult.completed, modelId: task.parameters.modelId });
+    this.logger.info({
+      msg: 'Done working on a task in this interval',
+      taskId: task.id,
+      isCompleted: taskResult.completed,
+      modelId: task.parameters.modelId,
+    });
   }
 
   private async deleteTaskParameters(task: ITaskResponse<TaskParameters>): Promise<void> {
