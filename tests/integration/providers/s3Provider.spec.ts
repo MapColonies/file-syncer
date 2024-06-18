@@ -1,5 +1,5 @@
 import jsLogger from '@map-colonies/js-logger';
-import { faker } from '@faker-js/faker'
+import { faker } from '@faker-js/faker';
 import { container } from 'tsyringe';
 import { ProviderManager } from '../../../src/common/interfaces';
 import { S3Helper } from '../../helpers/s3Helper';
