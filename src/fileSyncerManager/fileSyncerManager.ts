@@ -4,7 +4,8 @@ import { IConfig } from 'config';
 import client from 'prom-client';
 import { inject, injectable } from 'tsyringe';
 import { withSpanAsyncV4 } from '@map-colonies/telemetry';
-import { Tracer } from '@opentelemetry/api';
+import { Tracer, trace } from '@opentelemetry/api';
+import { INFRA_CONVENTIONS, THREE_D_CONVENTIONS } from '@map-colonies/telemetry/conventions';
 import { JOB_TYPE, SERVICES } from '../common/constants';
 import { ProviderManager, TaskParameters, TaskResult } from '../common/interfaces';
 
@@ -53,6 +54,14 @@ export class FileSyncerManager {
 
   @withSpanAsyncV4
   public async start(task: ITaskResponse<TaskParameters>): Promise<void> {
+    const spanActive = trace.getActiveSpan();
+    spanActive?.setAttributes({
+      [INFRA_CONVENTIONS.infra.jobManagement.taskId]: task.id,
+      [INFRA_CONVENTIONS.infra.jobManagement.jobId]: task.jobId,
+      [INFRA_CONVENTIONS.infra.jobManagement.taskType]: this.taskType,
+      [THREE_D_CONVENTIONS.three_d.catalogManager.catalogId]: task.parameters.modelId,
+    });
+
     const workingTaskTimerEnd = this.tasksHistogram?.startTimer({ type: this.taskType });
     const taskResult = await this.handleTask(task);
     if (taskResult.completed) {
