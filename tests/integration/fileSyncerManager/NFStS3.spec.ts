@@ -1,5 +1,5 @@
 import jsLogger from '@map-colonies/js-logger';
-import { randFileExt, randWord } from '@ngneat/falso';
+import { faker } from '@faker-js/faker';
 import { container } from 'tsyringe';
 import { register } from 'prom-client';
 import { trace } from '@opentelemetry/api';
@@ -60,9 +60,9 @@ describe('fileSyncerManager NFS to S3', () => {
     });
 
     it('When get task, should start the sync process without errors', async () => {
-      const model = randWord();
-      const file1 = `${randWord()}.${randFileExt()}`;
-      const file2 = `${randWord()}.${randFileExt()}`;
+      const model = faker.word.sample();
+      const file1 = `${faker.word.sample()}.${faker.system.commonFileExt()}`;
+      const file2 = `${faker.word.sample()}.${faker.system.commonFileExt()}`;
       await nfsHelperSource.createFileOfModel(model, file1);
       const fileContent = await nfsHelperSource.createFileOfModel(model, file2);
       const bufferedContent = Buffer.from(fileContent);
@@ -77,9 +77,9 @@ describe('fileSyncerManager NFS to S3', () => {
     });
 
     it(`When can't read file, should increase task's retry and update job manager`, async () => {
-      const model = randWord();
-      const file1 = `${randWord()}.${randFileExt()}`;
-      const file2 = `${randWord()}.${randFileExt()}`;
+      const model = faker.word.sample();
+      const file1 = `${faker.word.sample()}.${faker.system.commonFileExt()}`;
+      const file2 = `${faker.word.sample()}.${faker.system.commonFileExt()}`;
       await nfsHelperSource.createFileOfModel(model, file1);
       const paths = [`${model}/${file1}`, `${model}/${file2}`];
       const task = createTask(model, paths);
@@ -92,9 +92,9 @@ describe('fileSyncerManager NFS to S3', () => {
     });
 
     it(`When can't update job manager, should finish the function`, async () => {
-      const model = randWord();
-      const file1 = `${randWord()}.${randFileExt()}`;
-      const file2 = `${randWord()}.${randFileExt()}`;
+      const model = faker.word.sample();
+      const file1 = `${faker.word.sample()}.${faker.system.commonFileExt()}`;
+      const file2 = `${faker.word.sample()}.${faker.system.commonFileExt()}`;
       await nfsHelperSource.createFileOfModel(model, file1);
       const paths = [`${model}/${file1}`, `${model}/${file2}`];
       const task = createTask(model, paths);

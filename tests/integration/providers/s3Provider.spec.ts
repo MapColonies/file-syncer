@@ -1,5 +1,5 @@
 import jsLogger from '@map-colonies/js-logger';
-import { randFileExt, randSentence, randWord } from '@ngneat/falso';
+import { faker } from '@faker-js/faker';
 import { container } from 'tsyringe';
 import { trace } from '@opentelemetry/api';
 import { ProviderManager } from '../../../src/common/interfaces';
@@ -49,8 +49,8 @@ describe('S3Provider', () => {
 
   describe('getFile', () => {
     it(`When calling getFile, should see the file content from source bucket`, async () => {
-      const model = randWord();
-      const file = `${randWord()}.${randFileExt()}`;
+      const model = faker.word.sample();
+      const file = `${faker.word.sample()}.${faker.system.commonFileExt()}`;
       const expected = await s3HelperSource.createFileOfModel(model, file);
 
       const result = await providerManager.source.getFile(`${model}/${file}`);
@@ -59,7 +59,7 @@ describe('S3Provider', () => {
     });
 
     it(`When the file is not exists in the bucket, throws error`, async () => {
-      const file = `${randWord()}.${randFileExt()}`;
+      const file = `${faker.word.sample()}.${faker.system.commonFileExt()}`;
 
       const result = async () => {
         await providerManager.source.getFile(file);
@@ -71,9 +71,9 @@ describe('S3Provider', () => {
 
   describe('postFile', () => {
     it('When calling postFile, should be able to read the written file from the destination', async () => {
-      const model = randWord();
-      const file = `${randWord()}.${randFileExt()}`;
-      const data = Buffer.from(randSentence());
+      const model = faker.word.sample();
+      const file = `${faker.word.sample()}.${faker.system.commonFileExt()}`;
+      const data = Buffer.from(faker.word.words());
 
       await providerManager.dest.postFile(`${model}/${file}`, data);
       const result = await s3HelperDest.readFile(mockS3tS3.dest.bucket, `${model}/${file}`);

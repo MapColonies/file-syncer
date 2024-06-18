@@ -1,5 +1,5 @@
 import { ITaskResponse, OperationStatus } from '@map-colonies/mc-priority-queue';
-import { randUuid, randWord } from '@ngneat/falso';
+import { faker } from '@faker-js/faker';
 import { NFSConfig, ProviderConfig, ProvidersConfig, S3Config, TaskParameters } from '../../src/common/interfaces';
 
 const fakeNFSConfig = (name: string): NFSConfig => {
@@ -41,15 +41,15 @@ const FakeProvider = (provider: string, name: string): ProviderConfig => {
 
 export const createTask = (modelId?: string, paths?: string[]): ITaskResponse<TaskParameters> => {
   return {
-    id: randUuid(),
-    jobId: randUuid(),
-    description: randWord(),
+    id: faker.string.uuid(),
+    jobId: faker.string.uuid(),
+    description: faker.word.sample(),
     parameters: createTaskParameters(modelId, paths),
     created: '2020',
     updated: '2022',
     type: 'ingestion',
     status: OperationStatus.IN_PROGRESS,
-    reason: randWord(),
+    reason: faker.word.sample(),
     attempts: 0,
     resettable: true,
   };
@@ -57,8 +57,8 @@ export const createTask = (modelId?: string, paths?: string[]): ITaskResponse<Ta
 
 export const createTaskParameters = (modelId?: string, paths?: string[]): TaskParameters => {
   return {
-    paths: paths ? paths : [randWord(), randWord()],
-    modelId: modelId ?? randUuid(),
+    paths: paths ? paths : [faker.word.sample(), faker.word.sample()],
+    modelId: modelId ?? faker.string.uuid(),
     lastIndexError: -1,
   };
 };

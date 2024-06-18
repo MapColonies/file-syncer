@@ -1,5 +1,5 @@
 import jsLogger from '@map-colonies/js-logger';
-import { randFileExt, randWord } from '@ngneat/falso';
+import { faker } from '@faker-js/faker';
 import { container } from 'tsyringe';
 import { trace } from '@opentelemetry/api';
 import { getApp } from '../../../src/app';
@@ -47,8 +47,8 @@ describe('NFSProvider', () => {
 
   describe('getFile', () => {
     it('When calling getFile, should get the file content from pv path', async () => {
-      const model = randWord();
-      const file = `${randWord()}.${randFileExt()}`;
+      const model = faker.word.sample();
+      const file = `${faker.word.sample()}.${faker.system.commonFileExt()}`;
       const fileContent = await nfsHelperSource.createFileOfModel(model, file);
 
       const bufferResult = await providerManager.source.getFile(`${model}/${file}`);
@@ -60,8 +60,8 @@ describe('NFSProvider', () => {
 
   describe('postFile', () => {
     it('When calling postFile, we should see the file and his content in the destination pv path', async () => {
-      const model = randWord();
-      const file = `${randWord()}.${randFileExt()}`;
+      const model = faker.word.sample();
+      const file = `${faker.word.sample()}.${faker.system.commonFileExt()}`;
       const fileContent = await nfsHelperSource.createFileOfModel(model, file);
       const bufferedContent = Buffer.from(fileContent, 'utf-8');
 
