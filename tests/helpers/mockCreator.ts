@@ -1,5 +1,5 @@
 import { ITaskResponse, OperationStatus } from '@map-colonies/mc-priority-queue';
-import { faker } from '@faker-js/faker'
+import { faker } from '@faker-js/faker';
 import { NFSConfig, ProviderConfig, ProvidersConfig, S3Config, TaskParameters } from '../../src/common/interfaces';
 
 const fakeNFSConfig = (name: string): NFSConfig => {

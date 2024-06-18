@@ -1,5 +1,5 @@
 import fs from 'fs';
-import { faker } from '@faker-js/faker'
+import { faker } from '@faker-js/faker';
 import { NFSConfig } from '../../src/common/interfaces';
 
 export class NFSHelper {

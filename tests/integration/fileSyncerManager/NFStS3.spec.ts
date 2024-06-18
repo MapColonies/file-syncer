@@ -1,5 +1,5 @@
 import jsLogger from '@map-colonies/js-logger';
-import { faker } from '@faker-js/faker'
+import { faker } from '@faker-js/faker';
 import { container } from 'tsyringe';
 import { register } from 'prom-client';
 import { getApp } from '../../../src/app';

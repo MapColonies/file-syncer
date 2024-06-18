@@ -1,5 +1,5 @@
 /* eslint-disable @typescript-eslint/naming-convention */
-import { faker } from '@faker-js/faker'
+import { faker } from '@faker-js/faker';
 import { S3 } from 'aws-sdk';
 import { S3Config } from '../../src/common/interfaces';
 
