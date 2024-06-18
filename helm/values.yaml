@@ -130,10 +130,10 @@ env:
   logPrettyPrintEnabled: false
   tracing:
     enabled: false
-    url: 'http://localhost:55681/v1/trace'
+    url: ''
   metrics:
     enabled: false
-    url: 'http://localhost:55681/v1/metrics'
+    url: ''
   intervalMs: 3000
   taskPoolSize: 40
 
