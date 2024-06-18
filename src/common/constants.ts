@@ -7,7 +7,7 @@ export const SERVICE_VERSION = packageJsonData.version ?? 'unknown_version';
 
 export const NODE_VERSION = process.versions.node;
 
-export const JOB_TYPE = config.get<string>('fileSyncer.job.type');
+export const JOB_TYPE = config.get<string>('jobManager.job.type');
 
 /* eslint-disable @typescript-eslint/naming-convention */
 export const SERVICES: Record<string, symbol> = {

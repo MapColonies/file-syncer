@@ -22,8 +22,8 @@ export const registerExternalValues = (options?: RegisterOptions): DependencyCon
   const providerConfiguration = config.get<ProvidersConfig>('provider');
   const jobManagerBaseUrl = config.get<string>('jobManager.url');
   const heartbeatUrl = config.get<string>('heartbeat.url');
-  const dequeueIntervalMs = config.get<number>('fileSyncer.waitTime');
-  const heartbeatIntervalMs = config.get<number>('heartbeat.waitTime');
+  const dequeueIntervalMs = config.get<number>('jobManager.task.pollingIntervalTime');
+  const heartbeatIntervalMs = config.get<number>('heartbeat.pingingIntervalTime');
   const loggerConfig = config.get<LoggerOptions>('telemetry.logger');
   const logger = jsLogger({ ...loggerConfig, prettyPrint: loggerConfig.prettyPrint, mixin: getOtelMixin() });
 

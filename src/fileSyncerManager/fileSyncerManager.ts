@@ -7,7 +7,6 @@ import { withSpanAsyncV4 } from '@map-colonies/telemetry';
 import { Tracer } from '@opentelemetry/api';
 import { JOB_TYPE, SERVICES } from '../common/constants';
 import { ProviderManager, TaskParameters, TaskResult } from '../common/interfaces';
-import { sleep } from '../common/utils';
 
 @injectable()
 export class FileSyncerManager {
@@ -16,9 +15,7 @@ export class FileSyncerManager {
   private readonly tasksGauge?: client.Gauge<'type'>;
 
   private readonly taskType: string;
-  private readonly waitTime: number;
   private readonly maxAttempts: number;
-  private readonly maxRetries: number;
   private readonly taskPoolSize: number;
   private taskCounter: number;
 
@@ -30,7 +27,7 @@ export class FileSyncerManager {
     @inject(SERVICES.PROVIDER_MANAGER) private readonly providerManager: ProviderManager,
     @inject(SERVICES.METRICS_REGISTRY) registry?: client.Registry
   ) {
-    this.taskType = this.config.get<string>('fileSyncer.task.type');
+    this.taskType = this.config.get<string>('jobManager.task.type');
     if (registry !== undefined) {
       this.tasksGauge = new client.Gauge({
         name: 'working_tasks',
@@ -49,9 +46,7 @@ export class FileSyncerManager {
       });
     }
 
-    this.maxAttempts = this.config.get<number>('fileSyncer.task.maxAttempts');
-    this.waitTime = this.config.get<number>('fileSyncer.waitTime');
-    this.maxRetries = this.config.get<number>('fileSyncer.maxRetries');
+    this.maxAttempts = this.config.get<number>('jobManager.task.maxAttempts');
     this.taskPoolSize = this.config.get<number>('fileSyncer.taskPoolSize');
     this.taskCounter = 0;
   }
@@ -59,8 +54,8 @@ export class FileSyncerManager {
   @withSpanAsyncV4
   public async start(task: ITaskResponse<TaskParameters>): Promise<void> {
     const workingTaskTimerEnd = this.tasksHistogram?.startTimer({ type: this.taskType });
-    const isCompleted: boolean = await this.handleTaskWithRetries(task);
-    if (isCompleted) {
+    const taskResult = await this.handleTask(task);
+    if (taskResult.completed) {
       await this.taskHandler.ack<IUpdateTaskBody<TaskParameters>>(task.jobId, task.id);
       this.logger.info({ msg: 'Finished ack task', task: task.id, modelId: task.parameters.modelId });
       await this.deleteTaskParameters(task);
@@ -72,7 +67,12 @@ export class FileSyncerManager {
 
     this.taskCounter--;
     this.tasksGauge?.dec({ type: this.taskType });
-    this.logger.info({ msg: 'Done working on a task in this interval', taskId: task.id, isCompleted, modelId: task.parameters.modelId });
+    this.logger.info({
+      msg: 'Done working on a task in this interval',
+      taskId: task.id,
+      isCompleted: taskResult.completed,
+      modelId: task.parameters.modelId,
+    });
   }
 
   @withSpanAsyncV4
@@ -81,45 +81,6 @@ export class FileSyncerManager {
     await this.taskHandler.jobManagerClient.updateTask(task.jobId, task.id, {
       parameters: { modelId: parameters.modelId, lastIndexError: parameters.lastIndexError },
     });
-  }
-
-  @withSpanAsyncV4
-  private async handleTaskWithRetries(task: ITaskResponse<TaskParameters>): Promise<boolean> {
-    this.logger.debug({ msg: 'Starting handleTaskWithRetries', taskId: task.id, modelId: task.parameters.modelId });
-    let retry = 0;
-    let taskResult!: TaskResult;
-
-    while (retry < this.maxRetries) {
-      taskResult = await this.handleTask(task);
-
-      if (taskResult.completed) {
-        return true;
-      } else {
-        retry++;
-        this.logger.info({
-          msg: 'Increase retry',
-          retry,
-          maxRetries: this.maxRetries,
-        });
-        await sleep(this.waitTime);
-        this.logger.error({
-          // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-          error: taskResult.error!.message,
-          taskId: task.id,
-          modelId: task.parameters.modelId,
-          jobId: task.jobId,
-        });
-      }
-    }
-
-    this.logger.error({
-      msg: 'Reaching maximum retries, failing the task',
-      error: taskResult.error,
-      retry,
-      taskId: task.id,
-    });
-    await this.handleFailedTask(task, taskResult);
-    return false;
   }
 
   @withSpanAsyncV4
@@ -145,6 +106,7 @@ export class FileSyncerManager {
       try {
         await this.syncFile(filePath, taskParameters);
       } catch (error) {
+        await this.handleFailedTask(task, taskResult);
         this.logger.error({ error, taskId: task.id, modelId: task.parameters.modelId });
         taskResult.error = error instanceof Error ? error : new Error(String(error));
         return taskResult;

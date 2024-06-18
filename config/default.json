@@ -15,14 +15,22 @@
     }
   },
   "server": {
-    "port": "8087"
+    "port": "8080"
   },
   "jobManager": {
-    "url": "http://127.0.0.1:8080"
+    "url": "http://127.0.0.1:8080",
+    "job": {
+      "type": "Ingestion_New_3D"
+    },
+    "task": {
+      "type": "tilesCopying",
+      "pollingIntervalTime": 5000,
+      "maxAttempts": 3
+    }
   },
   "heartbeat": {
-    "url": "http://127.0.0.1:8082",
-    "waitTime": 3000
+    "url": "http://127.0.0.1:8080",
+    "pingingIntervalTime": 3000
   },
   "provider": {
     "source": {
@@ -52,15 +60,6 @@
     }
   },
   "fileSyncer": {
-    "job": {
-      "type": "Ingestion_New_3D"
-    },
-    "task": {
-      "type": "Ingestion",
-      "maxAttempts": 3
-    },
-    "waitTime": 5000,
-    "maxRetries": 3,
     "intervalMs": 5000,
     "taskPoolSize": 1
   }

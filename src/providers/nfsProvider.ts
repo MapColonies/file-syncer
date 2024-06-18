@@ -1,11 +1,9 @@
 import fs from 'fs';
 import path from 'path';
 import { Logger } from '@map-colonies/js-logger';
-import httpStatus from 'http-status-codes';
 import { withSpanAsyncV4 } from '@map-colonies/telemetry';
 import { inject, injectable } from 'tsyringe';
 import { Tracer } from '@opentelemetry/api';
-import { AppError } from '../common/appError';
 import { NFSConfig, Provider } from '../common/interfaces';
 import { SERVICES } from '../common/constants';
 
@@ -21,14 +19,9 @@ export class NFSProvider implements Provider {
   public async getFile(filePath: string): Promise<Buffer> {
     const pvPath = this.config.pvPath;
     const fullPath = `${pvPath}/${filePath}`;
-    if (!fs.existsSync(fullPath)) {
-      throw new AppError(httpStatus.BAD_REQUEST, `File ${filePath} doesn't exists in the agreed folder`, true);
-    }
-
     this.logger.debug({ msg: 'Starting getFile', fullPath });
     const data = await fs.promises.readFile(fullPath);
     this.logger.debug({ msg: 'Done getFile' });
-
     return data;
   }
 
