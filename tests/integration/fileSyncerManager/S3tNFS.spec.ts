@@ -2,6 +2,7 @@ import jsLogger from '@map-colonies/js-logger';
 import { faker } from '@faker-js/faker';
 import { container } from 'tsyringe';
 import { register } from 'prom-client';
+import { trace } from '@opentelemetry/api';
 import { getApp } from '../../../src/app';
 import { SERVICES } from '../../../src/common/constants';
 import { ProviderManager } from '../../../src/common/interfaces';
@@ -25,7 +26,7 @@ describe('fileSyncerManager S3 to NFS', () => {
           token: SERVICES.PROVIDER_MANAGER,
           provider: {
             useFactory: (): ProviderManager => {
-              return getProviderManager(mockS3tNFS);
+              return getProviderManager(jsLogger({ enabled: false }), trace.getTracer('testTracer'), mockS3tNFS);
             },
           },
         },
@@ -52,7 +53,7 @@ describe('fileSyncerManager S3 to NFS', () => {
     it(`When didn't get task, should do nothing`, async () => {
       taskHandlerMock.dequeue.mockResolvedValue(null);
 
-      await fileSyncerManager.start();
+      await fileSyncerManager.fetch();
 
       expect(taskHandlerMock.ack).not.toHaveBeenCalled();
       expect(taskHandlerMock.reject).not.toHaveBeenCalled();
@@ -68,7 +69,7 @@ describe('fileSyncerManager S3 to NFS', () => {
       const paths = [`${model}/${file1}`, `${model}/${file2}`];
       taskHandlerMock.dequeue.mockResolvedValue(createTask(model, paths));
 
-      await fileSyncerManager.start();
+      await fileSyncerManager.fetch();
       const result = await nfsHelperDest.readFile(`${model}/${file2}`);
 
       expect(taskHandlerMock.ack).toHaveBeenCalled();
@@ -85,7 +86,7 @@ describe('fileSyncerManager S3 to NFS', () => {
       taskHandlerMock.dequeue.mockResolvedValue(task);
       taskHandlerMock.reject.mockResolvedValue(null);
 
-      await fileSyncerManager.start();
+      await fileSyncerManager.fetch();
 
       expect(taskHandlerMock.ack).not.toHaveBeenCalled();
     });
@@ -100,7 +101,7 @@ describe('fileSyncerManager S3 to NFS', () => {
       taskHandlerMock.dequeue.mockResolvedValue(task);
       taskHandlerMock.reject.mockRejectedValue(new Error('error with job manager'));
 
-      await fileSyncerManager.start();
+      await fileSyncerManager.fetch();
 
       expect(taskHandlerMock.ack).not.toHaveBeenCalled();
     });

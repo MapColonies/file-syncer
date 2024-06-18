@@ -1,6 +1,7 @@
 import jsLogger from '@map-colonies/js-logger';
 import { faker } from '@faker-js/faker';
 import { container } from 'tsyringe';
+import { trace } from '@opentelemetry/api';
 import { ProviderManager } from '../../../src/common/interfaces';
 import { S3Helper } from '../../helpers/s3Helper';
 import { SERVICES } from '../../../src/common/constants';
@@ -23,7 +24,7 @@ describe('S3Provider', () => {
           token: SERVICES.PROVIDER_MANAGER,
           provider: {
             useFactory: (): ProviderManager => {
-              return getProviderManager(mockS3tS3);
+              return getProviderManager(jsLogger({ enabled: false }), trace.getTracer('testTracer'), mockS3tS3);
             },
           },
         },

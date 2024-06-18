@@ -1,6 +1,7 @@
 import jsLogger from '@map-colonies/js-logger';
 import { container } from 'tsyringe';
 import { register } from 'prom-client';
+import { trace } from '@opentelemetry/api';
 import { getApp } from '../../../src/app';
 import { SERVICES } from '../../../src/common/constants';
 import { FileSyncerManager } from '../../../src/fileSyncerManager/fileSyncerManager';
@@ -13,6 +14,7 @@ describe('fileSyncerManager', () => {
     getApp({
       override: [
         { token: SERVICES.LOGGER, provider: { useValue: jsLogger({ enabled: false }) } },
+        { token: SERVICES.TRACER, provider: { useValue: trace.getTracer('testTracer') } },
         { token: SERVICES.TASK_HANDLER, provider: { useValue: taskHandlerMock } },
         { token: SERVICES.PROVIDER_MANAGER, provider: { useValue: providerManagerMock } },
       ],
@@ -37,7 +39,7 @@ describe('fileSyncerManager', () => {
         ],
       });
 
-      const response = await fileSyncerManager.start();
+      const response = await fileSyncerManager.fetch();
 
       expect(response).toBeUndefined();
       expect(taskHandlerMock.dequeue).not.toHaveBeenCalled();
@@ -46,7 +48,7 @@ describe('fileSyncerManager', () => {
     it(`When didn't find task, does nothing`, async () => {
       taskHandlerMock.dequeue.mockResolvedValue(null);
 
-      await fileSyncerManager.start();
+      await fileSyncerManager.fetch();
 
       expect(taskHandlerMock.dequeue).toHaveBeenCalled();
       expect(providerManagerMock.source.getFile).not.toHaveBeenCalled();
@@ -58,7 +60,7 @@ describe('fileSyncerManager', () => {
       providerManagerMock.source.getFile.mockResolvedValue('file data');
       providerManagerMock.dest.postFile.mockResolvedValue(null);
 
-      await fileSyncerManager.start();
+      await fileSyncerManager.fetch();
 
       expect(taskHandlerMock.dequeue).toHaveBeenCalled();
       expect(providerManagerMock.source.getFile).toHaveBeenCalled();
@@ -72,7 +74,7 @@ describe('fileSyncerManager', () => {
       providerManagerMock.source.getFile.mockResolvedValue('file data');
       providerManagerMock.dest.postFile.mockResolvedValue(null);
 
-      await fileSyncerManager.start();
+      await fileSyncerManager.fetch();
 
       expect(taskHandlerMock.dequeue).toHaveBeenCalled();
       expect(providerManagerMock.source.getFile).toHaveBeenCalled();
@@ -83,7 +85,7 @@ describe('fileSyncerManager', () => {
       taskHandlerMock.dequeue.mockResolvedValue(createTask());
       providerManagerMock.source.getFile.mockRejectedValue(new Error('error'));
 
-      await fileSyncerManager.start();
+      await fileSyncerManager.fetch();
 
       expect(taskHandlerMock.dequeue).toHaveBeenCalled();
     });
@@ -92,7 +94,7 @@ describe('fileSyncerManager', () => {
       taskHandlerMock.dequeue.mockResolvedValue(createTask());
       providerManagerMock.source.getFile.mockRejectedValue('error');
 
-      await fileSyncerManager.start();
+      await fileSyncerManager.fetch();
 
       expect(taskHandlerMock.dequeue).toHaveBeenCalled();
     });
@@ -102,7 +104,7 @@ describe('fileSyncerManager', () => {
       providerManagerMock.source.getFile.mockRejectedValue(new Error('error'));
       taskHandlerMock.reject.mockRejectedValue(new Error('job-manager error'));
 
-      const response = await fileSyncerManager.start();
+      const response = await fileSyncerManager.fetch();
 
       expect(taskHandlerMock.dequeue).toHaveBeenCalled();
       expect(response).toBeUndefined();

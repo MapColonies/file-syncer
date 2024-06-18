@@ -1,13 +1,14 @@
 import { TaskHandler } from '@map-colonies/mc-priority-queue';
 import { trace } from '@opentelemetry/api';
+import jsLogger, { LoggerOptions } from '@map-colonies/js-logger';
 import { instanceCachingFactory } from 'tsyringe';
 import client from 'prom-client';
 import config from 'config';
 import { DependencyContainer } from 'tsyringe/dist/typings/types';
+import { getOtelMixin } from '@map-colonies/telemetry';
 import { SERVICES, SERVICE_NAME } from './common/constants';
 import { InjectionObject, registerDependencies } from './common/dependencyRegistration';
 import { ProvidersConfig, ProviderManager } from './common/interfaces';
-import logger from './common/logger';
 import { tracing } from './common/tracing';
 import { getProviderManager } from './providers/getProvider';
 import { IConfig } from './common/interfaces';
@@ -23,6 +24,8 @@ export const registerExternalValues = (options?: RegisterOptions): DependencyCon
   const heartbeatUrl = config.get<string>('heartbeat.url');
   const dequeueIntervalMs = config.get<number>('jobManager.task.pollingIntervalTime');
   const heartbeatIntervalMs = config.get<number>('heartbeat.pingingIntervalTime');
+  const loggerConfig = config.get<LoggerOptions>('telemetry.logger');
+  const logger = jsLogger({ ...loggerConfig, prettyPrint: loggerConfig.prettyPrint, mixin: getOtelMixin() });
 
   tracing.start();
   const tracer = trace.getTracer(SERVICE_NAME);
@@ -58,7 +61,7 @@ export const registerExternalValues = (options?: RegisterOptions): DependencyCon
       token: SERVICES.PROVIDER_MANAGER,
       provider: {
         useFactory: (): ProviderManager => {
-          return getProviderManager(providerConfiguration);
+          return getProviderManager(logger, tracer, providerConfiguration);
         },
       },
     },

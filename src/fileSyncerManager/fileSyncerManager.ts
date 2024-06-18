@@ -3,6 +3,9 @@ import { ITaskResponse, IUpdateTaskBody, TaskHandler } from '@map-colonies/mc-pr
 import { IConfig } from 'config';
 import client from 'prom-client';
 import { inject, injectable } from 'tsyringe';
+import { withSpanAsyncV4 } from '@map-colonies/telemetry';
+import { Tracer, trace } from '@opentelemetry/api';
+import { INFRA_CONVENTIONS, THREE_D_CONVENTIONS } from '@map-colonies/telemetry/conventions';
 import { JOB_TYPE, SERVICES } from '../common/constants';
 import { ProviderManager, TaskParameters, TaskResult } from '../common/interfaces';
 
@@ -20,6 +23,7 @@ export class FileSyncerManager {
   public constructor(
     @inject(SERVICES.LOGGER) private readonly logger: Logger,
     @inject(SERVICES.CONFIG) private readonly config: IConfig,
+    @inject(SERVICES.TRACER) public readonly tracer: Tracer,
     @inject(SERVICES.TASK_HANDLER) private readonly taskHandler: TaskHandler,
     @inject(SERVICES.PROVIDER_MANAGER) private readonly providerManager: ProviderManager,
     @inject(SERVICES.METRICS_REGISTRY) registry?: client.Registry
@@ -48,20 +52,16 @@ export class FileSyncerManager {
     this.taskCounter = 0;
   }
 
-  public async start(): Promise<void> {
-    if (this.taskCounter >= this.taskPoolSize) {
-      return;
-    }
+  @withSpanAsyncV4
+  public async start(task: ITaskResponse<TaskParameters>): Promise<void> {
+    const spanActive = trace.getActiveSpan();
+    spanActive?.setAttributes({
+      [INFRA_CONVENTIONS.infra.jobManagement.taskId]: task.id,
+      [INFRA_CONVENTIONS.infra.jobManagement.jobId]: task.jobId,
+      [INFRA_CONVENTIONS.infra.jobManagement.taskType]: this.taskType,
+      [THREE_D_CONVENTIONS.three_d.catalogManager.catalogId]: task.parameters.modelId,
+    });
 
-    this.logger.debug({ msg: 'Try to dequeue new task' });
-    const task = await this.taskHandler.dequeue<TaskParameters>(JOB_TYPE, this.taskType);
-    if (!task) {
-      return;
-    }
-
-    this.logger.info({ msg: 'Found a task to work on!', task: task.id, modelId: task.parameters.modelId });
-    this.taskCounter++;
-    this.tasksGauge?.inc({ type: this.taskType });
     const workingTaskTimerEnd = this.tasksHistogram?.startTimer({ type: this.taskType });
     const taskResult = await this.handleTask(task);
     if (taskResult.completed) {
@@ -84,6 +84,7 @@ export class FileSyncerManager {
     });
   }
 
+  @withSpanAsyncV4
   private async deleteTaskParameters(task: ITaskResponse<TaskParameters>): Promise<void> {
     const parameters = task.parameters;
     await this.taskHandler.jobManagerClient.updateTask(task.jobId, task.id, {
@@ -91,6 +92,7 @@ export class FileSyncerManager {
     });
   }
 
+  @withSpanAsyncV4
   private async handleFailedTask(task: ITaskResponse<TaskParameters>, taskResult: TaskResult): Promise<void> {
     try {
       await this.updateIndexError(task, taskResult.index);
@@ -102,6 +104,7 @@ export class FileSyncerManager {
     }
   }
 
+  @withSpanAsyncV4
   private async handleTask(task: ITaskResponse<TaskParameters>): Promise<TaskResult> {
     this.logger.debug({ msg: 'Starting handleTask', taskId: task.id });
     const taskParameters = task.parameters;
@@ -125,24 +128,20 @@ export class FileSyncerManager {
     return taskResult;
   }
 
-  private initTaskResult(taskParameters: TaskParameters): TaskResult {
-    // eslint-disable-next-line @typescript-eslint/no-magic-numbers
-    const startPosition = taskParameters.lastIndexError === -1 ? 0 : taskParameters.lastIndexError;
-    const taskResult: TaskResult = { index: startPosition, completed: false };
-    return taskResult;
-  }
-
+  @withSpanAsyncV4
   private async syncFile(filePath: string, taskParameters: TaskParameters): Promise<void> {
     const data = await this.providerManager.source.getFile(filePath);
     const newModelName = this.changeModelName(filePath, taskParameters.modelId);
     await this.providerManager.dest.postFile(newModelName, data);
   }
 
+  @withSpanAsyncV4
   private async rejectJobManager(error: Error, task: ITaskResponse<TaskParameters>): Promise<void> {
     const isRecoverable: boolean = task.attempts < this.maxAttempts;
     await this.taskHandler.reject<IUpdateTaskBody<TaskParameters>>(task.jobId, task.id, isRecoverable, error.message);
   }
 
+  @withSpanAsyncV4
   private async updateIndexError(task: ITaskResponse<TaskParameters>, lastIndexError: number): Promise<void> {
     const payload: IUpdateTaskBody<TaskParameters> = {
       parameters: { ...task.parameters, lastIndexError },
@@ -150,9 +149,33 @@ export class FileSyncerManager {
     await this.taskHandler.jobManagerClient.updateTask<TaskParameters>(task.jobId, task.id, payload);
   }
 
+  public async fetch(): Promise<void> {
+    if (this.taskCounter >= this.taskPoolSize) {
+      return;
+    }
+
+    this.logger.debug({ msg: 'Try to dequeue new task' });
+    const task = await this.taskHandler.dequeue<TaskParameters>(JOB_TYPE, this.taskType);
+    if (!task) {
+      return;
+    }
+
+    this.logger.info({ msg: 'Found a task to work on!', task: task.id, modelId: task.parameters.modelId });
+    this.taskCounter++;
+    this.tasksGauge?.inc({ type: this.taskType });
+    await this.start(task);
+  }
+
   private changeModelName(oldName: string, newName: string): string {
     const nameSplitted = oldName.split('/');
     nameSplitted[0] = newName;
     return nameSplitted.join('/');
+  }
+
+  private initTaskResult(taskParameters: TaskParameters): TaskResult {
+    // eslint-disable-next-line @typescript-eslint/no-magic-numbers
+    const startPosition = taskParameters.lastIndexError === -1 ? 0 : taskParameters.lastIndexError;
+    const taskResult: TaskResult = { index: startPosition, completed: false };
+    return taskResult;
   }
 }
