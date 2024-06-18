@@ -1,5 +1,5 @@
 /* eslint-disable @typescript-eslint/naming-convention */
-import { randSentence } from '@ngneat/falso';
+import { faker } from '@faker-js/faker'
 import { S3 } from 'aws-sdk';
 import { S3Config } from '../../src/common/interfaces';
 
@@ -44,7 +44,7 @@ export class S3Helper {
   }
 
   public async createFileOfModel(model: string, file: string): Promise<Buffer> {
-    const data = Buffer.from(randSentence());
+    const data = Buffer.from(faker.word.words());
     const params: S3.PutObjectRequest = {
       Bucket: this.config.bucket,
       Key: `${model}/${file}`,
