@@ -2,12 +2,14 @@ import { Logger } from '@map-colonies/js-logger';
 import { ITaskResponse, IUpdateTaskBody, TaskHandler } from '@map-colonies/mc-priority-queue';
 import { IConfig } from 'config';
 import client from 'prom-client';
+import { Job, Queue, Worker } from 'bullmq';
 import { inject, injectable } from 'tsyringe';
-import { withSpanAsyncV4 } from '@map-colonies/telemetry';
+import { withSpanAsyncV4, withSpanV4 } from '@map-colonies/telemetry';
 import { Tracer, trace } from '@opentelemetry/api';
 import { INFRA_CONVENTIONS, THREE_D_CONVENTIONS } from '@map-colonies/telemetry/conventions';
 import { JOB_TYPE, SERVICES } from '../common/constants';
 import { ProviderManager, TaskParameters, TaskResult } from '../common/interfaces';
+import { PERCENTAGES, QUEUES } from '../common/commonBullMQ';
 
 @injectable()
 export class FileSyncerManager {
@@ -15,16 +17,14 @@ export class FileSyncerManager {
   private readonly tasksHistogram?: client.Histogram<'type'>;
   private readonly tasksGauge?: client.Gauge<'type'>;
 
+  private worker: Worker<TaskParameters> | null = null;
   private readonly taskType: string;
-  private readonly maxAttempts: number;
-  private readonly taskPoolSize: number;
-  private taskCounter: number;
 
   public constructor(
     @inject(SERVICES.LOGGER) private readonly logger: Logger,
     @inject(SERVICES.CONFIG) private readonly config: IConfig,
     @inject(SERVICES.TRACER) public readonly tracer: Tracer,
-    @inject(SERVICES.TASK_HANDLER) private readonly taskHandler: TaskHandler,
+    @inject(SERVICES.QUEUE) public readonly queue: Queue,
     @inject(SERVICES.PROVIDER_MANAGER) private readonly providerManager: ProviderManager,
     @inject(SERVICES.METRICS_REGISTRY) registry?: client.Registry
   ) {
@@ -47,67 +47,48 @@ export class FileSyncerManager {
       });
     }
 
-    this.maxAttempts = this.config.get<number>('jobManager.task.maxAttempts');
-    this.taskPoolSize = this.config.get<number>('fileSyncer.taskPoolSize');
-    this.taskCounter = 0;
   }
 
-  @withSpanAsyncV4
-  public async start(task: ITaskResponse<TaskParameters>): Promise<void> {
-    const spanActive = trace.getActiveSpan();
-    spanActive?.setAttributes({
-      [INFRA_CONVENTIONS.infra.jobManagement.taskId]: task.id,
-      [INFRA_CONVENTIONS.infra.jobManagement.jobId]: task.jobId,
-      [INFRA_CONVENTIONS.infra.jobManagement.taskType]: this.taskType,
-      [THREE_D_CONVENTIONS.three_d.catalogManager.catalogId]: task.parameters.modelId,
-    });
+  @withSpanV4
+  public start(): void {
 
+    console.log("HERE");
+    
     const workingTaskTimerEnd = this.tasksHistogram?.startTimer({ type: this.taskType });
-    const taskResult = await this.handleTask(task);
-    if (taskResult.completed) {
-      await this.taskHandler.ack<IUpdateTaskBody<TaskParameters>>(task.jobId, task.id);
-      this.logger.info({ msg: 'Finished ack task', task: task.id, modelId: task.parameters.modelId });
-      await this.deleteTaskParameters(task);
-      this.logger.info({ msg: `Deleted task's parameters successfully`, task: task.id, modelId: task.parameters.modelId });
-    }
-    if (workingTaskTimerEnd) {
-      workingTaskTimerEnd();
-    }
+    this.worker = new Worker(
+      QUEUES.taskQueues.fileSyncerQueue,
+      async (job) => {
+        const taskResult = await this.handleTask(job);
+        if (taskResult.completed) {
+          this.logger.info({ msg: 'Finished ack task', task: job.id, modelId: job.data.modelId });
+        } else {
+          await job.updateData({ ...job.data, lastIndexError:taskResult.index });
+          throw new Error(taskResult.error?.message);
+        }
+        if (workingTaskTimerEnd) {
+          workingTaskTimerEnd();
+        }
+        const parent = await this.queue.getJob(job.parent!.id);
+        const data = Math.round(parent!.progress as number + PERCENTAGES.tilesCopying/job.data.numOfTasks);
+        await this.queue.updateJobProgress(job.parent!.id, data)
+      },
+      {
+        connection: {
+          host: "127.0.0.1",
+          port: 6379
+        },
+        prefix: '3D',
+      }
+    );
 
-    this.taskCounter--;
-    this.tasksGauge?.dec({ type: this.taskType });
-    this.logger.info({
-      msg: 'Done working on a task in this interval',
-      taskId: task.id,
-      isCompleted: taskResult.completed,
-      modelId: task.parameters.modelId,
-    });
+    // this.worker.on('active', )
+
   }
 
   @withSpanAsyncV4
-  private async deleteTaskParameters(task: ITaskResponse<TaskParameters>): Promise<void> {
-    const parameters = task.parameters;
-    await this.taskHandler.jobManagerClient.updateTask(task.jobId, task.id, {
-      parameters: { modelId: parameters.modelId, lastIndexError: parameters.lastIndexError },
-    });
-  }
-
-  @withSpanAsyncV4
-  private async handleFailedTask(task: ITaskResponse<TaskParameters>, taskResult: TaskResult): Promise<void> {
-    try {
-      await this.updateIndexError(task, taskResult.index);
-      // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-      await this.rejectJobManager(taskResult.error!, task);
-      this.logger.info({ msg: 'Updated failing the task in job manager', task: task.id });
-    } catch (error) {
-      this.logger.error({ error, taskId: task.id, modelId: task.parameters.modelId });
-    }
-  }
-
-  @withSpanAsyncV4
-  private async handleTask(task: ITaskResponse<TaskParameters>): Promise<TaskResult> {
-    this.logger.debug({ msg: 'Starting handleTask', taskId: task.id });
-    const taskParameters = task.parameters;
+  private async handleTask(job: Job<TaskParameters>): Promise<TaskResult> {
+    this.logger.debug({ msg: 'Starting handleTask', taskId: job.id });
+    const taskParameters = job.data;
     const taskResult: TaskResult = this.initTaskResult(taskParameters);
 
     while (taskResult.index < taskParameters.paths.length) {
@@ -115,8 +96,7 @@ export class FileSyncerManager {
       try {
         await this.syncFile(filePath, taskParameters);
       } catch (error) {
-        await this.handleFailedTask(task, taskResult);
-        this.logger.error({ error, taskId: task.id, modelId: task.parameters.modelId });
+        this.logger.error({ error, taskId: job.id, modelId: job.data.modelId });
         taskResult.error = error instanceof Error ? error : new Error(String(error));
         return taskResult;
       }
@@ -133,37 +113,6 @@ export class FileSyncerManager {
     const data = await this.providerManager.source.getFile(filePath);
     const newModelName = this.changeModelName(filePath, taskParameters.modelId);
     await this.providerManager.dest.postFile(newModelName, data);
-  }
-
-  @withSpanAsyncV4
-  private async rejectJobManager(error: Error, task: ITaskResponse<TaskParameters>): Promise<void> {
-    const isRecoverable: boolean = task.attempts < this.maxAttempts;
-    await this.taskHandler.reject<IUpdateTaskBody<TaskParameters>>(task.jobId, task.id, isRecoverable, error.message);
-  }
-
-  @withSpanAsyncV4
-  private async updateIndexError(task: ITaskResponse<TaskParameters>, lastIndexError: number): Promise<void> {
-    const payload: IUpdateTaskBody<TaskParameters> = {
-      parameters: { ...task.parameters, lastIndexError },
-    };
-    await this.taskHandler.jobManagerClient.updateTask<TaskParameters>(task.jobId, task.id, payload);
-  }
-
-  public async fetch(): Promise<void> {
-    if (this.taskCounter >= this.taskPoolSize) {
-      return;
-    }
-
-    this.logger.debug({ msg: 'Try to dequeue new task' });
-    const task = await this.taskHandler.dequeue<TaskParameters>(JOB_TYPE, this.taskType);
-    if (!task) {
-      return;
-    }
-
-    this.logger.info({ msg: 'Found a task to work on!', task: task.id, modelId: task.parameters.modelId });
-    this.taskCounter++;
-    this.tasksGauge?.inc({ type: this.taskType });
-    await this.start(task);
   }
 
   private changeModelName(oldName: string, newName: string): string {
