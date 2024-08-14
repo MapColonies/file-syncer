@@ -40,8 +40,11 @@ export class App {
       this.logger.info({ msg: `app started on port ${this.port}` });
     });
 
-    // eslint-disable-next-line @typescript-eslint/no-misused-promises
-    setInterval(async () => this.fileSyncerManager.fetch(), this.intervalMs);
+    setInterval(() => {
+      void (async (): Promise<void> => {
+        await this.fileSyncerManager.fetch();
+      })();
+    }, this.intervalMs);
   }
 }
 
