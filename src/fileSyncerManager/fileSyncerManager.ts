@@ -115,9 +115,9 @@ export class FileSyncerManager {
       try {
         await this.syncFile(filePath, taskParameters);
       } catch (error) {
-        await this.handleFailedTask(task, taskResult);
         this.logger.error({ error, taskId: task.id, modelId: task.parameters.modelId });
         taskResult.error = error instanceof Error ? error : new Error(String(error));
+        await this.handleFailedTask(task, taskResult);
         return taskResult;
       }
 
@@ -137,8 +137,9 @@ export class FileSyncerManager {
 
   @withSpanAsyncV4
   private async rejectJobManager(error: Error, task: ITaskResponse<TaskParameters>): Promise<void> {
+    const reason = `${error.name}: ${error.message}`;
     const isRecoverable: boolean = task.attempts < this.maxAttempts;
-    await this.taskHandler.reject<IUpdateTaskBody<TaskParameters>>(task.jobId, task.id, isRecoverable, error.message);
+    await this.taskHandler.reject<IUpdateTaskBody<TaskParameters>>(task.jobId, task.id, isRecoverable, reason);
   }
 
   @withSpanAsyncV4

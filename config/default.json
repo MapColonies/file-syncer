@@ -35,15 +35,7 @@
   "provider": {
     "source": {
       "type": "NFS",
-      "accessKeyId": "minioadmin",
-      "secretAccessKey": "minioadmin",
-      "endpointUrl": "http://127.0.0.1:9000",
-      "bucket": "3dtiles",
-      "region": "us-east-1",
-      "forcePathStyle": true,
-      "sslEnabled": false,
-      "maxAttempts": 3,
-      "sigVersion": "v4"
+      "pvPath": "/Path/To/Models"
     },
     "dest": {
       "type": "S3",
