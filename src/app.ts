@@ -8,12 +8,14 @@ import { StatusCodes } from 'http-status-codes';
 import { SERVICES } from './common/constants';
 import { registerExternalValues, RegisterOptions } from './containerConfig';
 import { FileSyncerManager } from './fileSyncerManager/fileSyncerManager';
+import { LogContext } from './common/interfaces';
 
 @singleton()
 export class App {
   private readonly intervalMs: number;
   private readonly port: number;
   private readonly serverInstance: express.Application;
+  private readonly logContext: LogContext;
 
   public constructor(
     @inject(SERVICES.LOGGER) private readonly logger: Logger,
@@ -31,13 +33,25 @@ export class App {
     this.serverInstance.get('/liveness', (req: Request, res: Response) => {
       res.status(StatusCodes.OK).send('OK');
     });
+
+    this.logContext = {
+      fileName: __filename,
+      class: App.name,
+    };
   }
 
   public run(): void {
-    this.logger.info({ msg: 'Starting fileSyncer' });
+    const logContext = { ...this.logContext, function: this.run.name };
+    this.logger.info({
+      msg: 'Starting fileSyncer',
+      logContext,
+    });
 
     this.serverInstance.listen(this.port, () => {
-      this.logger.info({ msg: `app started on port ${this.port}` });
+      this.logger.info({
+        msg: `app started on port ${this.port}`,
+        logContext,
+      });
     });
 
     setInterval(() => {

@@ -58,3 +58,9 @@ export interface TaskResult {
   index: number;
   error?: Error;
 }
+
+export interface LogContext {
+  fileName: string;
+  class: string;
+  function?: string;
+}

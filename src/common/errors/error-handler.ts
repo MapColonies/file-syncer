@@ -3,28 +3,42 @@ import { StatusCodes } from 'http-status-codes';
 import jsLogger, { Logger, LoggerOptions } from '@map-colonies/js-logger';
 import { getOtelMixin } from '@map-colonies/telemetry';
 import { AppErrorResponse } from '../middlewares/error-handling-midleware';
+import { LogContext } from '../interfaces';
 import { AppError, httpErrorCodeMapper } from './error-types';
 
 class ErrorHandler {
   private readonly logger: Logger;
+  private readonly logContext: LogContext;
 
   public constructor() {
     const loggerConfig = config.get<LoggerOptions>('telemetry.logger');
     this.logger = jsLogger({ ...loggerConfig, prettyPrint: loggerConfig.prettyPrint, mixin: getOtelMixin() });
+    this.logContext = {
+      fileName: __filename,
+      class: ErrorHandler.name,
+    };
   }
 
   public listenToErrorEvents(): void {
+    const logContext = { ...this.logContext, function: this.listenToErrorEvents.name };
     process.on('uncaughtException', (error: Error) => {
-      this.logger.error({ msg: error.message });
+      this.logger.error({
+        msg: error.message,
+        logContext,
+      });
     });
 
     process.on('unhandledRejection', (reason: Error) => {
-      this.logger.error({ msg: reason.message });
+      this.logger.error({
+        msg: reason.message,
+        logContext,
+      });
     });
 
     process.on('SIGTERM', () => {
       this.logger.error({
         msg: 'App received SIGTERM event, try to gracefully close the server',
+        logContext,
       });
       this.exit();
     });
@@ -32,6 +46,7 @@ class ErrorHandler {
     process.on('SIGINT', () => {
       this.logger.error({
         msg: 'App received SIGINT event, try to gracefully close the server',
+        logContext,
       });
       this.exit();
     });
@@ -51,7 +66,12 @@ class ErrorHandler {
   }
 
   private handleCriticalError(error: Error | AppError, response?: AppErrorResponse): void {
-    this.logger.error({ msg: error.message, metadata: error });
+    const logContext = { ...this.logContext, function: this.handleCriticalError.name };
+    this.logger.error({
+      msg: error.message,
+      metadata: error,
+      logContext,
+    });
     if (response !== undefined) {
       response.status(StatusCodes.INTERNAL_SERVER_ERROR).json({ message: 'Internal server error' });
     }
@@ -65,7 +85,11 @@ class ErrorHandler {
   }
 
   private exit(): void {
-    this.logger.error({ msg: 'Gracefully closing the server' });
+    const logContext = { ...this.logContext, function: this.exit.name };
+    this.logger.error({
+      msg: 'Gracefully closing the server',
+      logContext,
+    });
     process.exit(1);
   }
 }
