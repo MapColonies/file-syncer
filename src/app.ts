@@ -54,8 +54,11 @@ export class App {
       });
     });
 
-    // eslint-disable-next-line @typescript-eslint/no-misused-promises
-    setInterval(async () => this.fileSyncerManager.fetch(), this.intervalMs);
+    setInterval(() => {
+      void (async (): Promise<void> => {
+        await this.fileSyncerManager.fetch();
+      })();
+    }, this.intervalMs);
   }
 }
 
