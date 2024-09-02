@@ -170,7 +170,7 @@ export class FileSyncerManager {
   private async syncFile(filePath: string, taskParameters: TaskParameters): Promise<void> {
     const data = await this.providerManager.source.getFile(filePath);
     const newModelName = this.changeModelName(filePath, taskParameters.modelId);
-    await this.providerManager.dest.postFile(newModelName, data);
+    await this.providerManager.destination.postFile(newModelName, data);
   }
 
   @withSpanAsyncV4

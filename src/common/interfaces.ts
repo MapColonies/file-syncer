@@ -1,4 +1,4 @@
-import { S3 } from 'aws-sdk';
+import { commonNfsV1Type, commonS3FullV1Type } from '@map-colonies/schemas';
 import { NFSProvider } from '../providers/nfsProvider';
 import { S3Provider } from '../providers/s3Provider';
 
@@ -13,36 +13,23 @@ export interface TaskParameters {
   lastIndexError: number;
 }
 
-export interface S3Config {
-  type: 'S3';
-  accessKeyId: string;
-  secretAccessKey: string;
-  endpointUrl: string;
-  bucket: string;
-  region: string;
-  sslEnabled: boolean;
-  forcePathStyle: boolean;
-  maxAttempts: number;
-  sigVersion: string;
-  storageClass?: S3.StorageClass;
-}
-
-export interface NFSConfig {
-  type: 'NFS';
-  pvPath: string;
-}
-
 export interface ProviderManager {
   source: S3Provider | NFSProvider;
-  dest: S3Provider | NFSProvider;
+  destination: S3Provider | NFSProvider;
 }
 
 export interface ProvidersConfig {
   source: ProviderConfig;
-  dest: ProviderConfig;
+  destination: ProviderConfig;
 }
 
-export type ProviderConfig = S3Config | NFSConfig;
+export type ProviderConfig = {
+    provider: "NFS",
+    config: commonNfsV1Type
+  } | {
+    provider: "S3",
+    config: commonS3FullV1Type
+};
 
 export interface ProviderMap {
   [key: string]: Provider;

@@ -38,10 +38,12 @@
     }
   },
   "dependencies": {
+    "@map-colonies/config": "file:../config/map-colonies-config-0.0.1.tgz",
     "@map-colonies/error-types": "^1.1.5",
     "@map-colonies/js-logger": "^1.0.1",
     "@map-colonies/mc-priority-queue": "^8.0.0",
     "@map-colonies/read-pkg": "0.0.1",
+    "@map-colonies/schemas": "file:../schemas/.",
     "@map-colonies/telemetry": "^6.1.0",
     "@opentelemetry/api": "1.7.0",
     "@opentelemetry/api-metrics": "0.23.0",

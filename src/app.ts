@@ -9,6 +9,7 @@ import { SERVICES } from './common/constants';
 import { registerExternalValues, RegisterOptions } from './containerConfig';
 import { FileSyncerManager } from './fileSyncerManager/fileSyncerManager';
 import { LogContext } from './common/interfaces';
+import { initConfig } from './common/config';
 
 @singleton()
 export class App {
@@ -62,7 +63,8 @@ export class App {
   }
 }
 
-export function getApp(registerOptions?: RegisterOptions): App {
+export async function getApp(registerOptions?: RegisterOptions): Promise<App> {
+  await initConfig(true);
   const container = registerExternalValues(registerOptions);
   const app = container.resolve(App);
   return app;

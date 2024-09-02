@@ -4,18 +4,18 @@ import { ProviderConfig, ProviderManager, ProvidersConfig } from '../common/inte
 import { NFSProvider } from './nfsProvider';
 import { S3Provider } from './s3Provider';
 
-function getProvider(logger: Logger, tracer: Tracer, config: ProviderConfig): S3Provider | NFSProvider {
-  if (config.type === 'S3') {
-    return new S3Provider(logger, tracer, config);
+function getProvider(logger: Logger, tracer: Tracer, storage: ProviderConfig): S3Provider | NFSProvider {
+  if (storage.provider === 'S3') {
+    return new S3Provider(logger, tracer, storage.config);
   } else {
-    return new NFSProvider(logger, tracer, config);
+    return new NFSProvider(logger, tracer, storage.config);
   }
 }
 
 function getProviderManager(logger: Logger, tracer: Tracer, providerConfiguration: ProvidersConfig): ProviderManager {
   return {
     source: getProvider(logger, tracer, providerConfiguration.source),
-    dest: getProvider(logger, tracer, providerConfiguration.dest),
+    destination: getProvider(logger, tracer, providerConfiguration.destination),
   };
 }
 

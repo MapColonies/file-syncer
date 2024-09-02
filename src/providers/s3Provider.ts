@@ -3,7 +3,8 @@ import { S3 } from 'aws-sdk';
 import { withSpanAsyncV4 } from '@map-colonies/telemetry';
 import { inject, injectable } from 'tsyringe';
 import { Tracer } from '@opentelemetry/api';
-import { LogContext, Provider, S3Config } from '../common/interfaces';
+import { type commonS3FullV1Type } from '@map-colonies/schemas';
+import { LogContext, Provider } from '../common/interfaces';
 import { SERVICES } from '../common/constants';
 
 @injectable()
@@ -14,7 +15,7 @@ export class S3Provider implements Provider {
   public constructor(
     @inject(SERVICES.LOGGER) private readonly logger: Logger,
     @inject(SERVICES.TRACER) public readonly tracer: Tracer,
-    private readonly config: S3Config
+    private readonly config: commonS3FullV1Type
   ) {
     this.s3Instance = this.createS3Instance(config);
     this.logContext = {
@@ -68,9 +69,9 @@ export class S3Provider implements Provider {
     });
   }
 
-  private createS3Instance(config: S3Config): S3 {
+  private createS3Instance(config: commonS3FullV1Type): S3 {
     return new S3({
-      endpoint: config.endpointUrl,
+      endpoint: `${config.host}://${config.host}:${config.port}`,
       credentials: {
         accessKeyId: config.accessKeyId,
         secretAccessKey: config.secretAccessKey,

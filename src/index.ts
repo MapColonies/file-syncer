@@ -4,11 +4,12 @@ import 'reflect-metadata';
 import { errorHandler } from './common/errors/error-handler';
 import { getApp } from './app';
 
-function main(): void {
-  errorHandler.listenToErrorEvents();
-  const app = getApp();
+errorHandler.listenToErrorEvents();
 
+void getApp()
+.then((app) => {
   app.run();
-}
-
-void main();
+})
+.catch((error: Error) => {
+  console.error(error);
+});

@@ -4,7 +4,8 @@ import { Logger } from '@map-colonies/js-logger';
 import { withSpanAsyncV4 } from '@map-colonies/telemetry';
 import { inject, injectable } from 'tsyringe';
 import { Tracer } from '@opentelemetry/api';
-import { LogContext, NFSConfig, Provider } from '../common/interfaces';
+import { type commonNfsV1Type } from '@map-colonies/schemas';
+import { LogContext, Provider } from '../common/interfaces';
 import { SERVICES } from '../common/constants';
 
 @injectable()
@@ -14,7 +15,7 @@ export class NFSProvider implements Provider {
   public constructor(
     @inject(SERVICES.LOGGER) private readonly logger: Logger,
     @inject(SERVICES.TRACER) public readonly tracer: Tracer,
-    private readonly config: NFSConfig
+    private readonly config: commonNfsV1Type
   ) {
     this.logContext = {
       fileName: __filename,
