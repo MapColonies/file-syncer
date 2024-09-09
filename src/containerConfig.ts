@@ -8,7 +8,7 @@ import { DependencyContainer } from 'tsyringe/dist/typings/types';
 import { getOtelMixin } from '@map-colonies/telemetry';
 import { SERVICES, SERVICE_NAME } from './common/constants';
 import { InjectionObject, registerDependencies } from './common/dependencyRegistration';
-import { ProviderManager, ProvidersConfig } from './common/interfaces';
+import { ProviderManager } from './common/interfaces';
 import { tracing } from './common/tracing';
 import { getProviderManager } from './providers/getProvider';
 import { getConfig } from './common/config';
@@ -25,10 +25,7 @@ export const registerExternalValues = (options?: RegisterOptions): DependencyCon
   const dequeueIntervalMs = configInstance.get('jobManager.task.pollingIntervalTime');
   const loggerConfig = configInstance.get('telemetry.logger');
   const logger = jsLogger({ ...loggerConfig, prettyPrint: loggerConfig.prettyPrint, mixin: getOtelMixin() });
-  const providers: ProvidersConfig = {
-    source: configInstance.get('source'),
-    destination: configInstance.get('destination')
-  };
+  const providers = configInstance.get('storage');
 
   tracing.start();
   const tracer = trace.getTracer(SERVICE_NAME);
