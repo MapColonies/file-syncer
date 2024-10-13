@@ -76,7 +76,7 @@ describe('S3Provider', () => {
       const data = Buffer.from(faker.word.words());
 
       await providerManager.dest.postFile(`${model}/${file}`, data);
-      const result = await s3HelperDest.readFile(mockS3tS3.dest.bucket, `${model}/${file}`);
+      const result = await s3HelperDest.readFile(mockS3tS3.dest.bucketName, `${model}/${file}`);
 
       expect(result).toStrictEqual(data);
     });

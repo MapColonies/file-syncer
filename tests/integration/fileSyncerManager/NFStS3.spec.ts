@@ -70,7 +70,7 @@ describe('fileSyncerManager NFS to S3', () => {
       taskHandlerMock.dequeue.mockResolvedValue(createTask(model, paths));
 
       await fileSyncerManager.fetch();
-      const result = await s3HelperDest.readFile(mockNFStS3.dest.bucket, `${model}/${file2}`);
+      const result = await s3HelperDest.readFile(mockNFStS3.dest.bucketName, `${model}/${file2}`);
 
       expect(taskHandlerMock.ack).toHaveBeenCalled();
       expect(result).toStrictEqual(bufferedContent);

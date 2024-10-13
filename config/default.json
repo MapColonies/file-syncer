@@ -34,20 +34,20 @@
   },
   "provider": {
     "source": {
-      "type": "NFS",
+      "kind": "NFS",
       "pvPath": "/Path/To/Models"
     },
     "dest": {
-      "type": "S3",
-      "accessKeyId": "minioadmin",
-      "secretAccessKey": "minioadmin",
-      "endpointUrl": "http://127.0.0.1:9000",
-      "bucket": "3dtiles",
-      "region": "us-east-1",
+      "kind": "s3",
+      "credentials": {
+        "accessKeyId": "accessKeyId",
+        "secretAccessKey": "secret"
+      },
+      "endpoint": "http://s3-domain/",
+      "bucketName": "3dtiles",
+      "region": "region",
       "forcePathStyle": true,
-      "sslEnabled": false,
       "maxAttempts": 3,
-      "sigVersion": "v4",
       "storageClass": "STANDARD"
     }
   },

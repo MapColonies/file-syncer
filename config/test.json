@@ -27,26 +27,29 @@
   },
   "provider": {
     "source": {
-      "accessKeyId": "minioadmin",
-      "secretAccessKey": "minioadmin",
-      "endpointUrl": "http://127.0.0.1:9000",
-      "bucket": "3dtiles",
+      "kind": "s3",
+      "credentials": {
+        "accessKeyId": "minioadmin",
+        "secretAccessKey": "minioadmin"
+      },
+      "endpoint": "http://127.0.0.1:9000",
+      "bucketName": "3dtiles",
       "region": "us-east-1",
       "forcePathStyle": true,
-      "sslEnabled": false,
       "maxAttempts": 3,
-      "sigVersion": "v4"
+      "storageClass": "STANDARD"
     },
     "dest": {
-      "accessKeyId": "minioadmin",
-      "secretAccessKey": "minioadmin",
-      "endpointUrl": "http://127.0.0.1:9000",
-      "bucket": "3dtiles",
+      "kind": "s3",
+      "credentials": {
+        "accessKeyId": "minioadmin",
+        "secretAccessKey": "minioadmin"
+      },
+      "endpoint": "http://127.0.0.1:9000",
+      "bucketName": "3dtiles",
       "region": "us-east-1",
       "forcePathStyle": true,
-      "sslEnabled": false,
       "maxAttempts": 3,
-      "sigVersion": "v4",
       "storageClass": "STANDARD"
     }
   },

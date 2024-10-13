@@ -1,5 +1,5 @@
 import { Logger } from '@map-colonies/js-logger';
-import { S3 } from 'aws-sdk';
+import { GetObjectCommand, PutObjectCommand, S3Client } from '@aws-sdk/client-s3';
 import { withSpanAsyncV4 } from '@map-colonies/telemetry';
 import { inject, injectable } from 'tsyringe';
 import { Tracer } from '@opentelemetry/api';
@@ -8,77 +8,95 @@ import { SERVICES } from '../common/constants';
 
 @injectable()
 export class S3Provider implements Provider {
-  private readonly s3Instance: S3;
   private readonly logContext: LogContext;
 
   public constructor(
+    private readonly s3Client: S3Client,
     @inject(SERVICES.LOGGER) private readonly logger: Logger,
     @inject(SERVICES.TRACER) public readonly tracer: Tracer,
     private readonly config: S3Config
   ) {
-    this.s3Instance = this.createS3Instance(config);
     this.logContext = {
       fileName: __filename,
       class: S3Provider.name,
     };
+    this.logger.info({ msg: 'initializing S3 tile storage', endpoint: config.endpoint, bucketName: config.bucketName });
   }
 
   @withSpanAsyncV4
   public async getFile(filePath: string): Promise<Buffer> {
     const logContext = { ...this.logContext, function: this.getFile.name };
-    /* eslint-disable @typescript-eslint/naming-convention */
-    const getParams: S3.GetObjectRequest = {
-      Bucket: this.config.bucket,
-      Key: filePath,
-    };
-    /* eslint-enable @typescript-eslint/naming-convention */
-
     this.logger.debug({
-      msg: 'Starting getFile',
+      msg: 'Starting to get file',
       logContext,
       filePath,
     });
-    const response = await this.s3Instance.getObject(getParams).promise();
 
-    return response.Body as Buffer;
+    const getObjectCommand = new GetObjectCommand({
+      // eslint-disable-next-line @typescript-eslint/naming-convention
+      Bucket: this.config.bucketName,
+      // eslint-disable-next-line @typescript-eslint/naming-convention
+      Key: filePath,
+    });
+
+    try {
+      const response = await this.s3Client.send(getObjectCommand);
+      const responseArray = await response.Body?.transformToByteArray();
+      return Buffer.from(responseArray as Uint8Array);
+    } catch (error) {
+      const s3Error = error as Error;
+      this.logger.error({
+        msg: 'an error occurred during getting file',
+        err: s3Error,
+        parent,
+        endpoint: this.config.endpoint,
+        bucketName: this.config.bucketName,
+        key: filePath,
+      });
+      throw new Error(`an error occurred during the get key ${filePath} on bucket ${this.config.bucketName}, ${s3Error.message}`);
+    }
   }
 
   @withSpanAsyncV4
   public async postFile(filePath: string, data: Buffer): Promise<void> {
     const logContext = { ...this.logContext, function: this.postFile.name };
-    /* eslint-disable @typescript-eslint/naming-convention */
-    const putParams: S3.PutObjectRequest = {
-      Bucket: this.config.bucket,
-      StorageClass: this.config.storageClass,
-      Key: filePath,
-      Body: data,
-    };
-    /* eslint-enable @typescript-eslint/naming-convention */
 
     this.logger.debug({
       msg: 'Starting postFile',
       logContext,
       filePath,
     });
-    await this.s3Instance.putObject(putParams).promise();
+
+    const putObjectCommand = new PutObjectCommand({
+      // eslint-disable-next-line @typescript-eslint/naming-convention
+      Bucket: this.config.bucketName,
+      // eslint-disable-next-line @typescript-eslint/naming-convention
+      StorageClass: this.config.storageClass,
+      // eslint-disable-next-line @typescript-eslint/naming-convention
+      Key: filePath,
+      // eslint-disable-next-line @typescript-eslint/naming-convention
+      Body: data,
+    });
+
+    try {
+      await this.s3Client.send(putObjectCommand);
+    } catch (error) {
+      const s3Error = error as Error;
+      this.logger.error({
+        msg: 'an error occurred during tile storing',
+        err: s3Error,
+        parent,
+        endpoint: this.config.endpoint,
+        bucketName: this.config.bucketName,
+        key: filePath,
+      });
+      throw new Error(`an error occurred during the put of key ${filePath} on bucket ${this.config.bucketName}, ${s3Error.message}`);
+    }
+
     this.logger.debug({
       msg: 'Done postFile',
       logContext,
       filePath,
-    });
-  }
-
-  private createS3Instance(config: S3Config): S3 {
-    return new S3({
-      endpoint: config.endpointUrl,
-      credentials: {
-        accessKeyId: config.accessKeyId,
-        secretAccessKey: config.secretAccessKey,
-      },
-      maxRetries: config.maxAttempts,
-      sslEnabled: config.sslEnabled,
-      s3ForcePathStyle: config.forcePathStyle,
-      signatureVersion: config.sigVersion,
     });
   }
 }
