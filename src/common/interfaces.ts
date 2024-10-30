@@ -13,7 +13,10 @@ export interface TaskParameters {
   lastIndexError: number;
 }
 
-export interface MandatoryS3ClientConfig extends S3ClientConfig {
+export interface S3Config extends S3ClientConfig {
+  kind: 's3';
+  bucketName: string;
+  storageClass?: StorageClass;
   endpoint: string;
   region: string;
   forcePathStyle: boolean;
@@ -22,18 +25,6 @@ export interface MandatoryS3ClientConfig extends S3ClientConfig {
     accessKeyId: string;
     secretAccessKey: string;
   };
-}
-
-export interface S3Config extends Omit<MandatoryS3ClientConfig, 'endpoint' | 'region' | 'forcePathStyle' | 'maxAttempts' | 'credentials'> {
-  kind: 's3';
-  bucketName: string;
-  storageClass?: StorageClass;
-}
-
-export interface S3Config extends S3ClientConfig {
-  kind: 's3';
-  bucketName: string;
-  storageClass?: StorageClass;
 }
 
 export interface NFSConfig {
