@@ -33,10 +33,10 @@ export class S3Provider implements Provider {
     });
 
     const getObjectCommand = new GetObjectCommand({
-      // eslint-disable-next-line @typescript-eslint/naming-convention
+      /* eslint-disable @typescript-eslint/naming-convention */
       Bucket: this.config.bucketName,
-      // eslint-disable-next-line @typescript-eslint/naming-convention
       Key: filePath,
+      /* eslint-disable @typescript-eslint/naming-convention */
     });
 
     try {
@@ -68,14 +68,12 @@ export class S3Provider implements Provider {
     });
 
     const putObjectCommand = new PutObjectCommand({
-      // eslint-disable-next-line @typescript-eslint/naming-convention
+      /* eslint-disable @typescript-eslint/naming-convention */
       Bucket: this.config.bucketName,
-      // eslint-disable-next-line @typescript-eslint/naming-convention
       StorageClass: this.config.storageClass,
-      // eslint-disable-next-line @typescript-eslint/naming-convention
       Key: filePath,
-      // eslint-disable-next-line @typescript-eslint/naming-convention
       Body: data,
+      /* eslint-enable @typescript-eslint/naming-convention */
     });
 
     try {
