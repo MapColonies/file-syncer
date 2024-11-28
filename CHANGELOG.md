@@ -2,6 +2,17 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+## [2.0.0](https://github.com/MapColonies/file-syncer/compare/v1.4.3...v2.0.0) (2024-11-28)
+
+
+### ⚠ BREAKING CHANGES
+
+* support new s3 client and config (#45)
+
+### Features
+
+* support new s3 client and config ([#45](https://github.com/MapColonies/file-syncer/issues/45)) ([7a475b2](https://github.com/MapColonies/file-syncer/commit/7a475b2673918fa5d2f5c80967947fd16ce88c13))
+
 ### [1.4.3](https://github.com/MapColonies/file-syncer/compare/v1.4.2...v1.4.3) (2024-09-09)
 
 ### [1.4.2](https://github.com/MapColonies/file-syncer/compare/v1.4.1...v1.4.2) (2024-09-04)
