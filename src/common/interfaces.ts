@@ -1,4 +1,4 @@
-import { S3 } from 'aws-sdk';
+import { S3ClientConfig, StorageClass } from '@aws-sdk/client-s3';
 import { NFSProvider } from '../providers/nfsProvider';
 import { S3Provider } from '../providers/s3Provider';
 
@@ -13,22 +13,22 @@ export interface TaskParameters {
   lastIndexError: number;
 }
 
-export interface S3Config {
-  type: 'S3';
-  accessKeyId: string;
-  secretAccessKey: string;
-  endpointUrl: string;
-  bucket: string;
+export interface S3Config extends S3ClientConfig {
+  kind: 's3';
+  bucketName: string;
+  storageClass?: StorageClass;
+  endpoint: string;
   region: string;
-  sslEnabled: boolean;
   forcePathStyle: boolean;
   maxAttempts: number;
-  sigVersion: string;
-  storageClass?: S3.StorageClass;
+  credentials: {
+    accessKeyId: string;
+    secretAccessKey: string;
+  };
 }
 
 export interface NFSConfig {
-  type: 'NFS';
+  kind: 'NFS';
   pvPath: string;
 }
 
