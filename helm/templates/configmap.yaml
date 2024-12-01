@@ -29,8 +29,8 @@ data:
   FILE_SYNCER_TASK_POOL_SIZE: {{ .Values.env.taskPoolSize | quote }}
   {{ if eq $providers.source "S3" }}
   {{- $S3Source := (include "merged.S3.source" . ) | fromYaml }}
-  S3_SOURCE_ACCESS_KEY_ID: {{ $S3Source.credentials.accessKey | quote }}
-  S3_SOURCE_SECRET_ACCESS_KEY: {{ $S3Source.credentials.secretAccessKey | quote }}
+  S3_SOURCE_ACCESS_KEY_ID: {{ $S3Source.accessKey | quote }}
+  S3_SOURCE_SECRET_ACCESS_KEY: {{ $S3Source.secretAccessKey | quote }}
   S3_SOURCE_END_POINT_URL: {{ $S3Source.endpoint | quote }}
   S3_SOURCE_BUCKET: {{ $S3Source.bucket | quote }}
   S3_SOURCE_REGION: {{ $S3Source.region | quote }}
@@ -44,8 +44,8 @@ data:
   {{ end }}
   {{ if eq $providers.destination "S3" }}
   {{- $S3Destination := (include "merged.S3.destination" . ) | fromYaml }}
-  S3_DEST_ACCESS_KEY_ID: {{ $S3Destination.credentials.accessKey | quote }}
-  S3_DEST_SECRET_ACCESS_KEY: {{ $S3Destination.credentials.secretAccessKey | quote }}
+  S3_DEST_ACCESS_KEY_ID: {{ $S3Destination.accessKey | quote }}
+  S3_DEST_SECRET_ACCESS_KEY: {{ $S3Destination.secretAccessKey | quote }}
   S3_DEST_END_POINT_URL: {{ $S3Destination.endpoint | quote }}
   S3_DEST_BUCKET: {{ $S3Destination.bucket | quote }}
   S3_DEST_REGION: {{ $S3Destination.region | quote }}

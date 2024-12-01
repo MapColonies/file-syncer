@@ -1,9 +1,28 @@
+cloudProvider:
+    dockerRegistryUrl: ''
+    flavor: ''
+    imagePullSecretName: ''
+imagePullPolicy: 'Always'
+environment: ''
+
+podAnnotations: {}
+
+S3:
+    accessKey: ''
+    secretAccessKey: ''
+    endpoint: ''
+    bucket: ''
+    region: ''
+    style: ''
+    maxAttempts: 
+    storageClass: ''
+
 global:
   cloudProvider:
-    dockerRegistryUrl: 
+    dockerRegistryUrl: ''
     flavor: openshift
-    imagePullSecretName: 
-  imagePullPolicy: IfNotPresent
+    imagePullSecretName: ''
+  imagePullPolicy: Always
 
   ca:
     enabled: false
