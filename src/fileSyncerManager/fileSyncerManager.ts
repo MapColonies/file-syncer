@@ -145,7 +145,6 @@ export class FileSyncerManager {
     while (taskResult.index < taskParameters.paths.length) {
       const filePath = taskParameters.paths[taskResult.index];
       try {
-        throw new Error('Bad Input');
         await this.syncFile(filePath, taskParameters);
       } catch (err) {
         this.logger.error({
