@@ -43,16 +43,16 @@ export class S3Provider implements Provider {
       const response = await this.s3Client.send(getObjectCommand);
       const responseArray = await response.Body?.transformToByteArray();
       return Buffer.from(responseArray as Uint8Array);
-    } catch (error) {
-      const s3Error = error as Error;
+    } catch (err) {
       this.logger.error({
         msg: 'an error occurred during getting file',
-        err: s3Error,
+        err,
         parent,
         endpoint: this.config.endpoint,
         bucketName: this.config.bucketName,
         key: filePath,
       });
+      const s3Error = err as Error;
       throw new Error(`an error occurred during the get key ${filePath} on bucket ${this.config.bucketName}, ${s3Error.message}`);
     }
   }
@@ -78,16 +78,16 @@ export class S3Provider implements Provider {
 
     try {
       await this.s3Client.send(putObjectCommand);
-    } catch (error) {
-      const s3Error = error as Error;
+    } catch (err) {
       this.logger.error({
         msg: 'an error occurred during tile storing',
-        err: s3Error,
+        err,
         parent,
         endpoint: this.config.endpoint,
         bucketName: this.config.bucketName,
         key: filePath,
       });
+      const s3Error = err as Error;
       throw new Error(`an error occurred during the put of key ${filePath} on bucket ${this.config.bucketName}, ${s3Error.message}`);
     }
 

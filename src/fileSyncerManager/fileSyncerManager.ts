@@ -122,9 +122,9 @@ export class FileSyncerManager {
         logContext,
         task: task.id,
       });
-    } catch (error) {
+    } catch (err) {
       this.logger.error({
-        error,
+        err,
         logContext,
         taskId: task.id,
         modelId: task.parameters.modelId,
@@ -145,16 +145,17 @@ export class FileSyncerManager {
     while (taskResult.index < taskParameters.paths.length) {
       const filePath = taskParameters.paths[taskResult.index];
       try {
+        throw new Error('Bad Input');
         await this.syncFile(filePath, taskParameters);
-      } catch (error) {
+      } catch (err) {
         this.logger.error({
           msg: 'failed to handle task',
-          error,
+          err,
           logContext,
           taskId: task.id,
           modelId: task.parameters.modelId,
         });
-        taskResult.error = error instanceof Error ? error : new Error(String(error));
+        taskResult.error = err instanceof Error ? err : new Error(String(err));
         await this.handleFailedTask(task, taskResult);
         return taskResult;
       }

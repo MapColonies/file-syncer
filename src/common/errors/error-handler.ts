@@ -21,16 +21,18 @@ class ErrorHandler {
 
   public listenToErrorEvents(): void {
     const logContext = { ...this.logContext, function: this.listenToErrorEvents.name };
-    process.on('uncaughtException', (error: Error) => {
+    process.on('uncaughtException', (err: Error) => {
       this.logger.error({
-        msg: error.message,
+        msg: err.message,
+        err,
         logContext,
       });
     });
 
-    process.on('unhandledRejection', (reason: Error) => {
+    process.on('unhandledRejection', (err: Error) => {
       this.logger.error({
-        msg: reason.message,
+        msg: err.message,
+        err,
         logContext,
       });
     });
@@ -65,11 +67,11 @@ class ErrorHandler {
     response.status(responseStatusCode).json({ message: error.message });
   }
 
-  private handleCriticalError(error: Error | AppError, response?: AppErrorResponse): void {
+  private handleCriticalError(err: Error | AppError, response?: AppErrorResponse): void {
     const logContext = { ...this.logContext, function: this.handleCriticalError.name };
     this.logger.error({
-      msg: error.message,
-      metadata: error,
+      msg: err.message,
+      err,
       logContext,
     });
     if (response !== undefined) {
@@ -77,9 +79,9 @@ class ErrorHandler {
     }
   }
 
-  private isTrustedError(error: Error | AppError): boolean {
-    if (error instanceof AppError) {
-      return error.isTrusted;
+  private isTrustedError(err: Error | AppError): boolean {
+    if (err instanceof AppError) {
+      return err.isTrusted;
     }
     return false;
   }
