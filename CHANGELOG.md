@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [2.0.3](https://github.com/MapColonies/file-syncer/compare/v2.0.2...v2.0.3) (2024-12-16)
+
+
+### Bug Fixes
+
+* fix s3 provider ([#48](https://github.com/MapColonies/file-syncer/issues/48)) ([8fc38fe](https://github.com/MapColonies/file-syncer/commit/8fc38fe2c5775fefe7246d835e026459c78c8fcd))
+
 ### [2.0.2](https://github.com/MapColonies/file-syncer/compare/v2.0.1...v2.0.2) (2024-12-03)
 
 ### [2.0.1](https://github.com/MapColonies/file-syncer/compare/v2.0.0...v2.0.1) (2024-12-01)
