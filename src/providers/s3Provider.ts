@@ -47,7 +47,6 @@ export class S3Provider implements Provider {
       this.logger.error({
         msg: 'an error occurred during getting file',
         err,
-        parent,
         endpoint: this.config.endpoint,
         bucketName: this.config.bucketName,
         key: filePath,
@@ -82,7 +81,6 @@ export class S3Provider implements Provider {
       this.logger.error({
         msg: 'an error occurred during tile storing',
         err,
-        parent,
         endpoint: this.config.endpoint,
         bucketName: this.config.bucketName,
         key: filePath,
