@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [2.0.4](https://github.com/MapColonies/file-syncer/compare/v2.0.3...v2.0.4) (2024-12-17)
+
+
+### Bug Fixes
+
+* fix S3 client config parametr bug when using s3client and audit fix ([#49](https://github.com/MapColonies/file-syncer/issues/49)) ([8c825c4](https://github.com/MapColonies/file-syncer/commit/8c825c41471ff622b4d2db40967bfbbeb6f5f81b))
+
 ### [2.0.3](https://github.com/MapColonies/file-syncer/compare/v2.0.2...v2.0.3) (2024-12-16)
 
 
