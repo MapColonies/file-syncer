@@ -20,9 +20,9 @@ function getProvider(logger: Logger, tracer: Tracer, config: ProviderConfig): S3
         accessKeyId: clientConfig.credentials.accessKeyId,
         secretAccessKey: clientConfig.credentials.secretAccessKey,
       },
-    }
+    };
     const s3Client = new S3Client(s3ClientConfig);
-    const fullS3ClientConfig = {...s3ClientConfig, bucketName: clientConfig.bucketName, storageClass: clientConfig.storageClass}
+    const fullS3ClientConfig = { ...s3ClientConfig, bucketName: clientConfig.bucketName, storageClass: clientConfig.storageClass };
     return new S3Provider(s3Client, logger, tracer, fullS3ClientConfig as S3Config);
   } else if (config.kind.toLowerCase() === nfsProviderName) {
     return new NFSProvider(logger, tracer, config as NFSConfig);
