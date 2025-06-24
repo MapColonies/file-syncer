@@ -19,6 +19,7 @@
     "start": "npm run build && cd dist && node ./index.js",
     "assets:copy": "copyfiles -f ./config/* ./dist/config && copyfiles ./package.json dist",
     "clean": "rimraf dist reports coverage",
+    "fakeS3": "docker-compose up -d",
     "install": "npx husky install"
   },
   "directories": {

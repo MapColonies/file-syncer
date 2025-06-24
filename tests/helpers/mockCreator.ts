@@ -1,6 +1,6 @@
 import { ITaskResponse, OperationStatus } from '@map-colonies/mc-priority-queue';
 import { faker } from '@faker-js/faker';
-import { NFSConfig, ProviderConfig, ProvidersConfig, S3Config, TaskParameters } from '../../src/common/interfaces';
+import { NFSConfig, ProviderConfig, ProvidersConfig, S3Config, IngestionTaskParameters, DeleteTaskParameters } from '../../src/common/interfaces';
 
 const fakeNFSConfig = (name: string): NFSConfig => {
   return { kind: 'NFS', pvPath: `./tests/helpers/${name}` };
@@ -40,7 +40,7 @@ const FakeProvider = (provider: string, name: string): ProviderConfig => {
   }
 };
 
-export const createTask = (modelId?: string, paths?: string[]): ITaskResponse<TaskParameters> => {
+export const createIngestionTask = (modelId?: string, paths?: string[]): ITaskResponse<IngestionTaskParameters> => {
   return {
     id: faker.string.uuid(),
     jobId: faker.string.uuid(),
@@ -56,7 +56,26 @@ export const createTask = (modelId?: string, paths?: string[]): ITaskResponse<Ta
   };
 };
 
-export const createTaskParameters = (modelId?: string, paths?: string[]): TaskParameters => {
+export const createDeleteTask = (modelId?: string): ITaskResponse<DeleteTaskParameters> => {
+  return {
+    id: faker.string.uuid(),
+    jobId: faker.string.uuid(),
+    description: faker.word.sample(),
+    parameters: {
+      modelId: modelId!,
+      modelFolderId: modelId!,
+    },
+    created: '2020',
+    updated: '2022',
+    type: 'ingestion',
+    status: OperationStatus.IN_PROGRESS,
+    reason: faker.word.sample(),
+    attempts: 0,
+    resettable: true,
+  };
+};
+
+export const createTaskParameters = (modelId?: string, paths?: string[]): IngestionTaskParameters => {
   return {
     paths: paths ? paths : [faker.word.sample(), faker.word.sample()],
     modelId: modelId ?? faker.string.uuid(),
@@ -80,6 +99,7 @@ export const providerManagerMock = {
   },
   dest: {
     postFile: jest.fn(),
+    deleteFolder: jest.fn(),
   },
 };
 

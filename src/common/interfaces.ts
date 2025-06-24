@@ -7,10 +7,15 @@ export interface IConfig {
   has: (setting: string) => boolean;
 }
 
-export interface TaskParameters {
+export interface IngestionTaskParameters {
   paths: string[];
   modelId: string;
   lastIndexError: number;
+}
+
+export interface DeleteTaskParameters {
+  modelId: string;
+  modelFolderId: string;
 }
 
 export interface S3Config extends S3ClientConfig {
@@ -51,6 +56,7 @@ export interface ProviderMap {
 export interface Provider {
   getFile: (fileName: string) => Promise<Buffer>;
   postFile: (fileName: string, data: Buffer) => Promise<void>;
+  deleteFolder: (folderPath: string) => Promise<void>;
 }
 
 export interface TaskResult {

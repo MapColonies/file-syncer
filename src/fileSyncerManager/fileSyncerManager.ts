@@ -6,8 +6,8 @@ import { inject, injectable } from 'tsyringe';
 import { withSpanAsyncV4 } from '@map-colonies/telemetry';
 import { Tracer, trace } from '@opentelemetry/api';
 import { INFRA_CONVENTIONS, THREE_D_CONVENTIONS } from '@map-colonies/telemetry/conventions';
-import { JOB_TYPE, SERVICES } from '../common/constants';
-import { LogContext, ProviderManager, TaskParameters, TaskResult } from '../common/interfaces';
+import { DELETE_JOB_TYPE, DELETE_TASK_TYPE, INGESTION_JOB_TYPE, INGESTION_TASK_TYPE, SERVICES } from '../common/constants';
+import { LogContext, ProviderManager, IngestionTaskParameters, TaskResult, DeleteTaskParameters } from '../common/interfaces';
 
 @injectable()
 export class FileSyncerManager {
@@ -15,7 +15,6 @@ export class FileSyncerManager {
   private readonly tasksHistogram?: client.Histogram<'type'>;
   private readonly tasksGauge?: client.Gauge<'type'>;
 
-  private readonly taskType: string;
   private readonly maxAttempts: number;
   private readonly taskPoolSize: number;
   private taskCounter: number;
@@ -29,7 +28,6 @@ export class FileSyncerManager {
     @inject(SERVICES.PROVIDER_MANAGER) private readonly providerManager: ProviderManager,
     @inject(SERVICES.METRICS_REGISTRY) registry?: client.Registry
   ) {
-    this.taskType = this.config.get<string>('jobManager.task.type');
     if (registry !== undefined) {
       this.tasksGauge = new client.Gauge({
         name: 'working_tasks',
@@ -37,7 +35,7 @@ export class FileSyncerManager {
         labelNames: ['type'] as const,
         registers: [registry],
       });
-      this.tasksGauge.set({ type: this.taskType }, 0);
+      this.tasksGauge.set({ type: INGESTION_TASK_TYPE }, 0);
 
       this.tasksHistogram = new client.Histogram({
         name: 'tasks_duration_seconds',
@@ -48,7 +46,7 @@ export class FileSyncerManager {
       });
     }
 
-    this.maxAttempts = this.config.get<number>('jobManager.task.maxAttempts');
+    this.maxAttempts = this.config.get<number>('jobManager.maxAttempts');
     this.taskPoolSize = this.config.get<number>('fileSyncer.taskPoolSize');
     this.taskCounter = 0;
 
@@ -59,27 +57,129 @@ export class FileSyncerManager {
   }
 
   @withSpanAsyncV4
-  public async start(task: ITaskResponse<TaskParameters>): Promise<void> {
-    const logContext = { ...this.logContext, function: this.start.name };
+  public async handleDeleteTask(): Promise<boolean> {
+    const logContext = { ...this.logContext, function: this.handleDeleteTask.name };
+    this.logger.debug({
+      msg: 'Try to dequeue new delete task',
+      logContext,
+    });
+
+    let task;
+    try {
+      task = await this.taskHandler.dequeue<DeleteTaskParameters>(DELETE_JOB_TYPE, DELETE_TASK_TYPE);
+      if (task == null) {
+        return false;
+      }
+    } catch (err) {
+      this.logger.error({
+        msg: 'failed to dequeue delete task',
+        err,
+        logContext,
+      });
+      return false;
+    }
+    const attempts = task.attempts;
+    const jobId = task.jobId;
+    const taskId = task.id;
+    const modelId = task.parameters.modelId;
+    const modelFolderId = task.parameters.modelFolderId;
+
+    if (attempts >= this.maxAttempts) {
+      this.logger.error(`failed to handle delete task - maxAttempts reached: ${this.maxAttempts}`);
+      await this.taskHandler.reject(jobId, taskId, false);
+      return false;
+    }
+
+    this.logger.info({
+      msg: 'Found a delete task to work on!',
+      logContext,
+      jobId,
+      taskId,
+      modelId,
+      modelFolderId,
+    });
+
+    try {
+      await this.providerManager.dest.deleteFolder(modelFolderId);
+      await this.taskHandler.ack(jobId, taskId);
+    } catch (err) {
+      this.logger.error({
+        msg: 'failed to handle delete task',
+        err,
+        logContext,
+        jobId,
+        taskId,
+        modelId,
+        modelFolderId,
+      });
+      const error = err as Error;
+      //eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
+      const reason = error != undefined ? error.message : `Failed to delete folder`;
+      await this.taskHandler.reject(jobId, taskId, true, reason);
+    }
+
+    this.logger.info({
+      msg: 'Delete task finished',
+      logContext,
+      jobId,
+      taskId,
+      modelId,
+      modelFolderId,
+    });
+    return true;
+  }
+
+  @withSpanAsyncV4
+  public async handleIngestionTask(): Promise<boolean> {
+    if (this.taskCounter >= this.taskPoolSize) {
+      return false;
+    }
+
+    const logContext = { ...this.logContext, function: this.handleIngestionTask.name };
+
+    this.logger.debug({
+      msg: 'Try to dequeue new ingestion task',
+      logContext,
+    });
+    const task = await this.taskHandler.dequeue<IngestionTaskParameters>(INGESTION_JOB_TYPE, INGESTION_TASK_TYPE);
+    if (!task) {
+      return false;
+    }
+
+    this.logger.info({
+      msg: 'Found a ingestion task to work on!',
+      logContext,
+      task: task.id,
+      modelId: task.parameters.modelId,
+    });
+    this.taskCounter++;
+    this.tasksGauge?.inc({ type: INGESTION_TASK_TYPE });
+    await this.startIngestionTask(task);
+    return true;
+  }
+
+  @withSpanAsyncV4
+  private async startIngestionTask(task: ITaskResponse<IngestionTaskParameters>): Promise<void> {
+    const logContext = { ...this.logContext, function: this.startIngestionTask.name };
     const spanActive = trace.getActiveSpan();
     spanActive?.setAttributes({
       [INFRA_CONVENTIONS.infra.jobManagement.taskId]: task.id,
       [INFRA_CONVENTIONS.infra.jobManagement.jobId]: task.jobId,
-      [INFRA_CONVENTIONS.infra.jobManagement.taskType]: this.taskType,
+      [INFRA_CONVENTIONS.infra.jobManagement.taskType]: INGESTION_TASK_TYPE,
       [THREE_D_CONVENTIONS.three_d.catalogManager.catalogId]: task.parameters.modelId,
     });
 
-    const workingTaskTimerEnd = this.tasksHistogram?.startTimer({ type: this.taskType });
+    const workingTaskTimerEnd = this.tasksHistogram?.startTimer({ type: INGESTION_TASK_TYPE });
     const taskResult = await this.handleTask(task);
     if (taskResult.completed) {
-      await this.taskHandler.ack<IUpdateTaskBody<TaskParameters>>(task.jobId, task.id);
+      await this.taskHandler.ack<IUpdateTaskBody<IngestionTaskParameters>>(task.jobId, task.id);
       this.logger.info({
         msg: 'Finished ack task',
         logContext,
         task: task.id,
         modelId: task.parameters.modelId,
       });
-      await this.deleteTaskParameters(task);
+      await this.deleteIngestionTaskParameters(task);
       this.logger.info({
         msg: `Deleted task's parameters successfully`,
         logContext,
@@ -92,7 +192,7 @@ export class FileSyncerManager {
     }
 
     this.taskCounter--;
-    this.tasksGauge?.dec({ type: this.taskType });
+    this.tasksGauge?.dec({ type: INGESTION_TASK_TYPE });
     this.logger.info({
       msg: 'Done working on a task in this interval',
       logContext,
@@ -103,7 +203,7 @@ export class FileSyncerManager {
   }
 
   @withSpanAsyncV4
-  private async deleteTaskParameters(task: ITaskResponse<TaskParameters>): Promise<void> {
+  private async deleteIngestionTaskParameters(task: ITaskResponse<IngestionTaskParameters>): Promise<void> {
     const parameters = task.parameters;
     await this.taskHandler.jobManagerClient.updateTask(task.jobId, task.id, {
       parameters: { modelId: parameters.modelId, lastIndexError: parameters.lastIndexError },
@@ -111,8 +211,8 @@ export class FileSyncerManager {
   }
 
   @withSpanAsyncV4
-  private async handleFailedTask(task: ITaskResponse<TaskParameters>, taskResult: TaskResult): Promise<void> {
-    const logContext = { ...this.logContext, function: this.handleFailedTask.name };
+  private async handleFailedIngestionTask(task: ITaskResponse<IngestionTaskParameters>, taskResult: TaskResult): Promise<void> {
+    const logContext = { ...this.logContext, function: this.handleFailedIngestionTask.name };
     try {
       await this.updateIndexError(task, taskResult.index);
       // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
@@ -133,10 +233,10 @@ export class FileSyncerManager {
   }
 
   @withSpanAsyncV4
-  private async handleTask(task: ITaskResponse<TaskParameters>): Promise<TaskResult> {
+  private async handleTask(task: ITaskResponse<IngestionTaskParameters>): Promise<TaskResult> {
     const logContext = { ...this.logContext, function: this.handleTask.name };
     this.logger.debug({
-      msg: 'Starting handleTask',
+      msg: 'Starting handleTask ingestion',
       logContext,
       taskId: task.id,
     });
@@ -148,14 +248,14 @@ export class FileSyncerManager {
         await this.syncFile(filePath, taskParameters);
       } catch (err) {
         this.logger.error({
-          msg: 'failed to handle task',
+          msg: 'failed to handle ingestion task',
           err,
           logContext,
           taskId: task.id,
           modelId: task.parameters.modelId,
         });
         taskResult.error = err instanceof Error ? err : new Error(String(err));
-        await this.handleFailedTask(task, taskResult);
+        await this.handleFailedIngestionTask(task, taskResult);
         return taskResult;
       }
 
@@ -167,52 +267,25 @@ export class FileSyncerManager {
   }
 
   @withSpanAsyncV4
-  private async syncFile(filePath: string, taskParameters: TaskParameters): Promise<void> {
+  private async syncFile(filePath: string, taskParameters: IngestionTaskParameters): Promise<void> {
     const data = await this.providerManager.source.getFile(filePath);
     const newModelName = this.changeModelName(filePath, taskParameters.modelId);
     await this.providerManager.dest.postFile(newModelName, data);
   }
 
   @withSpanAsyncV4
-  private async rejectJobManager(error: Error, task: ITaskResponse<TaskParameters>): Promise<void> {
+  private async rejectJobManager(error: Error, task: ITaskResponse<IngestionTaskParameters>): Promise<void> {
     const reason = `${error.name}: ${error.message}`;
     const isRecoverable: boolean = task.attempts < this.maxAttempts;
-    await this.taskHandler.reject<IUpdateTaskBody<TaskParameters>>(task.jobId, task.id, isRecoverable, reason);
+    await this.taskHandler.reject<IUpdateTaskBody<IngestionTaskParameters>>(task.jobId, task.id, isRecoverable, reason);
   }
 
   @withSpanAsyncV4
-  private async updateIndexError(task: ITaskResponse<TaskParameters>, lastIndexError: number): Promise<void> {
-    const payload: IUpdateTaskBody<TaskParameters> = {
+  private async updateIndexError(task: ITaskResponse<IngestionTaskParameters>, lastIndexError: number): Promise<void> {
+    const payload: IUpdateTaskBody<IngestionTaskParameters> = {
       parameters: { ...task.parameters, lastIndexError },
     };
-    await this.taskHandler.jobManagerClient.updateTask<TaskParameters>(task.jobId, task.id, payload);
-  }
-
-  public async fetch(): Promise<void> {
-    if (this.taskCounter >= this.taskPoolSize) {
-      return;
-    }
-
-    const logContext = { ...this.logContext, function: this.fetch.name };
-
-    this.logger.debug({
-      msg: 'Try to dequeue new task',
-      logContext,
-    });
-    const task = await this.taskHandler.dequeue<TaskParameters>(JOB_TYPE, this.taskType);
-    if (!task) {
-      return;
-    }
-
-    this.logger.info({
-      msg: 'Found a task to work on!',
-      logContext,
-      task: task.id,
-      modelId: task.parameters.modelId,
-    });
-    this.taskCounter++;
-    this.tasksGauge?.inc({ type: this.taskType });
-    await this.start(task);
+    await this.taskHandler.jobManagerClient.updateTask<IngestionTaskParameters>(task.jobId, task.id, payload);
   }
 
   private changeModelName(oldName: string, newName: string): string {
@@ -221,7 +294,7 @@ export class FileSyncerManager {
     return nameSplitted.join('/');
   }
 
-  private initTaskResult(taskParameters: TaskParameters): TaskResult {
+  private initTaskResult(taskParameters: IngestionTaskParameters): TaskResult {
     // eslint-disable-next-line @typescript-eslint/no-magic-numbers
     const startPosition = taskParameters.lastIndexError === -1 ? 0 : taskParameters.lastIndexError;
     const taskResult: TaskResult = { index: startPosition, completed: false };

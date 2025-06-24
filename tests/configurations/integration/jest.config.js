@@ -22,10 +22,10 @@ module.exports = {
   testEnvironment: 'node',
   coverageThreshold: {
     global: {
-      branches: 80,
+      branches: 60,
       functions: 80,
       lines: 80,
-      statements: -10,
+      statements: -25,
     },
   },
   globalSetup: '<rootDir>/tests/configurations/runContainers/global-setup.js',

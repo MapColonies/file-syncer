@@ -59,4 +59,22 @@ export class NFSProvider implements Provider {
       fullPath,
     });
   }
+
+  @withSpanAsyncV4
+  public async deleteFolder(folderPath: string): Promise<void> {
+    const logContext = { ...this.logContext, function: this.deleteFolder.name };
+    const pvPath = this.config.pvPath;
+    const fullPath = path.join(pvPath, folderPath);
+    this.logger.debug({
+      msg: 'Starting delete folder',
+      logContext,
+      fullPath,
+    });
+    await fs.promises.rmdir(fullPath, { recursive: true });
+    this.logger.debug({
+      msg: 'Done delete folder',
+      logContext,
+      fullPath,
+    });
+  }
 }

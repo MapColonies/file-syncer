@@ -45,6 +45,8 @@ describe('S3Provider', () => {
     await s3HelperSource.terminate();
     await s3HelperDest.terminate();
     jest.clearAllMocks();
+    jest.resetAllMocks();
+    jest.restoreAllMocks();
   });
 
   describe('getFile', () => {
@@ -79,6 +81,19 @@ describe('S3Provider', () => {
       const result = await s3HelperDest.readFile(mockS3tS3.dest.bucketName, `${model}/${file}`);
 
       expect(result).toStrictEqual(data);
+    });
+  });
+
+  describe('Delete Folder', () => {
+    it('When calling DeleteFolder, we should remove the folder and its content from destination pv path', async () => {
+      const model = faker.word.sample();
+      const file = `${faker.word.sample()}.${faker.system.commonFileExt()}`;
+      await s3HelperDest.createFileOfModel(model, file);
+      let response = await s3HelperDest.readFile(mockS3tS3.dest.bucketName, `${model}/${file}`);
+      expect(response).toBeDefined();
+      await providerManager.dest.deleteFolder(model);
+      response = await s3HelperDest.readFile(mockS3tS3.dest.bucketName, `${model}/${file}`);
+      expect(response).toBeUndefined();
     });
   });
 });

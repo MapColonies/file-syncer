@@ -21,9 +21,9 @@ export interface RegisterOptions {
 export const registerExternalValues = (options?: RegisterOptions): DependencyContainer => {
   const providerConfiguration = config.get<ProvidersConfig>('provider');
   const jobManagerBaseUrl = config.get<string>('jobManager.url');
-  const heartbeatUrl = config.get<string>('heartbeat.url');
-  const dequeueIntervalMs = config.get<number>('jobManager.task.pollingIntervalTime');
-  const heartbeatIntervalMs = config.get<number>('heartbeat.pingingIntervalTime');
+  const heartbeatUrl = config.get<string>('jobManager.heartbeat.url');
+  const dequeueIntervalMs = config.get<number>('jobManager.pollingIntervalTime');
+  const heartbeatIntervalMs = config.get<number>('jobManager.heartbeat.pingingIntervalTime');
   const loggerConfig = config.get<LoggerOptions>('telemetry.logger');
   const logger = jsLogger({ ...loggerConfig, prettyPrint: loggerConfig.prettyPrint, mixin: getOtelMixin() });
 

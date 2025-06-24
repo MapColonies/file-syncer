@@ -74,15 +74,17 @@ global:
 
   jobManager:
     url: ''
-    job:
-      type: ''
-    task:
-      type: ''
-      pollingIntervalTime: 
-      maxAttempts: 
+    ingestion:
+      jobType: ''
+      taskType: ''
+    delete:
+      jobType: ''
+      taskType: ''
     heartbeat:
       url: ''
       pingingIntervalTime: 
+    pollingIntervalTime: 
+    maxAttempts: 
 
 replicaCount: 1
 revisionHistoryLimit: 5 # Amount of revisions we keep

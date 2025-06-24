@@ -19,18 +19,20 @@
   },
   "jobManager": {
     "url": "http://127.0.0.1:8080",
-    "job": {
-      "type": "Ingestion_New_3D"
+    "ingestion": {
+      "jobType": "Ingestion_New_3D",
+      "taskType": "tilesCopying"
     },
-    "task": {
-      "type": "tilesCopying",
-      "pollingIntervalTime": 5000,
-      "maxAttempts": 3
-    }
-  },
-  "heartbeat": {
-    "url": "http://127.0.0.1:8080",
-    "pingingIntervalTime": 3000
+    "delete": {
+      "jobType": "Delete_3D",
+      "taskType": "deleteModel"
+    },
+    "heartbeat": {
+      "url": "http://127.0.0.1:8080",
+      "pingingIntervalTime": 3000
+    },
+    "pollingIntervalTime": 5000,
+    "maxAttempts": 3
   },
   "provider": {
     "source": {
@@ -40,11 +42,11 @@
     "dest": {
       "kind": "s3",
       "credentials": {
-        "accessKeyId": "accessKeyId",
-        "secretAccessKey": "secret"
+        "accessKeyId": "minioadmin",
+        "secretAccessKey": "minioadmin"
       },
-      "endpoint": "http://s3-domain/",
-      "bucketName": "3dtiles",
+      "endpoint": "http://127.0.0.1:9000/",
+      "bucketName": "testaaa",
       "region": "region",
       "forcePathStyle": true,
       "maxAttempts": 3,
@@ -52,7 +54,7 @@
     }
   },
   "fileSyncer": {
-    "intervalMs": 5000,
+    "intervalMs": 15000,
     "taskPoolSize": 1
   }
 }

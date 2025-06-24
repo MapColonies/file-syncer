@@ -1,3 +1,4 @@
+import { setTimeout as setTimeoutPromise } from 'timers/promises';
 import { Logger } from '@map-colonies/js-logger';
 import { inject, singleton } from 'tsyringe';
 import { IConfig } from 'config';
@@ -40,7 +41,7 @@ export class App {
     };
   }
 
-  public run(): void {
+  public async run(): Promise<void> {
     const logContext = { ...this.logContext, function: this.run.name };
     this.logger.info({
       msg: 'Starting fileSyncer',
@@ -54,11 +55,27 @@ export class App {
       });
     });
 
-    setInterval(() => {
-      void (async (): Promise<void> => {
-        await this.fileSyncerManager.fetch();
-      })();
-    }, this.intervalMs);
+    await this.mainLoop();
+  }
+
+  public async mainLoop(): Promise<void> {
+    const isRunning = true;
+    //eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
+    while (isRunning) {
+      try {
+        const ingestionTaskProcessed = await this.fileSyncerManager.handleIngestionTask();
+        let deleteTaskProcessed = false;
+        if (!ingestionTaskProcessed) {
+          deleteTaskProcessed = await this.fileSyncerManager.handleDeleteTask();
+        }
+        if (!(ingestionTaskProcessed || deleteTaskProcessed)) {
+          await setTimeoutPromise(this.intervalMs);
+        }
+      } catch (error) {
+        this.logger.error(`mainLoop: Error: ${JSON.stringify(error, Object.getOwnPropertyNames(error))}`);
+        await setTimeoutPromise(this.intervalMs);
+      }
+    }
   }
 }
 
