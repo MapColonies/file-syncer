@@ -82,7 +82,6 @@ export class FileSyncerManager {
     const jobId = task.jobId;
     const taskId = task.id;
     const modelId = task.parameters.modelId;
-    const modelFolderId = task.parameters.modelFolderId;
 
     if (attempts >= this.maxAttempts) {
       this.logger.error(`failed to handle delete task - maxAttempts reached: ${this.maxAttempts}`);
@@ -96,11 +95,10 @@ export class FileSyncerManager {
       jobId,
       taskId,
       modelId,
-      modelFolderId,
     });
 
     try {
-      await this.providerManager.dest.deleteFolder(modelFolderId);
+      await this.providerManager.dest.deleteFolder(modelId);
       await this.taskHandler.ack(jobId, taskId);
     } catch (err) {
       this.logger.error({
@@ -110,7 +108,6 @@ export class FileSyncerManager {
         jobId,
         taskId,
         modelId,
-        modelFolderId,
       });
       const error = err as Error;
       //eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
@@ -124,7 +121,6 @@ export class FileSyncerManager {
       jobId,
       taskId,
       modelId,
-      modelFolderId,
     });
     return true;
   }

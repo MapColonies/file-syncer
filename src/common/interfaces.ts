@@ -15,7 +15,6 @@ export interface IngestionTaskParameters {
 
 export interface DeleteTaskParameters {
   modelId: string;
-  modelFolderId: string;
 }
 
 export interface S3Config extends S3ClientConfig {

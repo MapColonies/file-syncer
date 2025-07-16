@@ -63,7 +63,6 @@ export const createDeleteTask = (modelId?: string): ITaskResponse<DeleteTaskPara
     description: faker.word.sample(),
     parameters: {
       modelId: modelId!,
-      modelFolderId: modelId!,
     },
     created: '2020',
     updated: '2022',
