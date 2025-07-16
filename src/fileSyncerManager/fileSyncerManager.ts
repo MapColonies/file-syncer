@@ -57,6 +57,35 @@ export class FileSyncerManager {
   }
 
   @withSpanAsyncV4
+  public async handleIngestionTask(): Promise<boolean> {
+    if (this.taskCounter >= this.taskPoolSize) {
+      return false;
+    }
+
+    const logContext = { ...this.logContext, function: this.handleIngestionTask.name };
+
+    this.logger.debug({
+      msg: 'Try to dequeue new ingestion task',
+      logContext,
+    });
+    const task = await this.taskHandler.dequeue<IngestionTaskParameters>(INGESTION_JOB_TYPE, INGESTION_TASK_TYPE);
+    if (!task) {
+      return false;
+    }
+
+    this.logger.info({
+      msg: 'Found a ingestion task to work on!',
+      logContext,
+      task: task.id,
+      modelId: task.parameters.modelId,
+    });
+    this.taskCounter++;
+    this.tasksGauge?.inc({ type: INGESTION_TASK_TYPE });
+    await this.startIngestionTask(task);
+    return true;
+  }
+
+  @withSpanAsyncV4
   public async handleDeleteTask(): Promise<boolean> {
     const logContext = { ...this.logContext, function: this.handleDeleteTask.name };
     this.logger.debug({
@@ -125,35 +154,6 @@ export class FileSyncerManager {
       taskId,
       modelId,
     });
-    return true;
-  }
-
-  @withSpanAsyncV4
-  public async handleIngestionTask(): Promise<boolean> {
-    if (this.taskCounter >= this.taskPoolSize) {
-      return false;
-    }
-
-    const logContext = { ...this.logContext, function: this.handleIngestionTask.name };
-
-    this.logger.debug({
-      msg: 'Try to dequeue new ingestion task',
-      logContext,
-    });
-    const task = await this.taskHandler.dequeue<IngestionTaskParameters>(INGESTION_JOB_TYPE, INGESTION_TASK_TYPE);
-    if (!task) {
-      return false;
-    }
-
-    this.logger.info({
-      msg: 'Found a ingestion task to work on!',
-      logContext,
-      task: task.id,
-      modelId: task.parameters.modelId,
-    });
-    this.taskCounter++;
-    this.tasksGauge?.inc({ type: INGESTION_TASK_TYPE });
-    await this.startIngestionTask(task);
     return true;
   }
 
