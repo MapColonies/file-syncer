@@ -104,9 +104,10 @@ export class S3Provider implements Provider {
   public async deleteFolder(folderPath: string): Promise<void> {
     const logContext = { ...this.logContext, function: this.deleteFolder.name };
     this.logger.info({
-      msg: 'Starting delete folder',
+      msg: `Starting delete folder: bucketName ${this.config.bucketName}, Prefix ${folderPath}`,
       logContext,
       folderPath: folderPath,
+      bucketName: this.config.bucketName,
     });
 
     // --- 1. List all objects with the given prefix ---
@@ -169,6 +170,7 @@ export class S3Provider implements Provider {
             msg: `Successfully deleted ${deleteResponse.Deleted.length} objects.`,
             logContext,
             folderPath: folderPath,
+            bucketName: this.config.bucketName,
           });
         }
 
@@ -178,11 +180,14 @@ export class S3Provider implements Provider {
             msg: `Failed to delete ${deleteResponse.Errors.length} objects.`,
             logContext,
             folderPath: folderPath,
+            bucketName: this.config.bucketName,
           });
           this.logger.error({
             msg: `Failed to delete ${deleteResponse.Errors[0].Key} file.`,
             logContext,
             error: deleteResponse.Errors[0],
+            folderPath: folderPath,
+            bucketName: this.config.bucketName,
           });
           throw new Error(`an error occurred during the delete file of key ${deleteResponse.Errors[0].Key} on bucket ${this.config.bucketName}`);
         }
@@ -202,9 +207,10 @@ export class S3Provider implements Provider {
     } while (continuationToken != undefined);
 
     this.logger.info({
-      msg: 'Finished delete folder',
+      msg: `Finished delete folder from bucketName ${this.config.bucketName}, Prefix ${folderPath}`,
       logContext,
       folderPath: folderPath,
+      bucketName: this.config.bucketName,
     });
   }
 }

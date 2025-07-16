@@ -135,5 +135,18 @@ describe('fileSyncerManager NFS to NFS', () => {
       expect(taskHandlerMock.reject).not.toHaveBeenCalled();
       expect(response).toBeTruthy();
     });
+
+    it(`Delete Task: delete unexisting folder`, async () => {
+      const model = faker.word.sample();
+      const task = createDeleteTask(model);
+      taskHandlerMock.dequeue.mockResolvedValue(task);
+      taskHandlerMock.ack.mockResolvedValue(null);
+
+      const response = await fileSyncerManager.handleDeleteTask();
+
+      expect(taskHandlerMock.ack).toHaveBeenCalled();
+      expect(taskHandlerMock.reject).not.toHaveBeenCalled();
+      expect(response).toBeTruthy();
+    });
   });
 });

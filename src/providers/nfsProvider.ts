@@ -70,7 +70,15 @@ export class NFSProvider implements Provider {
       logContext,
       fullPath,
     });
-    await fs.promises.rmdir(fullPath, { recursive: true });
+    if (fs.existsSync(fullPath)) {
+      await fs.promises.rmdir(fullPath, { recursive: true });
+    } else {
+      this.logger.warn({
+        msg: `Tried to delete folder ${fullPath}, but it didn't exist`,
+        logContext,
+        fullPath,
+      });
+    }
     this.logger.debug({
       msg: 'Done delete folder',
       logContext,
