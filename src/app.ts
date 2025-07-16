@@ -71,8 +71,11 @@ export class App {
         if (!(ingestionTaskProcessed || deleteTaskProcessed)) {
           await setTimeoutPromise(this.intervalMs);
         }
-      } catch (error) {
-        this.logger.error(`mainLoop: Error: ${JSON.stringify(error, Object.getOwnPropertyNames(error))}`);
+      } catch (err) {
+        this.logger.error({
+          msg: `mainLoop: Error: ${JSON.stringify(err, Object.getOwnPropertyNames(err))}`,
+          err,
+        });
         await setTimeoutPromise(this.intervalMs);
       }
     }

@@ -84,7 +84,10 @@ export class FileSyncerManager {
     const modelId = task.parameters.modelId;
 
     if (attempts >= this.maxAttempts) {
-      this.logger.error(`failed to handle delete task - maxAttempts reached: ${this.maxAttempts}`);
+      this.logger.error({
+        msg: `failed to handle delete task - maxAttempts reached: ${this.maxAttempts}`,
+        logContext,
+      });
       await this.taskHandler.reject(jobId, taskId, false);
       return false;
     }
