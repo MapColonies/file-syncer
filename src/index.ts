@@ -8,7 +8,12 @@ function main(): void {
   errorHandler.listenToErrorEvents();
   const app = getApp();
 
-  app.run();
+  app
+    .run()
+    .then()
+    .catch((error) => {
+      console.error(error);
+    });
 }
 
 void main();

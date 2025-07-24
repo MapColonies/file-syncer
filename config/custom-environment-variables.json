@@ -32,25 +32,27 @@
   },
   "jobManager": {
     "url": "JOB_MANAGER_URL",
-    "job": {
-      "type": "JOB_TYPE"
+    "ingestion": {
+      "jobType": "JOB_INGESTION_TYPE",
+      "taskType": "TASK_INGESTION_TYPE"
     },
-    "task": {
-      "type": "TASK_TYPE",
-      "pollingIntervalTime": {
-        "__name": "TASK_POLLING_INTERVAL_TIME",
-        "__format": "number"
-      },
-      "maxAttempts": {
-        "__name": "TASK_MAX_ATTEMPTS",
+    "delete": {
+      "jobType": "JOB_DELETE_TYPE",
+      "taskType": "TASK_DELETE_TYPE"
+    },
+    "heartbeat": {
+      "url": "HEARTBEAT_URL",
+      "waitTime": {
+        "__name": "HEARTBEAT_PINGING_INTERVAL_TIME",
         "__format": "number"
       }
-    }
-  },
-  "heartbeat": {
-    "url": "HEARTBEAT_URL",
-    "waitTime": {
-      "__name": "HEARTBEAT_PINGING_INTERVAL_TIME",
+    },
+    "pollingIntervalTime": {
+      "__name": "TASK_POLLING_INTERVAL_TIME",
+      "__format": "number"
+    },
+    "maxAttempts": {
+      "__name": "TASK_MAX_ATTEMPTS",
       "__format": "number"
     }
   },

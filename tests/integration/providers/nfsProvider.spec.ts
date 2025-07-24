@@ -43,6 +43,8 @@ describe('NFSProvider', () => {
     await nfsHelperSource.cleanNFS();
     await nfsHelperDest.cleanNFS();
     jest.clearAllMocks();
+    jest.resetAllMocks();
+    jest.restoreAllMocks();
   });
 
   describe('getFile', () => {
@@ -69,6 +71,18 @@ describe('NFSProvider', () => {
       const resultFileContent = await nfsHelperDest.readFile(`${model}/${file}`);
 
       expect(resultFileContent).toStrictEqual(bufferedContent);
+    });
+  });
+
+  describe('Delete Folder', () => {
+    it('When calling DeleteFolder, we should remove the folder and its content from destination pv path', async () => {
+      const model = faker.word.sample();
+      const file = `${faker.word.sample()}.${faker.system.commonFileExt()}`;
+      await nfsHelperDest.createFileOfModel(model, file);
+
+      expect(nfsHelperDest.fileExists(model)).toBeTruthy();
+      await providerManager.dest.deleteFolder(model);
+      expect(nfsHelperDest.fileExists(model)).toBeFalsy();
     });
   });
 });

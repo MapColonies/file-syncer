@@ -1,4 +1,5 @@
 import fs from 'fs';
+import path from 'path';
 import { faker } from '@faker-js/faker';
 import { NFSConfig } from '../../src/common/interfaces';
 
@@ -18,6 +19,11 @@ export class NFSHelper {
 
   public async readFile(path: string): Promise<Buffer> {
     return fs.promises.readFile(`${this.config.pvPath}/${path}`);
+  }
+
+  public fileExists(filePath: string): boolean {
+    const fullPath = path.join(this.config.pvPath, filePath);
+    return fs.existsSync(fullPath);
   }
 
   public async cleanNFS(): Promise<void> {

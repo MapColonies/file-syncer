@@ -59,10 +59,12 @@ data:
   {{ end }}
   PROVIDER_FROM: {{ $providers.source | quote }}
   PROVIDER_TO: {{ $providers.destination | quote }}
-  JOB_TYPE: {{ $jobManager.job.type | quote }} 
-  TASK_TYPE: {{ $jobManager.task.type | quote }}
-  TASK_POLLING_INTERVAL_TIME: {{ $jobManager.task.pollingIntervalTime | quote }}
-  TASK_MAX_ATTEMPTS: {{ $jobManager.task.maxAttempts | quote }}
+  JOB_INGESTION_TYPE: {{ $jobManager.ingestion.jobType | quote }} 
+  TASK_INGESTION_TYPE: {{ $jobManager.ingestion.taskType | quote }}
+  JOB_DELETE_TYPE: {{ $jobManager.delete.jobType | quote }} 
+  TASK_DELETE_TYPE: {{ $jobManager.delete.taskType | quote }}
+  TASK_POLLING_INTERVAL_TIME: {{ $jobManager.pollingIntervalTime | quote }}
+  TASK_MAX_ATTEMPTS: {{ $jobManager.maxAttempts | quote }}
   JOB_MANAGER_URL: {{ $jobManager.url | quote }}
   HEARTBEAT_URL: {{ $jobManager.heartbeat.url | quote }}
   HEARTBEAT_PINGING_INTERVAL_TIME: {{ $jobManager.heartbeat.pingingIntervalTime | quote }}

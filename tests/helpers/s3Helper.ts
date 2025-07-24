@@ -90,7 +90,13 @@ export class S3Helper {
       Bucket: bucket,
       Key: key,
     });
-    const response = await this.s3.send(getObjectCommand);
+    let response;
+    try {
+      response = await this.s3.send(getObjectCommand);
+    } catch (err) {
+      return undefined;
+    }
+
     const responseArray = await response.Body?.transformToByteArray();
     return Buffer.from(responseArray as Uint8Array);
   }

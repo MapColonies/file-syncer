@@ -8,7 +8,7 @@ import { SERVICES } from '../../../src/common/constants';
 import { ProviderManager } from '../../../src/common/interfaces';
 import { FileSyncerManager } from '../../../src/fileSyncerManager/fileSyncerManager';
 import { getProviderManager } from '../../../src/providers/getProvider';
-import { createTask, mockNFStS3, taskHandlerMock } from '../../helpers/mockCreator';
+import { createDeleteTask, createIngestionTask, mockNFStS3, taskHandlerMock } from '../../helpers/mockCreator';
 import { NFSHelper } from '../../helpers/nfsHelper';
 import { S3Helper } from '../../helpers/s3Helper';
 
@@ -47,13 +47,15 @@ describe('fileSyncerManager NFS to S3', () => {
     await nfsHelperSource.cleanNFS();
     await s3HelperDest.terminate();
     jest.clearAllMocks();
+    jest.resetAllMocks();
+    jest.restoreAllMocks();
   });
 
   describe('start function', () => {
     it(`When didn't get task, should do nothing`, async () => {
       taskHandlerMock.dequeue.mockResolvedValue(null);
 
-      await fileSyncerManager.fetch();
+      await fileSyncerManager.handleIngestionTask();
 
       expect(taskHandlerMock.ack).not.toHaveBeenCalled();
       expect(taskHandlerMock.reject).not.toHaveBeenCalled();
@@ -67,9 +69,9 @@ describe('fileSyncerManager NFS to S3', () => {
       const fileContent = await nfsHelperSource.createFileOfModel(model, file2);
       const bufferedContent = Buffer.from(fileContent);
       const paths = [`${model}/${file1}`, `${model}/${file2}`];
-      taskHandlerMock.dequeue.mockResolvedValue(createTask(model, paths));
+      taskHandlerMock.dequeue.mockResolvedValueOnce(createIngestionTask(model, paths));
 
-      await fileSyncerManager.fetch();
+      await fileSyncerManager.handleIngestionTask();
       const result = await s3HelperDest.readFile(mockNFStS3.dest.bucketName, `${model}/${file2}`);
 
       expect(taskHandlerMock.ack).toHaveBeenCalled();
@@ -82,11 +84,11 @@ describe('fileSyncerManager NFS to S3', () => {
       const file2 = `${faker.word.sample()}.${faker.system.commonFileExt()}`;
       await nfsHelperSource.createFileOfModel(model, file1);
       const paths = [`${model}/${file1}`, `${model}/${file2}`];
-      const task = createTask(model, paths);
+      const task = createIngestionTask(model, paths);
       taskHandlerMock.dequeue.mockResolvedValue(task);
       taskHandlerMock.reject.mockResolvedValue(null);
 
-      await fileSyncerManager.fetch();
+      await fileSyncerManager.handleIngestionTask();
 
       expect(taskHandlerMock.ack).not.toHaveBeenCalled();
     });
@@ -97,13 +99,59 @@ describe('fileSyncerManager NFS to S3', () => {
       const file2 = `${faker.word.sample()}.${faker.system.commonFileExt()}`;
       await nfsHelperSource.createFileOfModel(model, file1);
       const paths = [`${model}/${file1}`, `${model}/${file2}`];
-      const task = createTask(model, paths);
+      const task = createIngestionTask(model, paths);
       taskHandlerMock.dequeue.mockResolvedValue(task);
       taskHandlerMock.reject.mockRejectedValue(new Error('error with job manager'));
 
-      await fileSyncerManager.fetch();
+      await fileSyncerManager.handleIngestionTask();
 
       expect(taskHandlerMock.ack).not.toHaveBeenCalled();
+    });
+  });
+
+  describe('start Delete function', () => {
+    it(`Delete Task: delete success`, async () => {
+      const model = faker.word.sample();
+      const file1 = `${faker.word.sample()}.${faker.system.commonFileExt()}`;
+      const file2 = `${faker.word.sample()}.${faker.system.commonFileExt()}`;
+      await s3HelperDest.createFileOfModel(model, file1);
+      await s3HelperDest.createFileOfModel(model, file2);
+      const task = createDeleteTask(model);
+      taskHandlerMock.dequeue.mockResolvedValue(task);
+      taskHandlerMock.ack.mockResolvedValue(null);
+
+      const response = await fileSyncerManager.handleDeleteTask();
+
+      expect(taskHandlerMock.ack).toHaveBeenCalled();
+      expect(taskHandlerMock.reject).not.toHaveBeenCalled();
+      expect(response).toBeTruthy();
+    });
+
+    it(`Delete Task: delete unexisting folder`, async () => {
+      const model = faker.word.sample();
+      const task = createDeleteTask(model);
+      taskHandlerMock.dequeue.mockResolvedValue(task);
+      taskHandlerMock.ack.mockResolvedValue(null);
+
+      const response = await fileSyncerManager.handleDeleteTask();
+
+      expect(taskHandlerMock.ack).toHaveBeenCalled();
+      expect(taskHandlerMock.reject).not.toHaveBeenCalled();
+      expect(response).toBeTruthy();
+    });
+
+    it(`Delete Task: reject on max attempts reached`, async () => {
+      const model = faker.word.sample();
+      const task = createDeleteTask(model);
+      task.attempts = 5;
+      taskHandlerMock.dequeue.mockResolvedValue(task);
+      taskHandlerMock.ack.mockResolvedValue(null);
+
+      const response = await fileSyncerManager.handleDeleteTask();
+
+      expect(taskHandlerMock.ack).not.toHaveBeenCalled();
+      expect(taskHandlerMock.reject).toHaveBeenCalled();
+      expect(response).toBeFalsy();
     });
   });
 });

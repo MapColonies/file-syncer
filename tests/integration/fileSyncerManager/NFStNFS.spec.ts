@@ -8,7 +8,7 @@ import { SERVICES } from '../../../src/common/constants';
 import { ProviderManager } from '../../../src/common/interfaces';
 import { FileSyncerManager } from '../../../src/fileSyncerManager/fileSyncerManager';
 import { getProviderManager } from '../../../src/providers/getProvider';
-import { createTask, mockNFStNFS, taskHandlerMock } from '../../helpers/mockCreator';
+import { createDeleteTask, createIngestionTask, mockNFStNFS, taskHandlerMock } from '../../helpers/mockCreator';
 import { NFSHelper } from '../../helpers/nfsHelper';
 
 describe('fileSyncerManager NFS to NFS', () => {
@@ -43,9 +43,11 @@ describe('fileSyncerManager NFS to NFS', () => {
     await nfsHelperSource.cleanNFS();
     await nfsHelperDest.cleanNFS();
     jest.clearAllMocks();
+    jest.resetAllMocks();
+    jest.restoreAllMocks();
   });
 
-  describe('start function', () => {
+  describe('start ingestion function', () => {
     it('When task counter is not smaller than pool size, it will not dequeue', async () => {
       fileSyncerManager['taskCounter'] = 10;
 
@@ -53,16 +55,16 @@ describe('fileSyncerManager NFS to NFS', () => {
         override: [{ token: SERVICES.FILE_SYNCER_MANAGER, provider: { useValue: fileSyncerManager } }],
       });
 
-      const response = await fileSyncerManager.fetch();
+      const response = await fileSyncerManager.handleIngestionTask();
 
-      expect(response).toBeUndefined();
+      expect(response).toBeFalsy();
       expect(taskHandlerMock.dequeue).not.toHaveBeenCalled();
     });
 
     it(`When didn't get task, should do nothing`, async () => {
       taskHandlerMock.dequeue.mockResolvedValue(null);
 
-      await fileSyncerManager.fetch();
+      await fileSyncerManager.handleIngestionTask();
 
       expect(taskHandlerMock.ack).not.toHaveBeenCalled();
       expect(taskHandlerMock.reject).not.toHaveBeenCalled();
@@ -76,9 +78,9 @@ describe('fileSyncerManager NFS to NFS', () => {
       const bufferedContent = Buffer.from(fileContent, 'utf-8');
       await nfsHelperSource.createFileOfModel(model, file2);
       const paths = [`${model}/${file1}`, `${model}/${file2}`];
-      taskHandlerMock.dequeue.mockResolvedValue(createTask(model, paths));
+      taskHandlerMock.dequeue.mockResolvedValue(createIngestionTask(model, paths));
 
-      await fileSyncerManager.fetch();
+      await fileSyncerManager.handleIngestionTask();
       const result = await nfsHelperDest.readFile(`${model}/${file1}`);
 
       expect(taskHandlerMock.ack).toHaveBeenCalled();
@@ -91,11 +93,11 @@ describe('fileSyncerManager NFS to NFS', () => {
       const file2 = `${faker.word.sample()}.${faker.system.commonFileExt()}`;
       await nfsHelperSource.createFileOfModel(model, file1);
       const paths = [`${model}/${file1}`, `${model}/${file2}`];
-      const task = createTask(model, paths);
+      const task = createIngestionTask(model, paths);
       taskHandlerMock.dequeue.mockResolvedValue(task);
       taskHandlerMock.reject.mockResolvedValue(null);
 
-      await fileSyncerManager.fetch();
+      await fileSyncerManager.handleIngestionTask();
 
       expect(taskHandlerMock.ack).not.toHaveBeenCalled();
     });
@@ -106,13 +108,45 @@ describe('fileSyncerManager NFS to NFS', () => {
       const file2 = `${faker.word.sample()}.${faker.system.commonFileExt()}`;
       await nfsHelperSource.createFileOfModel(model, file1);
       const paths = [`${model}/${file1}`, `${model}/${file2}`];
-      const task = createTask(model, paths);
+      const task = createIngestionTask(model, paths);
       taskHandlerMock.dequeue.mockResolvedValue(task);
       taskHandlerMock.reject.mockRejectedValue(new Error('error with job manager'));
 
-      await fileSyncerManager.fetch();
+      await fileSyncerManager.handleIngestionTask();
 
       expect(taskHandlerMock.ack).not.toHaveBeenCalled();
+    });
+  });
+
+  describe('start Delete function', () => {
+    it(`Delete Task: delete success`, async () => {
+      const model = faker.word.sample();
+      const file1 = `${faker.word.sample()}.${faker.system.commonFileExt()}`;
+      const file2 = `${faker.word.sample()}.${faker.system.commonFileExt()}`;
+      await nfsHelperDest.createFileOfModel(model, file1);
+      await nfsHelperDest.createFileOfModel(model, file2);
+      const task = createDeleteTask(model);
+      taskHandlerMock.dequeue.mockResolvedValue(task);
+      taskHandlerMock.ack.mockResolvedValue(null);
+
+      const response = await fileSyncerManager.handleDeleteTask();
+
+      expect(taskHandlerMock.ack).toHaveBeenCalled();
+      expect(taskHandlerMock.reject).not.toHaveBeenCalled();
+      expect(response).toBeTruthy();
+    });
+
+    it(`Delete Task: delete unexisting folder`, async () => {
+      const model = faker.word.sample();
+      const task = createDeleteTask(model);
+      taskHandlerMock.dequeue.mockResolvedValue(task);
+      taskHandlerMock.ack.mockResolvedValue(null);
+
+      const response = await fileSyncerManager.handleDeleteTask();
+
+      expect(taskHandlerMock.ack).toHaveBeenCalled();
+      expect(taskHandlerMock.reject).not.toHaveBeenCalled();
+      expect(response).toBeTruthy();
     });
   });
 });

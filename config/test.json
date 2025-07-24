@@ -6,18 +6,20 @@
   },
   "jobManager": {
     "url": "http://127.0.0.1:8080",
-    "job": {
-      "type": "Ingestion_New_3D"
+    "ingestion": {
+      "jobType": "Ingestion_New_3D",
+      "taskType": "tilesCopying"
     },
-    "task": {
-      "type": "tilesCopying",
-      "pollingIntervalTime": 0,
-      "maxAttempts": 3
-    }
-  },
-  "heartbeat": {
-    "url": "http://127.0.0.1:8082",
-    "pingingIntervalTime": 3000
+    "delete": {
+      "jobType": "Delete_3D",
+      "taskType": "deleteModel"
+    },
+    "heartbeat": {
+      "url": "http://127.0.0.1:8082",
+      "pingingIntervalTime": 3000
+    },
+    "pollingIntervalTime": 0,
+    "maxAttempts": 3
   },
   "catalog": {
     "url": "http://127.0.0.1:8083"
