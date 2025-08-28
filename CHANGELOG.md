@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+## [2.1.2](https://github.com/MapColonies/file-syncer/compare/v2.1.1...v2.1.2) (2025-08-28)
+
+
+### Helm Changes
+
+* add support for mc annotations package ([#53](https://github.com/MapColonies/file-syncer/issues/53)) ([8201f3d](https://github.com/MapColonies/file-syncer/commit/8201f3d94c175dfcb6201f77bef65d8be60ed989))
+
 ### [2.1.1](https://github.com/MapColonies/file-syncer/compare/v2.1.0...v2.1.1) (2025-07-27)
 
 ## [2.1.0](https://github.com/MapColonies/file-syncer/compare/v2.0.4...v2.1.0) (2025-07-24)
