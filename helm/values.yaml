@@ -3,9 +3,16 @@ cloudProvider:
     flavor: ''
     imagePullSecretName: ''
 imagePullPolicy: 'Always'
-environment: ''
 
 podAnnotations: {}
+
+mcLabelsAndAnnotations:
+    component: backend
+    partOf: ingestion
+    owner: 3d
+    gisDomain: 3d
+    prometheus:
+      enabled: true
 
 S3:
     accessKey: ''
@@ -33,8 +40,6 @@ global:
 
   tracing: {}
   metrics: {}
-
-  environment: development
 
   podAnnotations: {}
 
