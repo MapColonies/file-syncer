@@ -96,7 +96,7 @@ revisionHistoryLimit: 5 # Amount of revisions we keep
 
 image:
   repository: file-syncer
-  tag: latest
+  tag:
 
 extraVolumes: {}
 
