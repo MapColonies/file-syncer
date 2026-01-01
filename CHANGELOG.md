@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+## [2.1.3](https://github.com/MapColonies/file-syncer/compare/v2.1.2...v2.1.3) (2026-01-01)
+
+
+### Dependency Updates
+
+* remove tag value from values ([#56](https://github.com/MapColonies/file-syncer/issues/56)) ([6c94b1e](https://github.com/MapColonies/file-syncer/commit/6c94b1ef48e9765daf28c2377168a56861e795dd))
+
 ## [2.1.2](https://github.com/MapColonies/file-syncer/compare/v2.1.1...v2.1.2) (2025-08-28)
 
 
