@@ -41,7 +41,8 @@ global:
   tracing: {}
   metrics: {}
 
-  podAnnotations: {}
+  podAnnotations:
+    prometheus.io/port: 8080
 
   providers:
     source: NFS
@@ -112,7 +113,7 @@ env:
     enabled: false
     url: ''
   metrics:
-    enabled: false
+    buckets: '[120, 300, 420, 600, 900, 1200, 1500, 1800, 2100, 2400, 2700, 3000, 3600]'
     url: ''
   intervalMs: 3000
   taskPoolSize: 40
