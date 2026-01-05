@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+## [2.1.4](https://github.com/MapColonies/file-syncer/compare/v2.1.3...v2.1.4) (2026-01-05)
+
+
+### Helm Changes
+
+* added podannotations and buckets to helm's values ([#58](https://github.com/MapColonies/file-syncer/issues/58)) ([641e629](https://github.com/MapColonies/file-syncer/commit/641e629f502c16b18f8eb6c0d8b9d5438229bd6f))
+
 ## [2.1.3](https://github.com/MapColonies/file-syncer/compare/v2.1.2...v2.1.3) (2026-01-01)
 
 
