@@ -42,7 +42,8 @@ global:
   metrics: {}
 
   podAnnotations:
-    prometheus.io/port: 8080
+    value:
+      prometheus.io/port: 8080
 
   providers:
     source: NFS
