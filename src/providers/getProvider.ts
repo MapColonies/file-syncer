@@ -20,6 +20,7 @@ function getProvider(logger: Logger, tracer: Tracer, config: ProviderConfig): S3
         accessKeyId: clientConfig.credentials.accessKeyId,
         secretAccessKey: clientConfig.credentials.secretAccessKey,
       },
+      ...(clientConfig.requestHandler && { requestHandler: clientConfig.requestHandler }),
     };
     const s3Client = new S3Client(s3ClientConfig);
     const fullS3ClientConfig = { ...s3ClientConfig, bucketName: clientConfig.bucketName, storageClass: clientConfig.storageClass };
