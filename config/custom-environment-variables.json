@@ -95,7 +95,10 @@
         "__format": "number"
       },
       "requestHandler": {
-        "socketTimeout": "S3_DEST_SOCKET_TIMEOUT"
+        "socketTimeout": {
+          "__name": "S3_DEST_SOCKET_TIMEOUT",
+          "__format": "number"
+        }
       },
       "storageClass": "S3_DEST_STORAGE_CLASS",
       "pvPath": "PV_DEST_PATH"
