@@ -23,6 +23,7 @@ S3:
     style: ''
     maxAttempts: 
     storageClass: ''
+    socketTimeout: ''
 
 global:
   cloudProvider:
@@ -63,6 +64,7 @@ global:
     style: ''
     maxAttempts: 
     storageClass: ''
+    socketTimeout: ''
 
   destinationNFS:
     name: ''
@@ -78,6 +80,7 @@ global:
     style: ''
     maxAttempts: 
     storageClass: ''
+    socketTimeout: ''
 
   jobManager:
     url: ''

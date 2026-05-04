@@ -11,6 +11,9 @@ const s3ProviderName = 's3';
 function getProvider(logger: Logger, tracer: Tracer, config: ProviderConfig): S3Provider | NFSProvider {
   if (config.kind.toLowerCase() === s3ProviderName) {
     const { kind, ...clientConfig } = config as S3Config;
+    logger.info({ msg: `Creating S3 provider with endpoint ${clientConfig.endpoint} and region ${clientConfig.region}` });
+    logger.debug({ msg: `requestHandler's socketTimeout: ${clientConfig.requestHandler?.socketTimeout} ms` });
+
     const s3ClientConfig: S3ClientConfig = {
       endpoint: clientConfig.endpoint,
       region: clientConfig.region,

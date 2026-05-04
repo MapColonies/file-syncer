@@ -157,7 +157,7 @@ export class S3Provider implements Provider {
           Delete: {
             // ChecksumAlgorithm: ChecksumAlgorithm.SHA256,
             Objects: objectsToDelete,
-            Quiet: true, // We want to reduce logging for each key so the folder will go through smoothly 
+            Quiet: true, // We want to reduce logging for each key so the folder will go through smoothly
           },
           /* eslint-enable @typescript-eslint/naming-convention */
         });
