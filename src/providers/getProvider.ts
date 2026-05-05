@@ -12,7 +12,6 @@ function getProvider(logger: Logger, tracer: Tracer, config: ProviderConfig): S3
   if (config.kind.toLowerCase() === s3ProviderName) {
     const { kind, ...clientConfig } = config as S3Config;
     logger.info({ msg: `Creating S3 provider with endpoint ${clientConfig.endpoint} and region ${clientConfig.region}` });
-    logger.debug({ msg: `requestHandler's socketTimeout: ${clientConfig.requestHandler.socketTimeout} ms` });
 
     const s3ClientConfig: S3ClientConfig = {
       endpoint: clientConfig.endpoint,
@@ -25,7 +24,7 @@ function getProvider(logger: Logger, tracer: Tracer, config: ProviderConfig): S3
       },
       requestHandler: clientConfig.requestHandler,
     };
-    logger.debug({ msg: `s3 client configured: ${JSON.stringify(s3ClientConfig)}` });
+    logger.info({ msg: `s3 client configuration: `, s3ClientConfig });
     const s3Client = new S3Client(s3ClientConfig);
 
     const fullS3ClientConfig = { ...s3ClientConfig, bucketName: clientConfig.bucketName, storageClass: clientConfig.storageClass };
