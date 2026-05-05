@@ -24,7 +24,7 @@ function getProvider(logger: Logger, tracer: Tracer, config: ProviderConfig): S3
       },
       requestHandler: clientConfig.requestHandler,
     };
-    logger.info({ msg: `s3 client configuration: `, s3ClientConfig });
+    logger.debug({ msg: `s3 client configuration: `, s3ClientConfig });
     const s3Client = new S3Client(s3ClientConfig);
 
     const fullS3ClientConfig = { ...s3ClientConfig, bucketName: clientConfig.bucketName, storageClass: clientConfig.storageClass };
