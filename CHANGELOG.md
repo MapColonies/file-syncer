@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+## [2.2.0](https://github.com/MapColonies/file-syncer/compare/v2.1.5...v2.2.0) (2026-05-05)
+
+
+### Features
+
+* make quiet true and added socket timeout  (MAPCO-10555) ([#62](https://github.com/MapColonies/file-syncer/issues/62)) ([27a6909](https://github.com/MapColonies/file-syncer/commit/27a69097f5872c0b33fc1cb63e3ab1ee61503868))
+
 ## [2.1.5](https://github.com/MapColonies/file-syncer/compare/v2.1.4...v2.1.5) (2026-01-06)
 
 
