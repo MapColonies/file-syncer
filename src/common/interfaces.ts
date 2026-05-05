@@ -29,7 +29,7 @@ export interface S3Config extends S3ClientConfig {
     accessKeyId: string;
     secretAccessKey: string;
   };
-  requestHandler?: {
+  requestHandler: {
     socketTimeout: number;
   };
 }
