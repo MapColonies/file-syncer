@@ -11,6 +11,8 @@ const s3ProviderName = 's3';
 function getProvider(logger: Logger, tracer: Tracer, config: ProviderConfig): S3Provider | NFSProvider {
   if (config.kind.toLowerCase() === s3ProviderName) {
     const { kind, ...clientConfig } = config as S3Config;
+    logger.info({ msg: `Creating S3 provider with endpoint ${clientConfig.endpoint} and region ${clientConfig.region}` });
+
     const s3ClientConfig: S3ClientConfig = {
       endpoint: clientConfig.endpoint,
       region: clientConfig.region,
@@ -20,8 +22,11 @@ function getProvider(logger: Logger, tracer: Tracer, config: ProviderConfig): S3
         accessKeyId: clientConfig.credentials.accessKeyId,
         secretAccessKey: clientConfig.credentials.secretAccessKey,
       },
+      requestHandler: clientConfig.requestHandler,
     };
+    logger.debug({ msg: `s3 client configuration: `, s3ClientConfig });
     const s3Client = new S3Client(s3ClientConfig);
+
     const fullS3ClientConfig = { ...s3ClientConfig, bucketName: clientConfig.bucketName, storageClass: clientConfig.storageClass };
     return new S3Provider(s3Client, logger, tracer, fullS3ClientConfig as S3Config);
   } else if (config.kind.toLowerCase() === nfsProviderName) {

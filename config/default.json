@@ -50,7 +50,10 @@
       "region": "region",
       "forcePathStyle": true,
       "maxAttempts": 3,
-      "storageClass": "STANDARD"
+      "storageClass": "STANDARD",
+      "requestHandler": {
+        "socketTimeout": 300000
+      }
     }
   },
   "fileSyncer": {

@@ -18,6 +18,9 @@ const fakeS3Config = (bucketName: string): S3Config => {
       accessKeyId: 'minioadmin',
       secretAccessKey: 'minioadmin',
     },
+    requestHandler: {
+      socketTimeout: 222,
+    },
   };
   return result;
 };

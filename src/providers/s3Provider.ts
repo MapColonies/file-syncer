@@ -157,7 +157,7 @@ export class S3Provider implements Provider {
           Delete: {
             // ChecksumAlgorithm: ChecksumAlgorithm.SHA256,
             Objects: objectsToDelete,
-            Quiet: false, // We want to receive the results for each key
+            Quiet: true, // We want to reduce logging for each key so the folder will go through smoothly
           },
           /* eslint-enable @typescript-eslint/naming-convention */
         });
@@ -165,14 +165,14 @@ export class S3Provider implements Provider {
         const deleteResponse = await this.s3Client.send(deleteCommand);
 
         // Log successfully deleted objects
-        if (Array.isArray(deleteResponse.Deleted) && deleteResponse.Deleted.length > 0) {
-          this.logger.debug({
-            msg: `Successfully deleted ${deleteResponse.Deleted.length} objects.`,
-            logContext,
-            folderPath: folderPath,
-            bucketName: this.config.bucketName,
-          });
-        }
+        // if (Array.isArray(deleteResponse.Deleted) && deleteResponse.Deleted.length > 0) {
+        //   this.logger.debug({
+        //     msg: `Successfully deleted ${deleteResponse.Deleted.length} objects.`,
+        //     logContext,
+        //     folderPath: folderPath,
+        //     bucketName: this.config.bucketName,
+        //   });
+        // }
 
         // --- 4. Check for and handle failed deletions ---
         if (Array.isArray(deleteResponse.Errors) && deleteResponse.Errors.length > 0) {

@@ -29,6 +29,9 @@ export interface S3Config extends S3ClientConfig {
     accessKeyId: string;
     secretAccessKey: string;
   };
+  requestHandler: {
+    socketTimeout: number;
+  };
 }
 
 export interface NFSConfig {
