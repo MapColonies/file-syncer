@@ -101,6 +101,7 @@ export class S3Provider implements Provider {
    * * @param {string} prefix - The prefix (folder path) to delete. Must end with a '/'.
    * @returns {Promise<void>}
    */
+  @withSpanAsyncV4
   public async deleteFolder(folderPath: string): Promise<void> {
     const logContext = { ...this.logContext, function: this.deleteFolder.name };
     this.logger.info({
@@ -111,6 +112,7 @@ export class S3Provider implements Provider {
     });
 
     // --- 1. List all objects with the given prefix ---
+    const prefix = folderPath.endsWith('/') ? folderPath : `${folderPath}/`;
     let continuationToken;
 
     do {
@@ -119,17 +121,17 @@ export class S3Provider implements Provider {
         const listCommand: ListObjectsV2Command = new ListObjectsV2Command({
           /* eslint-disable @typescript-eslint/naming-convention */
           Bucket: this.config.bucketName,
-          Prefix: folderPath,
+          Prefix: prefix,
           ContinuationToken: continuationToken,
           /* eslint-enable @typescript-eslint/naming-convention */
         });
         const listResponse = await this.s3Client.send(listCommand);
 
         if (!listResponse.Contents || listResponse.Contents.length === 0) {
-          if (continuationToken == undefined) {
+          if (continuationToken === undefined) {
             // Only show on the first pass
             this.logger.info({
-              msg: '"No objects found with this prefix. Nothing to delete."',
+              msg: 'No objects found with this prefix. Nothing to delete.',
               logContext,
               folderPath: folderPath,
             });
@@ -147,8 +149,20 @@ export class S3Provider implements Provider {
         const objectsToDelete = listResponse.Contents.map((obj) => ({
           /* eslint-disable @typescript-eslint/naming-convention */
           Key: obj.Key,
+        })).filter((obj): obj is { Key: string } => obj.Key !== undefined);
           /* eslint-enable @typescript-eslint/naming-convention */
-        }));
+
+        if (objectsToDelete.length === 0) {
+          // This can happen if all listed objects had undefined keys (though unlikely with S3)
+          break;
+        }
+
+        this.logger.debug({
+          msg: `Folder '${folderPath}' files: [${objectsToDelete.map((obj) => obj.Key).join(', ')}]`,
+          logContext,
+          folderPath: folderPath,
+          listedObjectsCount: listResponse.Contents.length,
+        });
 
         // --- 3. Delete the batch of objects ---
         const deleteCommand = new DeleteObjectsCommand({
