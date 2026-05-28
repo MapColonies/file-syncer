@@ -111,12 +111,10 @@ export class S3Provider implements Provider {
       bucketName: this.config.bucketName,
     });
 
-    // --- 1. List all objects with the given prefix ---
     let continuationToken;
 
     do {
       try {
-        // List a batch of objects  bucketName:
         const listCommand: ListObjectsV2Command = new ListObjectsV2Command({
           /* eslint-disable @typescript-eslint/naming-convention */
           Bucket: this.config.bucketName,
@@ -128,14 +126,13 @@ export class S3Provider implements Provider {
 
         if (!listResponse.Contents || listResponse.Contents.length === 0) {
           if (continuationToken === undefined) {
-            // Only show on the first pass
             this.logger.info({
               msg: 'No objects found with this prefix. Nothing to delete.',
               logContext,
               folderPath: folderPath,
             });
           }
-          break; // No more objects to list
+          break;
         }
 
         this.logger.debug({
@@ -144,7 +141,6 @@ export class S3Provider implements Provider {
           folderPath: folderPath,
         });
 
-        // --- 2. Format keys for the DeleteObjectsCommand ---
         const objectsToDelete = listResponse.Contents.map((obj) => ({
           /* eslint-disable @typescript-eslint/naming-convention */
           Key: obj.Key,
@@ -158,7 +154,6 @@ export class S3Provider implements Provider {
           listedObjectsCount: listResponse.Contents.length,
         });
 
-        // --- 3. Delete the batch of objects ---
         const deleteCommand = new DeleteObjectsCommand({
           /* eslint-disable @typescript-eslint/naming-convention */
           Bucket: this.config.bucketName,
@@ -182,7 +177,6 @@ export class S3Provider implements Provider {
         //   });
         // }
 
-        // --- 4. Check for and handle failed deletions ---
         if (Array.isArray(deleteResponse.Errors) && deleteResponse.Errors.length > 0) {
           this.logger.error({
             msg: `Failed to delete ${deleteResponse.Errors.length} objects.`,
