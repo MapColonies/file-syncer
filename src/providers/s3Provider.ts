@@ -152,11 +152,6 @@ export class S3Provider implements Provider {
         })).filter((obj): obj is { Key: string } => obj.Key !== undefined);
           /* eslint-enable @typescript-eslint/naming-convention */
 
-        if (objectsToDelete.length === 0) {
-          // This can happen if all listed objects had undefined keys (though unlikely with S3)
-          break;
-        }
-
         this.logger.debug({
           msg: `Folder '${folderPath}' files: [${objectsToDelete.map((obj) => obj.Key).join(', ')}]`,
           logContext,
