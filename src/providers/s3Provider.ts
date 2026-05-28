@@ -150,7 +150,7 @@ export class S3Provider implements Provider {
           /* eslint-disable @typescript-eslint/naming-convention */
           Key: obj.Key,
         })).filter((obj): obj is { Key: string } => obj.Key !== undefined);
-          /* eslint-enable @typescript-eslint/naming-convention */
+        /* eslint-enable @typescript-eslint/naming-convention */
 
         this.logger.debug({
           msg: `Folder '${folderPath}' files: [${objectsToDelete.map((obj) => obj.Key).join(', ')}]`,
