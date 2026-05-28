@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+## [2.2.1](https://github.com/MapColonies/file-syncer/compare/v2.2.0...v2.2.1) (2026-05-28)
+
+
+### Bug Fixes
+
+* fix s3 deletion (MAPCO-10555) ([#64](https://github.com/MapColonies/file-syncer/issues/64)) ([2d4add6](https://github.com/MapColonies/file-syncer/commit/2d4add66dcbdf65956e15e514cc0d5a04deae2d2))
+
 ## [2.2.0](https://github.com/MapColonies/file-syncer/compare/v2.1.5...v2.2.0) (2026-05-05)
 
 
