@@ -112,7 +112,6 @@ export class S3Provider implements Provider {
     });
 
     // --- 1. List all objects with the given prefix ---
-    const prefix = folderPath.endsWith('/') ? folderPath : `${folderPath}/`;
     let continuationToken;
 
     do {
@@ -121,7 +120,7 @@ export class S3Provider implements Provider {
         const listCommand: ListObjectsV2Command = new ListObjectsV2Command({
           /* eslint-disable @typescript-eslint/naming-convention */
           Bucket: this.config.bucketName,
-          Prefix: prefix,
+          Prefix: folderPath,
           ContinuationToken: continuationToken,
           /* eslint-enable @typescript-eslint/naming-convention */
         });
