@@ -98,27 +98,30 @@ export class S3Provider implements Provider {
 
   /**
    * Deletes all objects within a specified "folder" (prefix) in an S3 bucket.
-   * * @param {string} prefix - The prefix (folder path) to delete. Must end with a '/'.
+   * @param {string} folderPath - The prefix (folder path) to delete.
    * @returns {Promise<void>}
    */
   @withSpanAsyncV4
   public async deleteFolder(folderPath: string): Promise<void> {
     const logContext = { ...this.logContext, function: this.deleteFolder.name };
+    
+    const prefix = folderPath.endsWith('/') ? folderPath : `${folderPath}/`;
+
     this.logger.info({
-      msg: `Starting delete folder: bucketName ${this.config.bucketName}, Prefix ${folderPath}`,
+      msg: `Starting delete folder from bucketName ${this.config.bucketName}, Prefix ${prefix}`,
       logContext,
-      folderPath: folderPath,
+      folderPath: prefix,
       bucketName: this.config.bucketName,
     });
 
-    let continuationToken;
+    let continuationToken: string | undefined = undefined;
 
     do {
       try {
         const listCommand: ListObjectsV2Command = new ListObjectsV2Command({
           /* eslint-disable @typescript-eslint/naming-convention */
           Bucket: this.config.bucketName,
-          Prefix: folderPath,
+          Prefix: prefix,
           ContinuationToken: continuationToken,
           /* eslint-enable @typescript-eslint/naming-convention */
         });
@@ -129,7 +132,7 @@ export class S3Provider implements Provider {
             this.logger.info({
               msg: 'No objects found with this prefix. Nothing to delete.',
               logContext,
-              folderPath: folderPath,
+              folderPath: prefix,
             });
           }
           break;
@@ -138,7 +141,7 @@ export class S3Provider implements Provider {
         this.logger.debug({
           msg: `Found ${listResponse.Contents.length} objects to delete in this batch.`,
           logContext,
-          folderPath: folderPath,
+          folderPath: prefix,
         });
 
         const objectsToDelete = listResponse.Contents.map((obj) => ({
@@ -148,9 +151,9 @@ export class S3Provider implements Provider {
         /* eslint-enable @typescript-eslint/naming-convention */
 
         this.logger.debug({
-          msg: `Folder '${folderPath}' files: [${objectsToDelete.map((obj) => obj.Key).join(', ')}]`,
+          msg: `Folder '${prefix}' files: [${objectsToDelete.map((obj) => obj.Key).join(', ')}]`,
           logContext,
-          folderPath: folderPath,
+          folderPath: prefix,
           listedObjectsCount: listResponse.Contents.length,
         });
 
@@ -158,42 +161,29 @@ export class S3Provider implements Provider {
           /* eslint-disable @typescript-eslint/naming-convention */
           Bucket: this.config.bucketName,
           Delete: {
-            // ChecksumAlgorithm: ChecksumAlgorithm.SHA256,
             Objects: objectsToDelete,
-            Quiet: true, // We want to reduce logging for each key so the folder will go through smoothly
+            Quiet: true,
           },
           /* eslint-enable @typescript-eslint/naming-convention */
         });
 
         const deleteResponse = await this.s3Client.send(deleteCommand);
 
-        // Log successfully deleted objects
-        // if (Array.isArray(deleteResponse.Deleted) && deleteResponse.Deleted.length > 0) {
-        //   this.logger.debug({
-        //     msg: `Successfully deleted ${deleteResponse.Deleted.length} objects.`,
-        //     logContext,
-        //     folderPath: folderPath,
-        //     bucketName: this.config.bucketName,
-        //   });
-        // }
-
         if (Array.isArray(deleteResponse.Errors) && deleteResponse.Errors.length > 0) {
+          const firstError = deleteResponse.Errors[0];
+          //eslint-disable-next-line @typescript-eslint/strict-boolean-expressions
+          const errorDetails = `Code: ${firstError.Code ?? 'Unknown'}, Message: ${firstError.Message ?? 'No Message'}`;
+
           this.logger.error({
-            msg: `Failed to delete ${deleteResponse.Errors.length} objects.`,
+            msg: `Failed to delete ${deleteResponse.Errors.length} objects in batch.`,
             logContext,
-            folderPath: folderPath,
+            folderPath: prefix,
             bucketName: this.config.bucketName,
+            //eslint-disable-next-line @typescript-eslint/no-magic-numbers
+            errorsSummary: deleteResponse.Errors.slice(0, 5),
           });
-          this.logger.error({
-            msg: `Failed to delete ${deleteResponse.Errors[0].Key} file.`,
-            logContext,
-            error: deleteResponse.Errors[0],
-            folderPath: folderPath,
-            bucketName: this.config.bucketName,
-          });
-          throw new Error(`an error occurred during the delete file of key ${deleteResponse.Errors[0].Key} on bucket ${this.config.bucketName}`);
+          throw new Error(`an error occurred during the delete file of key ${firstError.Key} on bucket ${this.config.bucketName}. S3 Error details -> ${errorDetails}`);
         }
-        // Check if there are more objects to list
         continuationToken = listResponse.NextContinuationToken;
       } catch (err) {
         this.logger.error({
@@ -201,17 +191,17 @@ export class S3Provider implements Provider {
           err,
           endpoint: this.config.endpoint,
           bucketName: this.config.bucketName,
-          folderPath: folderPath,
+          folderPath: prefix,
         });
         const s3Error = err as Error;
-        throw new Error(`an error occurred during the delete folder of key ${folderPath} on bucket ${this.config.bucketName}, ${s3Error.message}`);
+        throw new Error(`an error occurred during the delete folder of key ${prefix} on bucket ${this.config.bucketName}, ${s3Error.message}`);
       }
-    } while (continuationToken != undefined);
+    } while (continuationToken !== undefined);
 
     this.logger.info({
-      msg: `Finished delete folder from bucketName ${this.config.bucketName}, Prefix ${folderPath}`,
+      msg: `Finished delete folder from bucketName ${this.config.bucketName}, Prefix ${prefix}`,
       logContext,
-      folderPath: folderPath,
+      folderPath: prefix,
       bucketName: this.config.bucketName,
     });
   }
