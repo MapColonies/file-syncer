@@ -61,7 +61,7 @@ export const registerExternalValues = (options?: RegisterOptions): DependencyCon
       token: SERVICES.PROVIDER_MANAGER,
       provider: {
         useFactory: (): ProviderManager => {
-          return getProviderManager(logger, tracer, providerConfiguration);
+          return getProviderManager(logger, tracer, config, providerConfiguration);
         },
       },
     },

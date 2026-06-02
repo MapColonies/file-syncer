@@ -3,23 +3,26 @@ import { DeleteObjectsCommand, DeleteObjectCommand, GetObjectCommand, ListObject
 import { withSpanAsyncV4 } from '@map-colonies/telemetry';
 import { inject, injectable } from 'tsyringe';
 import { Tracer } from '@opentelemetry/api';
-import { LogContext, Provider, S3Config } from '../common/interfaces';
+import { LogContext, Provider, S3Config, IConfig } from '../common/interfaces';
 import { SERVICES } from '../common/constants';
 
 @injectable()
 export class S3Provider implements Provider {
   private readonly logContext: LogContext;
+  private readonly useS3Batch: boolean;
 
   public constructor(
     private readonly s3Client: S3Client,
     @inject(SERVICES.LOGGER) private readonly logger: Logger,
     @inject(SERVICES.TRACER) public readonly tracer: Tracer,
+    @inject(SERVICES.CONFIG) private readonly appConfig: IConfig,
     private readonly config: S3Config
   ) {
     this.logContext = {
       fileName: __filename,
       class: S3Provider.name,
     };
+    this.useS3Batch = this.appConfig.get<boolean>('useS3Batch');
     this.logger.info({ msg: 'initializing S3 tile storage', endpoint: config.endpoint, bucketName: config.bucketName });
   }
 
@@ -104,20 +107,19 @@ export class S3Provider implements Provider {
   @withSpanAsyncV4
   public async deleteFolder(folderPath: string): Promise<void> {
     const logContext = { ...this.logContext, function: this.deleteFolder.name };
-    const useS3Batch = this.config.useS3Batch ?? true;
 
     // istanbul ignore next
     const prefix = folderPath.endsWith('/') ? folderPath : `${folderPath}/`;
 
     this.logger.info({
-      msg: `Starting delete folder from bucketName ${this.config.bucketName}, Prefix ${prefix}, useS3Batch: ${useS3Batch}`,
+      msg: `Starting delete folder from bucketName ${this.config.bucketName}, Prefix ${prefix}, useS3Batch: ${this.useS3Batch}`,
       logContext,
       folderPath: prefix,
       bucketName: this.config.bucketName,
     });
 
     try {
-      if (!useS3Batch) {
+      if (!this.useS3Batch) {
         await this.deleteFolderIndividually(prefix);
       } else {
         await this.deleteFolderInBatch(prefix);
@@ -347,7 +349,7 @@ export class S3Provider implements Provider {
             msg: `Failed to delete ${deleteResponse.Errors.length} objects in batch.`,
             logContext,
             folderPath: prefix,
-            bucketName: this.config.bucketName,  
+            bucketName: this.config.bucketName,
           });
           throw new Error(
             `an error occurred during the delete file of key ${firstError.Key} on bucket ${this.config.bucketName}. S3 Error details -> ${errorDetails}`
