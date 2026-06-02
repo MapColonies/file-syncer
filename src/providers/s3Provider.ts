@@ -1,5 +1,5 @@
 import { Logger } from '@map-colonies/js-logger';
-import { DeleteObjectCommand, GetObjectCommand, ListObjectsV2Command, PutObjectCommand, S3Client } from '@aws-sdk/client-s3';
+import { DeleteObjectsCommand, DeleteObjectCommand, GetObjectCommand, ListObjectsV2Command, PutObjectCommand, S3Client } from '@aws-sdk/client-s3';
 import { withSpanAsyncV4 } from '@map-colonies/telemetry';
 import { inject, injectable } from 'tsyringe';
 import { Tracer } from '@opentelemetry/api';
@@ -104,17 +104,54 @@ export class S3Provider implements Provider {
   @withSpanAsyncV4
   public async deleteFolder(folderPath: string): Promise<void> {
     const logContext = { ...this.logContext, function: this.deleteFolder.name };
+    const useS3Batch = this.config.useS3Batch ?? true;
 
     // istanbul ignore next
     const prefix = folderPath.endsWith('/') ? folderPath : `${folderPath}/`;
-    let continuationToken: string | undefined = undefined;
 
     this.logger.info({
-      msg: `Starting delete folder from bucketName ${this.config.bucketName}, Prefix ${prefix}`,
+      msg: `Starting delete folder from bucketName ${this.config.bucketName}, Prefix ${prefix}, useS3Batch: ${useS3Batch}`,
       logContext,
       folderPath: prefix,
       bucketName: this.config.bucketName,
     });
+
+    try {
+      if (!useS3Batch) {
+        await this.deleteFolderIndividually(prefix);
+      } else {
+        await this.deleteFolderInBatch(prefix);
+      }
+    } catch (err) {
+      this.logger.error({
+        msg: 'an error occurred during delete folder',
+        err,
+        endpoint: this.config.endpoint,
+        bucketName: this.config.bucketName,
+        folderPath,
+      });
+    }
+
+    this.logger.info({
+      msg: `Finished delete folder from bucketName ${this.config.bucketName}, Prefix ${prefix}`,
+      logContext,
+      folderPath: prefix,
+      bucketName: this.config.bucketName,
+    });
+  }
+
+  private async deleteFolderIndividually(prefix: string): Promise<void> {
+    const logContext = { ...this.logContext, function: this.deleteFolderIndividually.name };
+    this.logger.debug({ msg: 'Using individual delete strategy for folder deletion', logContext, prefix });
+
+    this.logger.info({
+      msg: `Starting delete folder individually from bucketName ${this.config.bucketName}, Prefix ${prefix}`,
+      logContext,
+      folderPath: prefix,
+      bucketName: this.config.bucketName,
+    });
+
+    let continuationToken: string | undefined = undefined;
 
     do {
       try {
@@ -232,12 +269,103 @@ export class S3Provider implements Provider {
         folderPath: prefix,
       });
     }
+  }
+
+  private async deleteFolderInBatch(prefix: string): Promise<void> {
+    const logContext = { ...this.logContext, function: this.deleteFolderInBatch.name };
+    this.logger.debug({ msg: 'Using batch delete strategy for folder deletion', logContext, prefix });
 
     this.logger.info({
-      msg: `Finished delete folder from bucketName ${this.config.bucketName}, Prefix ${prefix}`,
+      msg: `Starting delete folder batch strategy from bucketName ${this.config.bucketName}, Prefix ${prefix}`,
       logContext,
       folderPath: prefix,
       bucketName: this.config.bucketName,
     });
+
+    let continuationToken: string | undefined = undefined;
+
+    do {
+      try {
+        const listCommand: ListObjectsV2Command = new ListObjectsV2Command({
+          /* eslint-disable @typescript-eslint/naming-convention */
+          Bucket: this.config.bucketName,
+          Prefix: prefix,
+          ContinuationToken: continuationToken,
+          /* eslint-enable @typescript-eslint/naming-convention */
+        });
+        const listResponse = await this.s3Client.send(listCommand);
+
+        if (!listResponse.Contents || listResponse.Contents.length === 0) {
+          if (continuationToken === undefined) {
+            this.logger.info({
+              msg: 'No objects found with this prefix. Nothing to delete.',
+              logContext,
+              folderPath: prefix,
+            });
+          }
+          break;
+        }
+
+        this.logger.debug({
+          msg: `Found ${listResponse.Contents.length} objects to delete in this batch.`,
+          logContext,
+          folderPath: prefix,
+        });
+
+        const objectsToDelete = listResponse.Contents.map((obj) => ({
+          /* eslint-disable @typescript-eslint/naming-convention */
+          Key: obj.Key,
+        })).filter((obj): obj is { Key: string } => obj.Key !== undefined);
+        /* eslint-enable @typescript-eslint/naming-convention */
+
+        this.logger.debug({
+          msg: `Folder '${prefix}' files: [${objectsToDelete.map((obj) => obj.Key).join(', ')}]`,
+          logContext,
+          folderPath: prefix,
+          listedObjectsCount: listResponse.Contents.length,
+        });
+
+        const deleteCommand = new DeleteObjectsCommand({
+          /* eslint-disable @typescript-eslint/naming-convention */
+          Bucket: this.config.bucketName,
+          Delete: {
+            Objects: objectsToDelete,
+            Quiet: true,
+          },
+          /* eslint-enable @typescript-eslint/naming-convention */
+        });
+
+        const deleteResponse = await this.s3Client.send(deleteCommand);
+
+        // istanbul ignore next
+        if (Array.isArray(deleteResponse.Errors) && deleteResponse.Errors.length > 0) {
+          const firstError = deleteResponse.Errors[0];
+          //eslint-disable-next-line @typescript-eslint/strict-boolean-expressions
+          const errorDetails = `Code: ${firstError.Code ?? 'Unknown'}, Message: ${firstError.Message ?? 'No Message'}`;
+
+          this.logger.error({
+            msg: `Failed to delete ${deleteResponse.Errors.length} objects in batch.`,
+            logContext,
+            folderPath: prefix,
+            bucketName: this.config.bucketName,  
+          });
+          throw new Error(
+            `an error occurred during the delete file of key ${firstError.Key} on bucket ${this.config.bucketName}. S3 Error details -> ${errorDetails}`
+          );
+        }
+        continuationToken = listResponse.NextContinuationToken;
+      } catch (err) {
+        // istanbul ignore next
+        this.logger.error({
+          msg: 'an error occurred during delete folder',
+          err,
+          endpoint: this.config.endpoint,
+          bucketName: this.config.bucketName,
+          folderPath: prefix,
+        });
+        const s3Error = err as Error;
+        throw new Error(`an error occurred during the delete folder of key ${prefix} on bucket ${this.config.bucketName}, ${s3Error.message}`);
+      }
+    } while (continuationToken !== undefined);
   }
 }

@@ -113,6 +113,7 @@ env:
   targetPort: 8080
   logLevel: info
   logPrettyPrintEnabled: false
+  useS3Batch: true
   tracing:
     enabled: false
     url: ''

@@ -25,6 +25,7 @@ export interface S3Config extends S3ClientConfig {
   region: string;
   forcePathStyle: boolean;
   maxAttempts: number;
+  useS3Batch?: boolean;
   credentials: {
     accessKeyId: string;
     secretAccessKey: string;

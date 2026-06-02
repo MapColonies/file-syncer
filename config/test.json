@@ -55,6 +55,7 @@
       "storageClass": "STANDARD"
     }
   },
+  "useS3Batch": true,
   "fileSyncer": {
     "taskPoolSize": 3,
     "intervalMs": 5000
