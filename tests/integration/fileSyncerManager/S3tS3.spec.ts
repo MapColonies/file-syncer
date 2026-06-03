@@ -1,15 +1,10 @@
-import jsLogger from '@map-colonies/js-logger';
 import { faker } from '@faker-js/faker';
 import { container } from 'tsyringe';
-import config from 'config';
 import { register } from 'prom-client';
-import { trace } from '@opentelemetry/api';
-import { getApp } from '../../../src/app';
 import { SERVICES } from '../../../src/common/constants';
 import { ProviderManager } from '../../../src/common/interfaces';
 import { FileSyncerManager } from '../../../src/fileSyncerManager/fileSyncerManager';
-import { getProviderManager } from '../../../src/providers/getProvider';
-import { createDeleteTask, createIngestionTask, mockS3tS3, taskHandlerMock } from '../../helpers/mockCreator';
+import { createDeleteTask, createIngestionTask, mockS3tS3, setupProviderIntegrationApp, taskHandlerMock } from '../../helpers/mockCreator';
 import { S3Helper } from '../../helpers/s3Helper';
 
 describe('fileSyncerManager NFS to S3', () => {
@@ -19,13 +14,9 @@ describe('fileSyncerManager NFS to S3', () => {
   let s3HelperDest: S3Helper;
 
   beforeAll(() => {
-    providerManager = getProviderManager(jsLogger({ enabled: false }), trace.getTracer('testTracer'), config, mockS3tS3);
-    getApp({
-      override: [
-        { token: SERVICES.TASK_HANDLER, provider: { useValue: taskHandlerMock } },
-        { token: SERVICES.LOGGER, provider: { useValue: jsLogger({ enabled: false }) } },
-        { token: SERVICES.PROVIDER_MANAGER, provider: { useValue: providerManager } },
-      ],
+    providerManager = setupProviderIntegrationApp({
+      providersConfig: mockS3tS3,
+      extraOverrides: [{ token: SERVICES.TASK_HANDLER, provider: { useValue: taskHandlerMock } }],
     });
     register.clear();
     fileSyncerManager = container.resolve(FileSyncerManager);

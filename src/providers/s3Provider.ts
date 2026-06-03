@@ -183,8 +183,14 @@ export class S3Provider implements Provider {
           folderPath: prefix,
         });
 
+        let foundPrefixMarker = false;
         for (const obj of listResponse.Contents) {
           if (obj.Key === undefined) {
+            continue;
+          }
+
+          if (obj.Key === prefix) {
+            foundPrefixMarker = true;
             continue;
           }
 
@@ -225,6 +231,10 @@ export class S3Provider implements Provider {
           }
         }
 
+        if (foundPrefixMarker) {
+          break;
+        }
+
         continuationToken = listResponse.NextContinuationToken;
       } catch (err) {
         // istanbul ignore next
@@ -240,30 +250,7 @@ export class S3Provider implements Provider {
       }
     } while (continuationToken !== undefined);
 
-    try {
-      const deletePrefixCommand = new DeleteObjectCommand({
-        /* eslint-disable @typescript-eslint/naming-convention */
-        Bucket: this.config.bucketName,
-        Key: prefix,
-        /* eslint-enable @typescript-eslint/naming-convention */
-      });
-
-      await this.s3Client.send(deletePrefixCommand);
-
-      this.logger.debug({
-        msg: `Successfully deleted prefix: ${prefix}`,
-        logContext,
-        folderPath: prefix,
-      });
-    } catch (err) {
-      // istanbul ignore next
-      this.logger.debug({
-        msg: `Could not delete prefix (may not exist): ${prefix}`,
-        logContext,
-        err,
-        folderPath: prefix,
-      });
-    }
+    await this.deletePrefixMarker(prefix, logContext);
   }
 
   private async deleteFolderInBatch(prefix: string): Promise<void> {
@@ -307,10 +294,11 @@ export class S3Provider implements Provider {
           folderPath: prefix,
         });
 
+        const foundPrefixMarker = listResponse.Contents.some((obj) => obj.Key === prefix);
         const objectsToDelete = listResponse.Contents.map((obj) => ({
           /* eslint-disable @typescript-eslint/naming-convention */
           Key: obj.Key,
-        })).filter((obj): obj is { Key: string } => obj.Key !== undefined);
+        })).filter((obj): obj is { Key: string } => obj.Key !== undefined && obj.Key !== prefix);
         /* eslint-enable @typescript-eslint/naming-convention */
 
         this.logger.debug({
@@ -320,34 +308,41 @@ export class S3Provider implements Provider {
           listedObjectsCount: listResponse.Contents.length,
         });
 
-        const deleteCommand = new DeleteObjectsCommand({
-          /* eslint-disable @typescript-eslint/naming-convention */
-          Bucket: this.config.bucketName,
-          Delete: {
-            Objects: objectsToDelete,
-            Quiet: true,
-          },
-          /* eslint-enable @typescript-eslint/naming-convention */
-        });
-
-        const deleteResponse = await this.s3Client.send(deleteCommand);
-
-        // istanbul ignore next
-        if (Array.isArray(deleteResponse.Errors) && deleteResponse.Errors.length > 0) {
-          const firstError = deleteResponse.Errors[0];
-          //eslint-disable-next-line @typescript-eslint/strict-boolean-expressions
-          const errorDetails = `Code: ${firstError.Code ?? 'Unknown'}, Message: ${firstError.Message ?? 'No Message'}`;
-
-          this.logger.error({
-            msg: `Failed to delete ${deleteResponse.Errors.length} objects in batch.`,
-            logContext,
-            folderPath: prefix,
-            bucketName: this.config.bucketName,
+        if (objectsToDelete.length > 0) {
+          const deleteCommand = new DeleteObjectsCommand({
+            /* eslint-disable @typescript-eslint/naming-convention */
+            Bucket: this.config.bucketName,
+            Delete: {
+              Objects: objectsToDelete,
+              Quiet: true,
+            },
+            /* eslint-enable @typescript-eslint/naming-convention */
           });
-          throw new Error(
-            `an error occurred during the delete file of key ${firstError.Key} on bucket ${this.config.bucketName}. S3 Error details -> ${errorDetails}`
-          );
+
+          const deleteResponse = await this.s3Client.send(deleteCommand);
+
+          // istanbul ignore next
+          if (Array.isArray(deleteResponse.Errors) && deleteResponse.Errors.length > 0) {
+            const firstError = deleteResponse.Errors[0];
+            //eslint-disable-next-line @typescript-eslint/strict-boolean-expressions
+            const errorDetails = `Code: ${firstError.Code ?? 'Unknown'}, Message: ${firstError.Message ?? 'No Message'}`;
+
+            this.logger.error({
+              msg: `Failed to delete ${deleteResponse.Errors.length} objects in batch.`,
+              logContext,
+              folderPath: prefix,
+              bucketName: this.config.bucketName,
+            });
+            throw new Error(
+              `an error occurred during the delete file of key ${firstError.Key} on bucket ${this.config.bucketName}. S3 Error details -> ${errorDetails}`
+            );
+          }
         }
+
+        if (foundPrefixMarker) {
+          break;
+        }
+
         continuationToken = listResponse.NextContinuationToken;
       } catch (err) {
         // istanbul ignore next
@@ -362,5 +357,34 @@ export class S3Provider implements Provider {
         throw new Error(`an error occurred during the delete folder of key ${prefix} on bucket ${this.config.bucketName}, ${s3Error.message}`);
       }
     } while (continuationToken !== undefined);
+
+    await this.deletePrefixMarker(prefix, logContext);
+  }
+
+  private async deletePrefixMarker(prefix: string, logContext: LogContext): Promise<void> {
+    try {
+      const deletePrefixCommand = new DeleteObjectCommand({
+        /* eslint-disable @typescript-eslint/naming-convention */
+        Bucket: this.config.bucketName,
+        Key: prefix,
+        /* eslint-enable @typescript-eslint/naming-convention */
+      });
+
+      await this.s3Client.send(deletePrefixCommand);
+
+      this.logger.debug({
+        msg: `Successfully deleted prefix: ${prefix}`,
+        logContext,
+        folderPath: prefix,
+      });
+    } catch (err) {
+      // istanbul ignore next
+      this.logger.debug({
+        msg: `Could not delete prefix (may not exist): ${prefix}`,
+        logContext,
+        err,
+        folderPath: prefix,
+      });
+    }
   }
 }

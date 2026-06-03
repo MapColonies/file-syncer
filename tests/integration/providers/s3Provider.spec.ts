@@ -1,67 +1,26 @@
-/* eslint-disable @typescript-eslint/naming-convention */
-import jsLogger from '@map-colonies/js-logger';
+/* eslint-disable @typescript-eslint/naming-convention, @typescript-eslint/promise-function-async */
 import { faker } from '@faker-js/faker';
-import { container } from 'tsyringe';
-import config from 'config';
 import { trace } from '@opentelemetry/api';
-import {
-  DeleteObjectCommand,
-  DeleteObjectsCommand,
-  ListObjectsV2Command,
-  S3Client,
-} from '@aws-sdk/client-s3';
-import { IConfig, ProviderManager } from '../../../src/common/interfaces';
-import { S3Helper } from '../../helpers/s3Helper';
-import { SERVICES } from '../../../src/common/constants';
-import { getApp } from '../../../src/app';
-import { getProvider, getProviderManager } from '../../../src/providers/getProvider';
-import { mockS3tS3 } from '../../helpers/mockCreator';
+import { DeleteObjectCommand, DeleteObjectsCommand, ListObjectsV2Command } from '@aws-sdk/client-s3';
+import { ProviderManager } from '../../../src/common/interfaces';
+import { S3Helper, mockS3Send } from '../../helpers/s3Helper';
+import { getProvider } from '../../../src/providers/getProvider';
+import { createAppConfig, mockS3tS3, setupProviderIntegrationApp, testLogger } from '../../helpers/mockCreator';
 
 jest.useFakeTimers();
 
-function createAppConfig(overrides: Record<string, unknown> = {}): IConfig {
-  return {
-    get: <T>(key: string): T => {
-      if (Object.prototype.hasOwnProperty.call(overrides, key)) {
-        return overrides[key] as T;
-      }
-      return config.get<T>(key);
-    },
-    has: (key: string): boolean => config.has(key),
-  };
-}
-
-function mockS3Send(handler: (command: unknown) => Promise<unknown>): void {
-  // S3Client.send returns a Promise; Jest's mock typing expects void from mockImplementation.
-  // eslint-disable-next-line @typescript-eslint/no-misused-promises
-  jest.spyOn(S3Client.prototype, 'send').mockImplementation(handler as S3Client['send']);
-}
-
-function registerProviderManager(appConfig: IConfig): ProviderManager {
-  getApp({
-    override: [
-      { token: SERVICES.LOGGER, provider: { useValue: jsLogger({ enabled: false }) } },
-      { token: SERVICES.CONFIG, provider: { useValue: appConfig } },
-      {
-        token: SERVICES.PROVIDER_MANAGER,
-        provider: {
-          useFactory: (): ProviderManager => {
-            return getProviderManager(jsLogger({ enabled: false }), trace.getTracer('testTracer'), appConfig, mockS3tS3);
-          },
-        },
-      },
-    ],
-  });
-  return container.resolve(SERVICES.PROVIDER_MANAGER);
-}
-
 describe('S3Provider', () => {
   let providerManager: ProviderManager;
+  let individualProviderManager: ProviderManager;
   let s3HelperSource: S3Helper;
   let s3HelperDest: S3Helper;
 
   beforeAll(() => {
-    providerManager = registerProviderManager(createAppConfig());
+    providerManager = setupProviderIntegrationApp({ providersConfig: mockS3tS3 });
+    individualProviderManager = setupProviderIntegrationApp({
+      appConfig: createAppConfig({ useS3Batch: false }),
+      providersConfig: mockS3tS3,
+    });
     s3HelperSource = new S3Helper(mockS3tS3.source);
     s3HelperDest = new S3Helper(mockS3tS3.dest);
   });
@@ -93,9 +52,7 @@ describe('S3Provider', () => {
     it(`When the file does not exist in the bucket, throws wrapped error`, async () => {
       const file = `${faker.word.sample()}.${faker.system.commonFileExt()}`;
 
-      await expect(providerManager.source.getFile(file)).rejects.toThrow(
-        new RegExp(`get key ${file} on bucket ${mockS3tS3.source.bucketName}`)
-      );
+      await expect(providerManager.source.getFile(file)).rejects.toThrow(new RegExp(`get key ${file} on bucket ${mockS3tS3.source.bucketName}`));
     });
   });
 
@@ -113,34 +70,15 @@ describe('S3Provider', () => {
 
     it('When the destination bucket does not exist, throws wrapped error', async () => {
       const missingBucket = `missing-bucket-${faker.string.uuid()}`;
-      const providersWithMissingDest = {
-        ...mockS3tS3,
-        dest: { ...mockS3tS3.dest, bucketName: missingBucket },
-      };
-      getApp({
-        override: [
-          { token: SERVICES.LOGGER, provider: { useValue: jsLogger({ enabled: false }) } },
-          {
-            token: SERVICES.PROVIDER_MANAGER,
-            provider: {
-              useFactory: (): ProviderManager => {
-                return getProviderManager(
-                  jsLogger({ enabled: false }),
-                  trace.getTracer('testTracer'),
-                  createAppConfig(),
-                  providersWithMissingDest
-                );
-              },
-            },
-          },
-        ],
+      const manager = setupProviderIntegrationApp({
+        providersConfig: {
+          ...mockS3tS3,
+          dest: { ...mockS3tS3.dest, bucketName: missingBucket },
+        },
       });
-      const manager = container.resolve<ProviderManager>(SERVICES.PROVIDER_MANAGER);
       const data = Buffer.from(faker.word.words());
 
-      await expect(manager.dest.postFile('model/file.txt', data)).rejects.toThrow(
-        new RegExp(`put of key model/file.txt on bucket ${missingBucket}`)
-      );
+      await expect(manager.dest.postFile('model/file.txt', data)).rejects.toThrow(new RegExp(`put of key model/file.txt on bucket ${missingBucket}`));
     });
   });
 
@@ -192,18 +130,12 @@ describe('S3Provider', () => {
 
   describe('getProvider', () => {
     it('throws when provider kind is unsupported', () => {
-      expect(() =>
-        getProvider(
-          jsLogger({ enabled: false }),
-          trace.getTracer('testTracer'),
-          createAppConfig(),
-          { kind: 'unknown', pvPath: '/tmp' } as never
-        )
-      ).toThrow(/Unsupported provider config type/);
+      expect(() => getProvider(testLogger, trace.getTracer('testTracer'), createAppConfig(), { kind: 'unknown', pvPath: '/tmp' } as never)).toThrow(
+        /Unsupported provider config type/
+      );
     });
   });
 
-  /* eslint-disable @typescript-eslint/promise-function-async -- mock handlers return Promise.resolve/reject */
   describe('deleteFolder error paths (mocked S3 send)', () => {
     afterEach(() => {
       jest.restoreAllMocks();
@@ -325,16 +257,8 @@ describe('S3Provider', () => {
       await expect(individualProviderManager.dest.deleteFolder('list-fail')).resolves.toBeUndefined();
     });
   });
-  /* eslint-enable @typescript-eslint/promise-function-async */
-
-  let individualProviderManager: ProviderManager;
-
-  beforeAll(() => {
-    individualProviderManager = registerProviderManager(createAppConfig({ useS3Batch: false }));
-  });
 
   describe('deleteFolder with useS3Batch false', () => {
-
     it('removes folder content using individual delete strategy', async () => {
       const model = faker.word.sample();
       const file = `${faker.word.sample()}.${faker.system.commonFileExt()}`;

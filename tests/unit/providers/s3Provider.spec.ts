@@ -1,4 +1,4 @@
-/* eslint-disable @typescript-eslint/naming-convention */
+/* eslint-disable @typescript-eslint/naming-convention, @typescript-eslint/promise-function-async */
 import { trace } from '@opentelemetry/api';
 import { Logger } from '@map-colonies/js-logger';
 import {
@@ -47,10 +47,7 @@ function listResponse(contents: { Key?: string }[], nextToken?: string): ListObj
 
 function getResponse(data: Uint8Array): GetObjectCommandOutput {
   const body = {
-    transformToByteArray: async (): Promise<Uint8Array> => {
-      await Promise.resolve();
-      return data;
-    },
+    transformToByteArray: (): Promise<Uint8Array> => Promise.resolve(data),
   } as NonNullable<GetObjectCommandOutput['Body']>;
 
   return {
@@ -59,35 +56,39 @@ function getResponse(data: Uint8Array): GetObjectCommandOutput {
   };
 }
 
-function findCommand<T>(send: MockSend, CommandClass: new (...args: never[]) => T): T | undefined {
+function getCommands<T>(send: MockSend, CommandClass: new (...args: never[]) => T): T[] {
+  const commands: T[] = [];
   for (const [command] of send.mock.calls) {
     if (command instanceof CommandClass) {
-      return command;
+      commands.push(command);
     }
   }
-  return undefined;
+  return commands;
+}
+
+function findCommand<T>(send: MockSend, CommandClass: new (...args: never[]) => T): T | undefined {
+  return getCommands(send, CommandClass)[0];
 }
 
 function getDeletedKeys(send: MockSend): string[] {
-  const keys: string[] = [];
-  for (const [command] of send.mock.calls) {
-    if (command instanceof DeleteObjectCommand) {
-      const key = command.input.Key;
-      if (key !== undefined) {
-        keys.push(key);
-      }
-    }
-  }
-  return keys;
+  return getCommands(send, DeleteObjectCommand)
+    .map((command) => command.input.Key)
+    .filter((key): key is string => key !== undefined);
 }
 
-function hasLogMatching(mockFn: { mock: { calls: unknown[][] } }, substring: string): boolean {
-  const calls = mockFn.mock.calls as [Record<string, unknown>][];
-  return calls.some(([arg]) => typeof arg.msg === 'string' && arg.msg.includes(substring));
+interface LogPayload {
+  msg?: string;
+}
+
+function hasLogMatching(logFn: { mock: { calls: unknown[][] } }, substring: string): boolean {
+  return logFn.mock.calls.some((call: unknown[]) => {
+    const arg = call[0] as LogPayload;
+    return typeof arg.msg === 'string' && arg.msg.includes(substring);
+  });
 }
 
 function onCommand(send: MockSend, handlers: SendHandlers): void {
-  send.mockImplementation(async (cmd: unknown) => {
+  send.mockImplementation((cmd: unknown): Promise<unknown> => {
     if (cmd instanceof GetObjectCommand) {
       return handlers.get?.() ?? Promise.reject(new Error('no get handler'));
     }
@@ -112,7 +113,7 @@ function createProvider(useS3Batch: boolean): { provider: S3Provider; send: Mock
   const send = jest.fn<Promise<unknown>, [command: unknown]>();
   const s3Client = { send } as unknown as S3Client;
   const appConfig: IConfig = {
-    get: <T>(key: string) => (key === 'useS3Batch' ? (useS3Batch as T) : undefined as T),
+    get: <T>(key: string) => (key === 'useS3Batch' ? (useS3Batch as T) : (undefined as T)),
     has: () => true,
   };
   const provider = new S3Provider(s3Client, loggerMock as unknown as Logger, trace.getTracer('test'), appConfig, s3Config);
@@ -128,7 +129,7 @@ describe('S3Provider', () => {
     it('returns file content when S3 get succeeds', async () => {
       const { provider, send } = createProvider(true);
       onCommand(send, {
-        get: async () => Promise.resolve(getResponse(new Uint8Array([1, 2, 3]))),
+        get: () => Promise.resolve(getResponse(new Uint8Array([1, 2, 3]))),
       });
 
       const result = await provider.getFile('path/file.txt');
@@ -143,16 +144,14 @@ describe('S3Provider', () => {
       await expect(provider.getFile('missing/key')).rejects.toThrow(
         'an error occurred during the get key missing/key on bucket test-bucket, NoSuchKey'
       );
-      expect(loggerMock.error).toHaveBeenCalledWith(
-        expect.objectContaining({ msg: 'an error occurred during getting file', key: 'missing/key' })
-      );
+      expect(loggerMock.error).toHaveBeenCalledWith(expect.objectContaining({ msg: 'an error occurred during getting file', key: 'missing/key' }));
     });
   });
 
   describe('postFile', () => {
     it('stores file when S3 put succeeds', async () => {
       const { provider, send } = createProvider(true);
-      onCommand(send, { put: async () => Promise.resolve({}) });
+      onCommand(send, { put: () => Promise.resolve({}) });
 
       await expect(provider.postFile('path/file.txt', Buffer.from('data'))).resolves.toBeUndefined();
       expect(loggerMock.debug).toHaveBeenCalledWith(expect.objectContaining({ msg: 'Done postFile' }));
@@ -165,9 +164,7 @@ describe('S3Provider', () => {
       await expect(provider.postFile('path/file.txt', Buffer.from('data'))).rejects.toThrow(
         'an error occurred during the put of key path/file.txt on bucket test-bucket, AccessDenied'
       );
-      expect(loggerMock.error).toHaveBeenCalledWith(
-        expect.objectContaining({ msg: 'an error occurred during tile storing', key: 'path/file.txt' })
-      );
+      expect(loggerMock.error).toHaveBeenCalledWith(expect.objectContaining({ msg: 'an error occurred during tile storing', key: 'path/file.txt' }));
     });
   });
 
@@ -177,19 +174,17 @@ describe('S3Provider', () => {
   ])('deleteFolder ($label)', ({ useS3Batch }) => {
     it('logs nothing to delete when prefix is empty', async () => {
       const { provider, send } = createProvider(useS3Batch);
-      onCommand(send, { list: async () => Promise.resolve(listResponse([])) });
+      onCommand(send, { list: () => Promise.resolve(listResponse([])) });
 
       await expect(provider.deleteFolder('folder/')).resolves.toBeUndefined();
 
-      expect(loggerMock.info).toHaveBeenCalledWith(
-        expect.objectContaining({ msg: 'No objects found with this prefix. Nothing to delete.' })
-      );
-      expect(hasLogMatching(loggerMock.info , 'Finished delete folder')).toBe(true);
+      expect(loggerMock.info).toHaveBeenCalledWith(expect.objectContaining({ msg: 'No objects found with this prefix. Nothing to delete.' }));
+      expect(hasLogMatching(loggerMock.info, 'Finished delete folder')).toBe(true);
     });
 
     it('normalizes folder path without trailing slash', async () => {
       const { provider, send } = createProvider(useS3Batch);
-      onCommand(send, { list: async () => Promise.resolve(listResponse([])) });
+      onCommand(send, { list: () => Promise.resolve(listResponse([])) });
 
       await provider.deleteFolder('folder');
 
@@ -203,31 +198,28 @@ describe('S3Provider', () => {
 
       await expect(provider.deleteFolder('folder/')).resolves.toBeUndefined();
 
-      expect(loggerMock.error).toHaveBeenCalledWith(
-        expect.objectContaining({ msg: 'an error occurred during delete folder' })
-      );
-      expect(hasLogMatching(loggerMock.info , 'Finished delete folder')).toBe(true);
+      expect(loggerMock.error).toHaveBeenCalledWith(expect.objectContaining({ msg: 'an error occurred during delete folder' }));
+      expect(hasLogMatching(loggerMock.info, 'Finished delete folder')).toBe(true);
     });
 
     it('paginates list when NextContinuationToken is present', async () => {
       const { provider, send } = createProvider(useS3Batch);
       let listCallCount = 0;
       onCommand(send, {
-        list: async () => {
+        list: () => {
           listCallCount += 1;
           if (listCallCount === 1) {
             return Promise.resolve(listResponse([{ Key: 'folder/a.txt' }], 'token-1'));
           }
           return Promise.resolve(listResponse([]));
         },
-        deleteOne: async () => Promise.resolve({}),
-        deleteMany: async () => Promise.resolve({}),
+        deleteOne: () => Promise.resolve({}),
+        deleteMany: () => Promise.resolve({}),
       });
 
       await provider.deleteFolder('folder/');
 
-      const listCalls = send.mock.calls.filter(([command]) => command instanceof ListObjectsV2Command);
-      expect(listCalls).toHaveLength(2);
+      expect(getCommands(send, ListObjectsV2Command)).toHaveLength(2);
     });
   });
 
@@ -235,8 +227,8 @@ describe('S3Provider', () => {
     it('deletes each object and the prefix marker', async () => {
       const { provider, send } = createProvider(false);
       onCommand(send, {
-        list: async () => Promise.resolve(listResponse([{ Key: 'folder/a.txt' }, { Key: 'folder/b.txt' }])),
-        deleteOne: async () => Promise.resolve({}),
+        list: () => Promise.resolve(listResponse([{ Key: 'folder/a.txt' }, { Key: 'folder/b.txt' }])),
+        deleteOne: () => Promise.resolve({}),
       });
 
       await provider.deleteFolder('folder/');
@@ -247,8 +239,8 @@ describe('S3Provider', () => {
     it('skips list entries with undefined Key', async () => {
       const { provider, send } = createProvider(false);
       onCommand(send, {
-        list: async () => Promise.resolve(listResponse([{ Key: undefined }, { Key: 'folder/a.txt' }])),
-        deleteOne: async () => Promise.resolve({}),
+        list: () => Promise.resolve(listResponse([{ Key: undefined }, { Key: 'folder/a.txt' }])),
+        deleteOne: () => Promise.resolve({}),
       });
 
       await provider.deleteFolder('folder/');
@@ -259,21 +251,36 @@ describe('S3Provider', () => {
     it('swallows per-object delete failure at deleteFolder level', async () => {
       const { provider, send } = createProvider(false);
       onCommand(send, {
-        list: async () => Promise.resolve(listResponse([{ Key: 'folder/a.txt' }])),
-        deleteOne: async () => Promise.reject(new Error('denied')),
+        list: () => Promise.resolve(listResponse([{ Key: 'folder/a.txt' }])),
+        deleteOne: () => Promise.reject(new Error('denied')),
       });
 
       await expect(provider.deleteFolder('folder/')).resolves.toBeUndefined();
-      expect(loggerMock.error).toHaveBeenCalledWith(
-        expect.objectContaining({ msg: 'an error occurred during delete folder' })
-      );
+      expect(loggerMock.error).toHaveBeenCalledWith(expect.objectContaining({ msg: 'an error occurred during delete folder' }));
+    });
+
+    it('stops listing when prefix marker appears in list', async () => {
+      const { provider, send } = createProvider(false);
+      let listCalls = 0;
+      onCommand(send, {
+        list: () => {
+          listCalls += 1;
+          return Promise.resolve(listResponse([{ Key: 'folder/a.txt' }, { Key: 'folder/' }]));
+        },
+        deleteOne: () => Promise.resolve({}),
+      });
+
+      await provider.deleteFolder('folder/');
+
+      expect(listCalls).toBe(1);
+      expect(getDeletedKeys(send)).toEqual(['folder/a.txt', 'folder/']);
     });
 
     it('continues when prefix marker delete fails', async () => {
       const { provider, send } = createProvider(false);
       onCommand(send, {
-        list: async () => Promise.resolve(listResponse([{ Key: 'folder/a.txt' }])),
-        deleteOne: async (cmd) => {
+        list: () => Promise.resolve(listResponse([{ Key: 'folder/a.txt' }])),
+        deleteOne: (cmd) => {
           if (cmd.input.Key === 'folder/') {
             return Promise.reject(new Error('prefix missing'));
           }
@@ -282,16 +289,17 @@ describe('S3Provider', () => {
       });
 
       await expect(provider.deleteFolder('folder/')).resolves.toBeUndefined();
-      expect(hasLogMatching(loggerMock.debug , 'Could not delete prefix')).toBe(true);
+      expect(hasLogMatching(loggerMock.debug, 'Could not delete prefix')).toBe(true);
     });
   });
 
   describe('deleteFolder (batch)', () => {
-    it('deletes objects in batch with Quiet flag', async () => {
+    it('deletes objects in batch with Quiet flag and prefix marker separately', async () => {
       const { provider, send } = createProvider(true);
       onCommand(send, {
-        list: async () => Promise.resolve(listResponse([{ Key: 'folder/a.txt' }, { Key: 'folder/b.txt' }])),
-        deleteMany: async () => Promise.resolve({}),
+        list: () => Promise.resolve(listResponse([{ Key: 'folder/a.txt' }, { Key: 'folder/b.txt' }])),
+        deleteMany: () => Promise.resolve({}),
+        deleteOne: () => Promise.resolve({}),
       });
 
       await provider.deleteFolder('folder/');
@@ -299,43 +307,63 @@ describe('S3Provider', () => {
       const deleteManyCall = findCommand(send, DeleteObjectsCommand);
       expect(deleteManyCall?.input.Delete?.Objects).toEqual([{ Key: 'folder/a.txt' }, { Key: 'folder/b.txt' }]);
       expect(deleteManyCall?.input.Delete?.Quiet).toBe(true);
-      expect(send.mock.calls.some(([command]) => command instanceof DeleteObjectCommand)).toBe(false);
+      expect(getDeletedKeys(send)).toEqual(['folder/']);
+    });
+
+    it('excludes prefix marker from batch delete and stops listing when it appears', async () => {
+      const { provider, send } = createProvider(true);
+      let listCalls = 0;
+      onCommand(send, {
+        list: () => {
+          listCalls += 1;
+          return Promise.resolve(listResponse([{ Key: 'folder/a.txt' }, { Key: 'folder/' }]));
+        },
+        deleteMany: () => Promise.resolve({}),
+        deleteOne: () => Promise.resolve({}),
+      });
+
+      await provider.deleteFolder('folder/');
+
+      expect(listCalls).toBe(1);
+      const deleteManyCall = findCommand(send, DeleteObjectsCommand);
+      expect(deleteManyCall?.input.Delete?.Objects).toEqual([{ Key: 'folder/a.txt' }]);
+      expect(getDeletedKeys(send)).toEqual(['folder/']);
     });
 
     it('filters undefined keys from batch delete', async () => {
       const { provider, send } = createProvider(true);
       onCommand(send, {
-        list: async () => Promise.resolve(listResponse([{ Key: 'folder/ok.txt' }, {}])),
-        deleteMany: async () => Promise.resolve({}),
+        list: () => Promise.resolve(listResponse([{ Key: 'folder/ok.txt' }, {}])),
+        deleteMany: () => Promise.resolve({}),
+        deleteOne: () => Promise.resolve({}),
       });
 
       await provider.deleteFolder('folder/');
 
       const deleteManyCall = findCommand(send, DeleteObjectsCommand);
       expect(deleteManyCall?.input.Delete?.Objects).toEqual([{ Key: 'folder/ok.txt' }]);
+      expect(getDeletedKeys(send)).toEqual(['folder/']);
     });
 
     it('swallows batch DeleteObjects Errors at deleteFolder level', async () => {
       const { provider, send } = createProvider(true);
       onCommand(send, {
-        list: async () => Promise.resolve(listResponse([{ Key: 'folder/a.txt' }])),
-        deleteMany: async () =>
+        list: () => Promise.resolve(listResponse([{ Key: 'folder/a.txt' }])),
+        deleteMany: () =>
           Promise.resolve({
             Errors: [{ Key: 'folder/a.txt', Code: 'InternalError', Message: 'boom' }],
           }),
       });
 
       await expect(provider.deleteFolder('folder/')).resolves.toBeUndefined();
-      expect(loggerMock.error).toHaveBeenCalledWith(
-        expect.objectContaining({ msg: 'an error occurred during delete folder' })
-      );
+      expect(loggerMock.error).toHaveBeenCalledWith(expect.objectContaining({ msg: 'an error occurred during delete folder' }));
     });
 
     it('uses Unknown/No Message when batch error details are missing', async () => {
       const { provider, send } = createProvider(true);
       onCommand(send, {
-        list: async () => Promise.resolve(listResponse([{ Key: 'folder/a.txt' }])),
-        deleteMany: async () =>
+        list: () => Promise.resolve(listResponse([{ Key: 'folder/a.txt' }])),
+        deleteMany: () =>
           Promise.resolve({
             Errors: [{ Key: 'folder/a.txt' }],
           }),
