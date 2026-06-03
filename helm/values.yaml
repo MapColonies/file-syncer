@@ -113,7 +113,6 @@ env:
   targetPort: 8080
   logLevel: info
   logPrettyPrintEnabled: false
-  useS3Batch: true
   tracing:
     enabled: false
     url: ''
@@ -122,6 +121,7 @@ env:
     url: ''
   intervalMs: 3000
   taskPoolSize: 40
+  useS3Batch: true
 
 resources:
   enabled: true

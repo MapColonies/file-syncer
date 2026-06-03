@@ -14,7 +14,7 @@ module.exports = {
     '!**/routes/**',
     '!<rootDir>/src/*',
   ],
-  coveragePathIgnorePatterns: ['<rootDir>/src/providers'],
+  coveragePathIgnorePatterns: ['<rootDir>/src/providers/getProvider.ts', '<rootDir>/src/providers/nfsProvider.ts'],
   coverageDirectory: '<rootDir>/coverage',
   reporters: [
     'default',

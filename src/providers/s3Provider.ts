@@ -119,10 +119,10 @@ export class S3Provider implements Provider {
     });
 
     try {
-      if (!this.useS3Batch) {
-        await this.deleteFolderIndividually(prefix);
-      } else {
+      if (this.useS3Batch) {
         await this.deleteFolderInBatch(prefix);
+      } else {
+        await this.deleteFolderIndividually(prefix);
       }
     } catch (err) {
       this.logger.error({
@@ -181,13 +181,6 @@ export class S3Provider implements Provider {
           msg: `Found ${listResponse.Contents.length} objects to delete.`,
           logContext,
           folderPath: prefix,
-        });
-
-        this.logger.debug({
-          msg: `Folder '${prefix}' files: [${listResponse.Contents.map((obj) => obj.Key).join(', ')}]`,
-          logContext,
-          folderPath: prefix,
-          listedObjectsCount: listResponse.Contents.length,
         });
 
         for (const obj of listResponse.Contents) {

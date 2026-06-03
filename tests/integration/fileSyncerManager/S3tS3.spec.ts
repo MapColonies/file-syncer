@@ -14,22 +14,17 @@ import { S3Helper } from '../../helpers/s3Helper';
 
 describe('fileSyncerManager NFS to S3', () => {
   let fileSyncerManager: FileSyncerManager;
+  let providerManager: ProviderManager;
   let s3HelperSource: S3Helper;
   let s3HelperDest: S3Helper;
 
   beforeAll(() => {
+    providerManager = getProviderManager(jsLogger({ enabled: false }), trace.getTracer('testTracer'), config, mockS3tS3);
     getApp({
       override: [
         { token: SERVICES.TASK_HANDLER, provider: { useValue: taskHandlerMock } },
         { token: SERVICES.LOGGER, provider: { useValue: jsLogger({ enabled: false }) } },
-        {
-          token: SERVICES.PROVIDER_MANAGER,
-          provider: {
-            useFactory: (): ProviderManager => {
-              return getProviderManager(jsLogger({ enabled: false }), trace.getTracer('testTracer'), config, mockS3tS3);
-            },
-          },
-        },
+        { token: SERVICES.PROVIDER_MANAGER, provider: { useValue: providerManager } },
       ],
     });
     register.clear();
@@ -110,6 +105,29 @@ describe('fileSyncerManager NFS to S3', () => {
   });
 
   describe('start Delete function', () => {
+    it('Delete Task: returns false when dequeue throws', async () => {
+      taskHandlerMock.dequeue.mockRejectedValue(new Error('dequeue failed'));
+
+      const response = await fileSyncerManager.handleDeleteTask();
+
+      expect(response).toBeFalsy();
+      expect(taskHandlerMock.ack).not.toHaveBeenCalled();
+    });
+
+    it('Delete Task: rejects when deleteFolder throws', async () => {
+      const model = faker.word.sample();
+      const task = createDeleteTask(model);
+      taskHandlerMock.dequeue.mockResolvedValue(task);
+      taskHandlerMock.reject.mockResolvedValue(null);
+      jest.spyOn(providerManager.dest, 'deleteFolder').mockRejectedValueOnce(new Error('delete failed'));
+
+      const response = await fileSyncerManager.handleDeleteTask();
+
+      expect(response).toBeTruthy();
+      expect(taskHandlerMock.reject).toHaveBeenCalledWith(task.jobId, task.id, true, 'delete failed');
+      expect(taskHandlerMock.ack).not.toHaveBeenCalled();
+    });
+
     it(`Delete Task: delete success`, async () => {
       const model = faker.word.sample();
       const file1 = `${faker.word.sample()}.${faker.system.commonFileExt()}`;
