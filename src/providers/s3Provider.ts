@@ -183,14 +183,9 @@ export class S3Provider implements Provider {
           folderPath: prefix,
         });
 
-        let foundPrefixMarker = false;
+        listResponse.Contents = listResponse.Contents.filter((obj) => obj.Key !== prefix);
         for (const obj of listResponse.Contents) {
           if (obj.Key === undefined) {
-            continue;
-          }
-
-          if (obj.Key === prefix) {
-            foundPrefixMarker = true;
             continue;
           }
 
@@ -229,10 +224,6 @@ export class S3Provider implements Provider {
             const s3Error = err as Error;
             throw new Error(`an error occurred during the delete of key ${obj.Key} on bucket ${this.config.bucketName}, ${s3Error.message}`);
           }
-        }
-
-        if (foundPrefixMarker) {
-          break;
         }
 
         continuationToken = listResponse.NextContinuationToken;
@@ -294,7 +285,6 @@ export class S3Provider implements Provider {
           folderPath: prefix,
         });
 
-        const foundPrefixMarker = listResponse.Contents.some((obj) => obj.Key === prefix);
         const objectsToDelete = listResponse.Contents.map((obj) => ({
           /* eslint-disable @typescript-eslint/naming-convention */
           Key: obj.Key,
@@ -337,10 +327,6 @@ export class S3Provider implements Provider {
               `an error occurred during the delete file of key ${firstError.Key} on bucket ${this.config.bucketName}. S3 Error details -> ${errorDetails}`
             );
           }
-        }
-
-        if (foundPrefixMarker) {
-          break;
         }
 
         continuationToken = listResponse.NextContinuationToken;
