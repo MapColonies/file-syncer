@@ -144,7 +144,6 @@ export class S3Provider implements Provider {
 
   private async deleteFolderIndividually(prefix: string): Promise<void> {
     const logContext = { ...this.logContext, function: this.deleteFolderIndividually.name };
-    this.logger.debug({ msg: 'Using individual delete strategy for folder deletion', logContext, prefix });
 
     this.logger.info({
       msg: `Starting delete folder individually from bucketName ${this.config.bucketName}, Prefix ${prefix}`,
@@ -183,12 +182,12 @@ export class S3Provider implements Provider {
           folderPath: prefix,
         });
 
-        listResponse.Contents = listResponse.Contents.filter((obj) => obj.Key !== prefix);
-        for (const obj of listResponse.Contents) {
-          if (obj.Key === undefined) {
-            continue;
-          }
-
+        /* eslint-disable @typescript-eslint/naming-convention */
+        const objectsToDelete = listResponse.Contents.map((obj) => ({ Key: obj.Key })).filter(
+          (obj): obj is { Key: string } => obj.Key !== undefined && obj.Key !== prefix
+        );
+        /* eslint-enable @typescript-eslint/naming-convention */
+        for (const obj of objectsToDelete) {
           this.logger.debug({
             msg: `Trying to delete: ${obj.Key}`,
             logContext,
@@ -285,17 +284,16 @@ export class S3Provider implements Provider {
           folderPath: prefix,
         });
 
-        const objectsToDelete = listResponse.Contents.map((obj) => ({
-          /* eslint-disable @typescript-eslint/naming-convention */
-          Key: obj.Key,
-        })).filter((obj): obj is { Key: string } => obj.Key !== undefined && obj.Key !== prefix);
+        /* eslint-disable @typescript-eslint/naming-convention */
+        const objectsToDelete = listResponse.Contents.map((obj) => ({ Key: obj.Key })).filter(
+          (obj): obj is { Key: string } => obj.Key !== undefined && obj.Key !== prefix
+        );
         /* eslint-enable @typescript-eslint/naming-convention */
 
         this.logger.debug({
-          msg: `Folder '${prefix}' files: [${objectsToDelete.map((obj) => obj.Key).join(', ')}]`,
+          msg: `Delete files: [${objectsToDelete.map((obj) => obj.Key).join(', ')}]`,
           logContext,
           folderPath: prefix,
-          listedObjectsCount: listResponse.Contents.length,
         });
 
         if (objectsToDelete.length === 0) {
