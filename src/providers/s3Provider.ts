@@ -298,35 +298,38 @@ export class S3Provider implements Provider {
           listedObjectsCount: listResponse.Contents.length,
         });
 
-        if (objectsToDelete.length > 0) {
-          const deleteCommand = new DeleteObjectsCommand({
-            /* eslint-disable @typescript-eslint/naming-convention */
-            Bucket: this.config.bucketName,
-            Delete: {
-              Objects: objectsToDelete,
-              Quiet: true,
-            },
-            /* eslint-enable @typescript-eslint/naming-convention */
+        if (objectsToDelete.length === 0) {
+          continuationToken = listResponse.NextContinuationToken;
+          continue;
+        }
+
+        const deleteCommand = new DeleteObjectsCommand({
+          /* eslint-disable @typescript-eslint/naming-convention */
+          Bucket: this.config.bucketName,
+          Delete: {
+            Objects: objectsToDelete,
+            Quiet: true,
+          },
+          /* eslint-enable @typescript-eslint/naming-convention */
+        });
+
+        const deleteResponse = await this.s3Client.send(deleteCommand);
+
+        // istanbul ignore next
+        if (Array.isArray(deleteResponse.Errors) && deleteResponse.Errors.length > 0) {
+          const firstError = deleteResponse.Errors[0];
+          //eslint-disable-next-line @typescript-eslint/strict-boolean-expressions
+          const errorDetails = `Code: ${firstError.Code ?? 'Unknown'}, Message: ${firstError.Message ?? 'No Message'}`;
+
+          this.logger.error({
+            msg: `Failed to delete ${deleteResponse.Errors.length} objects in batch.`,
+            logContext,
+            folderPath: prefix,
+            bucketName: this.config.bucketName,
           });
-
-          const deleteResponse = await this.s3Client.send(deleteCommand);
-
-          // istanbul ignore next
-          if (Array.isArray(deleteResponse.Errors) && deleteResponse.Errors.length > 0) {
-            const firstError = deleteResponse.Errors[0];
-            //eslint-disable-next-line @typescript-eslint/strict-boolean-expressions
-            const errorDetails = `Code: ${firstError.Code ?? 'Unknown'}, Message: ${firstError.Message ?? 'No Message'}`;
-
-            this.logger.error({
-              msg: `Failed to delete ${deleteResponse.Errors.length} objects in batch.`,
-              logContext,
-              folderPath: prefix,
-              bucketName: this.config.bucketName,
-            });
-            throw new Error(
-              `an error occurred during the delete file of key ${firstError.Key} on bucket ${this.config.bucketName}. S3 Error details -> ${errorDetails}`
-            );
-          }
+          throw new Error(
+            `an error occurred during the delete file of key ${firstError.Key} on bucket ${this.config.bucketName}. S3 Error details -> ${errorDetails}`
+          );
         }
 
         continuationToken = listResponse.NextContinuationToken;

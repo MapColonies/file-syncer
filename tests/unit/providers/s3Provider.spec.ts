@@ -259,21 +259,24 @@ describe('S3Provider', () => {
       expect(loggerMock.error).toHaveBeenCalledWith(expect.objectContaining({ msg: 'an error occurred during delete folder' }));
     });
 
-    it('stops listing when prefix marker appears in list', async () => {
+    it('excludes prefix marker from page deletes and deletes it after all pages are listed', async () => {
       const { provider, send } = createProvider(false);
       let listCalls = 0;
       onCommand(send, {
         list: () => {
           listCalls += 1;
-          return Promise.resolve(listResponse([{ Key: 'folder/a.txt' }, { Key: 'folder/' }]));
+          if (listCalls === 1) {
+            return Promise.resolve(listResponse([{ Key: 'folder/a.txt' }, { Key: 'folder/' }], 'page-2'));
+          }
+          return Promise.resolve(listResponse([{ Key: 'folder/b.txt' }]));
         },
         deleteOne: () => Promise.resolve({}),
       });
 
       await provider.deleteFolder('folder/');
 
-      expect(listCalls).toBe(1);
-      expect(getDeletedKeys(send)).toEqual(['folder/a.txt', 'folder/']);
+      expect(listCalls).toBe(2);
+      expect(getDeletedKeys(send)).toEqual(['folder/a.txt', 'folder/b.txt', 'folder/']);
     });
 
     it('continues when prefix marker delete fails', async () => {
@@ -310,13 +313,16 @@ describe('S3Provider', () => {
       expect(getDeletedKeys(send)).toEqual(['folder/']);
     });
 
-    it('excludes prefix marker from batch delete and stops listing when it appears', async () => {
+    it('excludes prefix marker from batch delete and deletes it after all pages are listed', async () => {
       const { provider, send } = createProvider(true);
       let listCalls = 0;
       onCommand(send, {
         list: () => {
           listCalls += 1;
-          return Promise.resolve(listResponse([{ Key: 'folder/a.txt' }, { Key: 'folder/' }]));
+          if (listCalls === 1) {
+            return Promise.resolve(listResponse([{ Key: 'folder/a.txt' }, { Key: 'folder/' }], 'page-2'));
+          }
+          return Promise.resolve(listResponse([{ Key: 'folder/b.txt' }]));
         },
         deleteMany: () => Promise.resolve({}),
         deleteOne: () => Promise.resolve({}),
@@ -324,9 +330,10 @@ describe('S3Provider', () => {
 
       await provider.deleteFolder('folder/');
 
-      expect(listCalls).toBe(1);
-      const deleteManyCall = findCommand(send, DeleteObjectsCommand);
-      expect(deleteManyCall?.input.Delete?.Objects).toEqual([{ Key: 'folder/a.txt' }]);
+      expect(listCalls).toBe(2);
+      const deleteManyCalls = getCommands(send, DeleteObjectsCommand);
+      expect(deleteManyCalls[0]?.input.Delete?.Objects).toEqual([{ Key: 'folder/a.txt' }]);
+      expect(deleteManyCalls[1]?.input.Delete?.Objects).toEqual([{ Key: 'folder/b.txt' }]);
       expect(getDeletedKeys(send)).toEqual(['folder/']);
     });
 
