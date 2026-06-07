@@ -186,6 +186,7 @@ export class S3Provider implements Provider {
         const objectsToDelete = listResponse.Contents.map((obj) => ({ Key: obj.Key })).filter(
           (obj): obj is { Key: string } => obj.Key !== undefined && obj.Key !== prefix
         );
+
         /* eslint-enable @typescript-eslint/naming-convention */
         for (const obj of objectsToDelete) {
           this.logger.debug({
