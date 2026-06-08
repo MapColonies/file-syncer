@@ -141,7 +141,7 @@ describe('S3Provider', () => {
       jest.restoreAllMocks();
     });
 
-    it('swallows batch list failure and logs at deleteFolder level', async () => {
+    it('rethrows batch list failure at deleteFolder level', async () => {
       mockS3Send((command: unknown) => {
         if (command instanceof ListObjectsV2Command) {
           return Promise.reject(new Error('batch list failed'));
@@ -149,10 +149,10 @@ describe('S3Provider', () => {
         return Promise.resolve({ $metadata: {} });
       });
 
-      await expect(providerManager.dest.deleteFolder('batch-list-fail')).resolves.toBeUndefined();
+      await expect(providerManager.dest.deleteFolder('batch-list-fail')).rejects.toThrow(/batch list failed/);
     });
 
-    it('swallows batch DeleteObjects errors at deleteFolder level', async () => {
+    it('rethrows batch DeleteObjects errors at deleteFolder level', async () => {
       mockS3Send((command: unknown) => {
         if (command instanceof ListObjectsV2Command) {
           return Promise.resolve({ Contents: [{ Key: 'batch-err/a.txt' }], $metadata: {} });
@@ -166,7 +166,7 @@ describe('S3Provider', () => {
         return Promise.resolve({ $metadata: {} });
       });
 
-      await expect(providerManager.dest.deleteFolder('batch-err')).resolves.toBeUndefined();
+      await expect(providerManager.dest.deleteFolder('batch-err')).rejects.toThrow(/InternalError/);
     });
 
     it('paginates with empty second list page (batch)', async () => {
@@ -232,7 +232,7 @@ describe('S3Provider', () => {
       await expect(individualProviderManager.dest.deleteFolder('skipundefined')).resolves.toBeUndefined();
     });
 
-    it('swallows per-object delete failure (individual)', async () => {
+    it('rethrows per-object delete failure (individual)', async () => {
       mockS3Send((command: unknown) => {
         if (command instanceof ListObjectsV2Command) {
           return Promise.resolve({ Contents: [{ Key: 'faildel/a.txt' }], $metadata: {} });
@@ -243,10 +243,10 @@ describe('S3Provider', () => {
         return Promise.resolve({ $metadata: {} });
       });
 
-      await expect(individualProviderManager.dest.deleteFolder('faildel')).resolves.toBeUndefined();
+      await expect(individualProviderManager.dest.deleteFolder('faildel')).rejects.toThrow(/AccessDenied/);
     });
 
-    it('swallows individual list failure at deleteFolder level', async () => {
+    it('rethrows individual list failure at deleteFolder level', async () => {
       mockS3Send((command: unknown) => {
         if (command instanceof ListObjectsV2Command) {
           return Promise.reject(new Error('individual list failed'));
@@ -254,7 +254,7 @@ describe('S3Provider', () => {
         return Promise.resolve({ $metadata: {} });
       });
 
-      await expect(individualProviderManager.dest.deleteFolder('list-fail')).resolves.toBeUndefined();
+      await expect(individualProviderManager.dest.deleteFolder('list-fail')).rejects.toThrow(/individual list failed/);
     });
   });
 

@@ -192,14 +192,14 @@ describe('S3Provider', () => {
       expect(listCall?.input.Prefix).toBe('folder/');
     });
 
-    it('swallows list errors and still finishes', async () => {
+    it('rethrows list errors', async () => {
       const { provider, send } = createProvider(useS3Batch);
       send.mockRejectedValue(new Error('list failed'));
 
-      await expect(provider.deleteFolder('folder/')).resolves.toBeUndefined();
+      await expect(provider.deleteFolder('folder/')).rejects.toThrow(/list failed/);
 
       expect(loggerMock.error).toHaveBeenCalledWith(expect.objectContaining({ msg: 'an error occurred during delete folder' }));
-      expect(hasLogMatching(loggerMock.info, 'Finished delete folder')).toBe(true);
+      expect(hasLogMatching(loggerMock.info, 'Finished delete folder')).toBe(false);
     });
 
     it('paginates list when NextContinuationToken is present', async () => {
@@ -248,14 +248,14 @@ describe('S3Provider', () => {
       expect(getDeletedKeys(send)).toEqual(['folder/a.txt', 'folder/']);
     });
 
-    it('swallows per-object delete failure at deleteFolder level', async () => {
+    it('rethrows per-object delete failure at deleteFolder level', async () => {
       const { provider, send } = createProvider(false);
       onCommand(send, {
         list: () => Promise.resolve(listResponse([{ Key: 'folder/a.txt' }])),
         deleteOne: () => Promise.reject(new Error('denied')),
       });
 
-      await expect(provider.deleteFolder('folder/')).resolves.toBeUndefined();
+      await expect(provider.deleteFolder('folder/')).rejects.toThrow(/denied/);
       expect(loggerMock.error).toHaveBeenCalledWith(expect.objectContaining({ msg: 'an error occurred during delete folder' }));
     });
 
@@ -352,7 +352,7 @@ describe('S3Provider', () => {
       expect(getDeletedKeys(send)).toEqual(['folder/']);
     });
 
-    it('swallows batch DeleteObjects Errors at deleteFolder level', async () => {
+    it('rethrows batch DeleteObjects Errors at deleteFolder level', async () => {
       const { provider, send } = createProvider(true);
       onCommand(send, {
         list: () => Promise.resolve(listResponse([{ Key: 'folder/a.txt' }])),
@@ -362,7 +362,7 @@ describe('S3Provider', () => {
           }),
       });
 
-      await expect(provider.deleteFolder('folder/')).resolves.toBeUndefined();
+      await expect(provider.deleteFolder('folder/')).rejects.toThrow(/InternalError/);
       expect(loggerMock.error).toHaveBeenCalledWith(expect.objectContaining({ msg: 'an error occurred during delete folder' }));
     });
 
@@ -376,7 +376,7 @@ describe('S3Provider', () => {
           }),
       });
 
-      await expect(provider.deleteFolder('folder/')).resolves.toBeUndefined();
+      await expect(provider.deleteFolder('folder/')).rejects.toThrow(/Unknown/);
     });
   });
 });
