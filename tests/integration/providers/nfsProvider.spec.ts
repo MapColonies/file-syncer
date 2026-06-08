@@ -1,6 +1,7 @@
 import jsLogger from '@map-colonies/js-logger';
 import { faker } from '@faker-js/faker';
 import { container } from 'tsyringe';
+import config from 'config';
 import { trace } from '@opentelemetry/api';
 import { getApp } from '../../../src/app';
 import { SERVICES } from '../../../src/common/constants';
@@ -22,7 +23,7 @@ describe('NFSProvider', () => {
           token: SERVICES.PROVIDER_MANAGER,
           provider: {
             useFactory: (): ProviderManager => {
-              return getProviderManager(jsLogger({ enabled: false }), trace.getTracer('testTracer'), mockNFStNFS);
+              return getProviderManager(jsLogger({ enabled: false }), trace.getTracer('testTracer'), config, mockNFStNFS);
             },
           },
         },

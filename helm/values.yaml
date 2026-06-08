@@ -121,6 +121,7 @@ env:
     url: ''
   intervalMs: 3000
   taskPoolSize: 40
+  useS3Batch: true
 
 resources:
   enabled: true

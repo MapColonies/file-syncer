@@ -1,14 +1,14 @@
 import { Logger } from '@map-colonies/js-logger';
 import { Tracer } from '@opentelemetry/api';
 import { S3Client, S3ClientConfig } from '@aws-sdk/client-s3';
-import { NFSConfig, ProviderConfig, ProviderManager, ProvidersConfig, S3Config } from '../common/interfaces';
+import { IConfig, NFSConfig, ProviderConfig, ProviderManager, ProvidersConfig, S3Config } from '../common/interfaces';
 import { NFSProvider } from './nfsProvider';
 import { S3Provider } from './s3Provider';
 
 const nfsProviderName = 'nfs';
 const s3ProviderName = 's3';
 
-function getProvider(logger: Logger, tracer: Tracer, config: ProviderConfig): S3Provider | NFSProvider {
+function getProvider(logger: Logger, tracer: Tracer, appConfig: IConfig, config: ProviderConfig): S3Provider | NFSProvider {
   if (config.kind.toLowerCase() === s3ProviderName) {
     const { kind, ...clientConfig } = config as S3Config;
     logger.info({ msg: `Creating S3 provider with endpoint ${clientConfig.endpoint} and region ${clientConfig.region}` });
@@ -28,7 +28,7 @@ function getProvider(logger: Logger, tracer: Tracer, config: ProviderConfig): S3
     const s3Client = new S3Client(s3ClientConfig);
 
     const fullS3ClientConfig = { ...s3ClientConfig, bucketName: clientConfig.bucketName, storageClass: clientConfig.storageClass };
-    return new S3Provider(s3Client, logger, tracer, fullS3ClientConfig as S3Config);
+    return new S3Provider(s3Client, logger, tracer, appConfig, fullS3ClientConfig as S3Config);
   } else if (config.kind.toLowerCase() === nfsProviderName) {
     return new NFSProvider(logger, tracer, config as NFSConfig);
   } else {
@@ -38,10 +38,10 @@ function getProvider(logger: Logger, tracer: Tracer, config: ProviderConfig): S3
   }
 }
 
-function getProviderManager(logger: Logger, tracer: Tracer, providerConfiguration: ProvidersConfig): ProviderManager {
+function getProviderManager(logger: Logger, tracer: Tracer, appConfig: IConfig, providerConfiguration: ProvidersConfig): ProviderManager {
   return {
-    source: getProvider(logger, tracer, providerConfiguration.source),
-    dest: getProvider(logger, tracer, providerConfiguration.dest),
+    source: getProvider(logger, tracer, appConfig, providerConfiguration.source),
+    dest: getProvider(logger, tracer, appConfig, providerConfiguration.dest),
   };
 }
 

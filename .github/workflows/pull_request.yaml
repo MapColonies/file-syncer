@@ -4,7 +4,8 @@ on: [pull_request]
 
 jobs:
   pull_request:
-    uses: MapColonies/shared-workflows/.github/workflows/pull_request.yaml@v2
+    uses: MapColonies/shared-workflows/.github/workflows/pull_request.yaml@v5.1.0
     secrets: inherit
     with:
       enableOpenApiCheck: false
+      chartDirs: 'helm'

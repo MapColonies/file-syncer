@@ -1,6 +1,22 @@
 import { ITaskResponse, OperationStatus } from '@map-colonies/mc-priority-queue';
 import { faker } from '@faker-js/faker';
-import { NFSConfig, ProviderConfig, ProvidersConfig, S3Config, IngestionTaskParameters, DeleteTaskParameters } from '../../src/common/interfaces';
+import jsLogger, { Logger } from '@map-colonies/js-logger';
+import { trace } from '@opentelemetry/api';
+import config from 'config';
+import { getApp } from '../../src/app';
+import { SERVICES } from '../../src/common/constants';
+import { InjectionObject } from '../../src/common/dependencyRegistration';
+import {
+  IConfig,
+  NFSConfig,
+  ProviderConfig,
+  ProviderManager,
+  ProvidersConfig,
+  S3Config,
+  IngestionTaskParameters,
+  DeleteTaskParameters,
+} from '../../src/common/interfaces';
+import { getProviderManager } from '../../src/providers/getProvider';
 
 const fakeNFSConfig = (name: string): NFSConfig => {
   return { kind: 'NFS', pvPath: `./tests/helpers/${name}` };
@@ -117,7 +133,7 @@ export const jobsManagerMock = {
   reject: jest.fn(),
 };
 
-export const loggerMock = {
+export const loggerMock: jest.Mocked<Pick<Logger, 'info' | 'warn' | 'error' | 'debug'>> = {
   info: jest.fn(),
   warn: jest.fn(),
   error: jest.fn(),
@@ -128,3 +144,38 @@ export const mockNFStNFS = fakeProvidersConfig('nfs', 'nfs') as { source: NFSCon
 export const mockNFStS3 = fakeProvidersConfig('nfs', 's3') as { source: NFSConfig; dest: S3Config };
 export const mockS3tNFS = fakeProvidersConfig('s3', 'nfs') as { source: S3Config; dest: NFSConfig };
 export const mockS3tS3 = fakeProvidersConfig('s3', 's3') as { source: S3Config; dest: S3Config };
+
+export const testLogger = jsLogger({ enabled: false });
+export const testTracer = trace.getTracer('testTracer');
+
+export function createAppConfig(overrides: Record<string, unknown> = {}): IConfig {
+  return {
+    get: <T>(key: string): T => {
+      if (Object.prototype.hasOwnProperty.call(overrides, key)) {
+        return overrides[key] as T;
+      }
+      return config.get<T>(key);
+    },
+    has: (key: string): boolean => config.has(key),
+  };
+}
+
+export function setupProviderIntegrationApp(options: {
+  providersConfig: ProvidersConfig;
+  appConfig?: IConfig;
+  extraOverrides?: InjectionObject<unknown>[];
+}): ProviderManager {
+  const appConfig = options.appConfig ?? createAppConfig();
+  const providerManager = getProviderManager(testLogger, testTracer, appConfig, options.providersConfig);
+
+  getApp({
+    override: [
+      { token: SERVICES.LOGGER, provider: { useValue: testLogger } },
+      { token: SERVICES.CONFIG, provider: { useValue: appConfig } },
+      { token: SERVICES.PROVIDER_MANAGER, provider: { useValue: providerManager } },
+      ...(options.extraOverrides ?? []),
+    ],
+  });
+
+  return providerManager;
+}

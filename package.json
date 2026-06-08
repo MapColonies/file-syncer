@@ -4,8 +4,8 @@
   "description": "This is template for map colonies typescript service",
   "main": "./src/index.ts",
   "scripts": {
-    "test:unit": "jest --config=./tests/configurations/unit/jest.config.js",
-    "test:integration": "jest --config=./tests/configurations/integration/jest.config.js --runInBand --detectOpenHandles",
+    "test:unit": "cross-env NODE_OPTIONS=--experimental-vm-modules jest --config=./tests/configurations/unit/jest.config.js",
+    "test:integration": "cross-env NODE_OPTIONS=--experimental-vm-modules jest --config=./tests/configurations/integration/jest.config.js --runInBand --detectOpenHandles",
     "format": "prettier --check .",
     "format:fix": "prettier --write .",
     "prelint:fix": "npm run format:fix",
@@ -68,6 +68,7 @@
     "@types/jest": "^29.5.8",
     "commitlint": "^17.6.6",
     "copyfiles": "^2.4.1",
+    "cross-env": "^10.1.0",
     "docker-compose": "^0.24.8",
     "eslint": "^8.43.0",
     "husky": "^8.0.3",

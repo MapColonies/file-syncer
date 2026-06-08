@@ -104,6 +104,10 @@
       "pvPath": "PV_DEST_PATH"
     }
   },
+  "useS3Batch": {
+    "__name": "USE_S3_BATCH",
+    "__format": "boolean"
+  },
   "fileSyncer": {
     "intervalMs": {
       "__name": "FILE_SYNCER_INTERVAL_MS",

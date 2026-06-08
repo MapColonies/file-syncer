@@ -101,3 +101,8 @@ export class S3Helper {
     return Buffer.from(responseArray as Uint8Array);
   }
 }
+
+export function mockS3Send(handler: (command: unknown) => Promise<unknown>): jest.SpiedFunction<S3Client['send']> {
+  // eslint-disable-next-line @typescript-eslint/no-misused-promises -- S3Client.send returns a Promise
+  return jest.spyOn(S3Client.prototype, 'send').mockImplementation(handler as S3Client['send']);
+}
