@@ -8,3 +8,4 @@ jobs:
     secrets: inherit
     with:
       enableOpenApiCheck: false
+      chartDirs: 'helm'
