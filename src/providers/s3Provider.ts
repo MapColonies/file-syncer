@@ -132,6 +132,7 @@ export class S3Provider implements Provider {
         bucketName: this.config.bucketName,
         folderPath,
       });
+      throw err;
     }
 
     this.logger.info({
