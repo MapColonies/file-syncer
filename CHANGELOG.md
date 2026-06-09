@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+## [2.2.3](https://github.com/MapColonies/file-syncer/compare/v2.2.2...v2.2.3) (2026-06-09)
+
+
+### Bug Fixes
+
+* added support of 1038 to aws-sdk (MAPCO-10555) ([#68](https://github.com/MapColonies/file-syncer/issues/68)) ([aeb63a8](https://github.com/MapColonies/file-syncer/commit/aeb63a8b4f93d7345149912eda120014c76fe7b4))
+
 ## [2.2.2](https://github.com/MapColonies/file-syncer/compare/v2.2.1...v2.2.2) (2026-06-08)
 
 
