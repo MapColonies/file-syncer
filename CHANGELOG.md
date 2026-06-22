@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+## [2.2.4](https://github.com/MapColonies/file-syncer/compare/v2.2.3...v2.2.4) (2026-06-22)
+
+
+### Helm Changes
+
+* upgrade to the latest mc-labels (MAPCO-7126) ([#70](https://github.com/MapColonies/file-syncer/issues/70)) ([c1ed803](https://github.com/MapColonies/file-syncer/commit/c1ed803f8886c9a283cbd3647150aec0ab69bf68))
+
 ## [2.2.3](https://github.com/MapColonies/file-syncer/compare/v2.2.2...v2.2.3) (2026-06-09)
 
 
