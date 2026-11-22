@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+## [2.2.5](https://github.com/MapColonies/file-syncer/compare/v2.2.4...v2.2.5) (2026-11-22)
+
+
+### Helm Changes
+
+* add mclabels to pod template and set cpu limit to 4x request (MAPCO-11865, MAPCO-11866) ([#72](https://github.com/MapColonies/file-syncer/issues/72)) ([81d005c](https://github.com/MapColonies/file-syncer/commit/81d005c7618ecc576a9ec5b11fd7aea761d03391))
+
 ## [2.2.4](https://github.com/MapColonies/file-syncer/compare/v2.2.3...v2.2.4) (2026-06-22)
 
 
