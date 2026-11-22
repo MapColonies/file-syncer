@@ -2,7 +2,6 @@ version: '2'
 
 services:
   minio:
-    # quay.io/minio/minio and docker.io/minio/minio are no longer publicly pullable
     image: cgr.dev/chainguard/minio:latest
     ports:
       - '9000:9000'
