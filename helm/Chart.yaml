@@ -2,8 +2,8 @@ apiVersion: v2
 name: file-syncer
 description: A Helm chart for file-syncer service
 type: application
-version: 2.2.4
-appVersion: 2.2.4
+version: 2.2.5
+appVersion: 2.2.5
 dependencies:
   - name: mclabels
     version: 1.0.1
